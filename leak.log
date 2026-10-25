@@ -1,0 +1,649 @@
+﻿WorkerThreadPool: 8 threads, 2 max low-priority.
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+TextServer: Added interface "Dummy"
+TextServer: Added interface "ICU / HarfBuzz / Graphite (Built-in)"
+Accessibility: AccessKit driver loaded.
+Accessibility: window 0 adapter created.
+Devices:
+  #0: NVIDIA NVIDIA GeForce RTX 5060 Ti - Supported, Discrete
+  #1: AMD AMD Radeon(TM) Graphics - Supported, Integrated
+Optional Vulkan device extension VK_EXT_fragment_density_map not found
+Optional Vulkan device extension VK_EXT_fragment_density_map2 not found
+Optional Vulkan device extension VK_QCOM_fragment_density_map_offset not found
+Optional Vulkan device extension VK_EXT_astc_decode_mode not found
+Optional Vulkan device extension VK_EXT_texture_compression_astc_hdr not found
+Optional Vulkan device extension VK_NV_ray_tracing_validation not found
+Optional Vulkan device extension VK_KHR_external_memory_fd not found
+Optional Vulkan device extension VK_EXT_debug_marker not found
+- Vulkan Fragment Shading Rate supported:
+  Pipeline fragment shading rate
+  Primitive fragment shading rate
+  Attachment fragment shading rate, min texel size: (16, 16), max texel size: (16, 16), max fragment size: (4, 4)
+- Vulkan Fragment Density Map not supported
+- Vulkan multiview supported:
+  max view count: 32
+  max instances: 134217727
+- Vulkan subgroup:
+  size: 32
+  min size: 32
+  max size: 32
+  stages: STAGE_VERTEX, STAGE_TESSELLATION_CONTROL, STAGE_TESSELLATION_EVALUATION, STAGE_GEOMETRY, STAGE_FRAGMENT, STAGE_COMPUTE, STAGE_RAYGEN_KHR, STAGE_ANY_HIT_KHR, STAGE_CLOSEST_HIT_KHR, STAGE_MISS_KHR, STAGE_INTERSECTION_KHR, STAGE_CALLABLE_KHR, STAGE_TASK_NV, STAGE_MESH_NV
+  supported ops: FEATURE_BASIC, FEATURE_VOTE, FEATURE_ARITHMETIC, FEATURE_BALLOT, FEATURE_SHUFFLE, FEATURE_SHUFFLE_RELATIVE, FEATURE_CLUSTERED, FEATURE_QUAD, FEATURE_PARTITIONED_NV
+  quad operations in all stages
+- Vulkan Acceleration Structure supported
+  min acceleration structure scratch offset alignment: 128
+- Vulkan Raytracing supported
+  shader group handle size: 32
+  shader group handle alignment: 32
+  shader group handle size aligned: 32
+  shader group base alignment: 64
+Vulkan 1.4.351 - Forward+ - Using Device #0: NVIDIA - NVIDIA GeForce RTX 5060 Ti
+Startup PSO cache (8.3 MiB)
+SDL: Init OK!
+Accessibility: window 0 adapter activated.
+Using "winink" pen tablet driver...
+Creating VMA small objects pool for memory type index 1
+Shader 'CanvasSdfShaderRD' (group 0) SHA256: cf39877e178c34ede4db342bbf1779a27125701d45df76cb3d07ef7c626416f2
+Loading cache for shader CanvasSdfShaderRD, variant 0
+Loading cache for shader CanvasSdfShaderRD, variant 1
+Loading cache for shader CanvasSdfShaderRD, variant 2
+Loading cache for shader CanvasSdfShaderRD, variant 3
+Loading cache for shader CanvasSdfShaderRD, variant 4
+Loading cache for shader CanvasSdfShaderRD, variant 5
+Shader 'SkeletonShaderRD' (group 0) SHA256: 96ae677d2af41a57b62fdce29c60aed1f841a9f298c7b5dc8c21c330ee4bfbd0
+Loading cache for shader SkeletonShaderRD, variant 0
+Loading cache for shader SkeletonShaderRD, variant 1
+Shader 'SortShaderRD' (group 0) SHA256: a48873e523f14e04dd6158a6a01c5a4e4feb0c7d6714a8c6246ab619a144fa67
+Loading cache for shader SortShaderRD, variant 0
+Loading cache for shader SortShaderRD, variant 1
+Loading cache for shader SortShaderRD, variant 2
+Shader 'ParticlesShaderRD' (group 0) SHA256: b6c7d969adc2c9522906fb5ed230ec231f2f6f4ef9270fc1c37bfe95bf5330bc
+Loading cache for shader ParticlesShaderRD, variant 0
+Shader 'ParticlesCopyShaderRD' (group 0) SHA256: 24d89099f97b1cf1fc7cbbc8f348e37b3ecfeff2344b41cb9355bb1701693999
+Loading cache for shader ParticlesCopyShaderRD, variant 0
+Loading cache for shader ParticlesCopyShaderRD, variant 1
+Loading cache for shader ParticlesCopyShaderRD, variant 2
+Loading cache for shader ParticlesCopyShaderRD, variant 3
+Loading cache for shader ParticlesCopyShaderRD, variant 4
+Loading cache for shader ParticlesCopyShaderRD, variant 5
+Loading cache for shader ParticlesCopyShaderRD, variant 6
+Loading cache for shader ParticlesCopyShaderRD, variant 7
+Loading cache for shader ParticlesCopyShaderRD, variant 8
+Loading cache for shader ParticlesCopyShaderRD, variant 9
+Loading cache for shader ParticlesCopyShaderRD, variant 10
+Loading cache for shader ParticlesCopyShaderRD, variant 11
+Loading cache for shader ParticlesCopyShaderRD, variant 12
+Loading cache for shader ParticlesCopyShaderRD, variant 13
+Loading cache for shader ParticlesCopyShaderRD, variant 14
+Loading cache for shader ParticlesCopyShaderRD, variant 15
+Loading cache for shader ParticlesCopyShaderRD, variant 16
+Loading cache for shader ParticlesCopyShaderRD, variant 17
+Loading cache for shader ParticlesCopyShaderRD, variant 18
+Loading cache for shader ParticlesCopyShaderRD, variant 19
+Loading cache for shader ParticlesCopyShaderRD, variant 20
+Shader 'CanvasShaderRD' (group 0) SHA256: 9bdc1125c86af67021aafde8760184618f2961034b221ad5dbe673034858b1f3
+Loading cache for shader CanvasShaderRD, variant 0
+Loading cache for shader CanvasShaderRD, variant 1
+Loading cache for shader CanvasShaderRD, variant 2
+Loading cache for shader CanvasShaderRD, variant 3
+Loading cache for shader CanvasShaderRD, variant 4
+Loading cache for shader CanvasShaderRD, variant 5
+Shader 'CanvasOcclusionShaderRD' (group 0) SHA256: c5cf7e62fd49f618cfdba96629de618a1b26be203d90def17606a90a4e91cf73
+Loading cache for shader CanvasOcclusionShaderRD, variant 0
+Loading cache for shader CanvasOcclusionShaderRD, variant 1
+Loading cache for shader CanvasOcclusionShaderRD, variant 2
+Loading cache for shader CanvasShaderRD, variant 0
+Loading cache for shader CanvasShaderRD, variant 1
+Loading cache for shader CanvasShaderRD, variant 2
+Loading cache for shader CanvasShaderRD, variant 3
+Loading cache for shader CanvasShaderRD, variant 4
+Loading cache for shader CanvasShaderRD, variant 5
+Loading cache for shader CanvasShaderRD, variant 0
+Loading cache for shader CanvasShaderRD, variant 1
+Loading cache for shader CanvasShaderRD, variant 2
+Loading cache for shader CanvasShaderRD, variant 3
+Loading cache for shader CanvasShaderRD, variant 4
+Loading cache for shader CanvasShaderRD, variant 5
+Shader 'TexBlitShaderRD' (group 0) SHA256: d6c74a83a7053c8f0db4205307d734eb7e49dad4cffc40fefc1c098a20f56c9e
+Loading cache for shader TexBlitShaderRD, variant 0
+Loading cache for shader TexBlitShaderRD, variant 1
+Loading cache for shader TexBlitShaderRD, variant 2
+Loading cache for shader TexBlitShaderRD, variant 3
+Shader 'ClusterRenderShaderRD' (group 0) SHA256: 1e2e9d959bf97d9428c9bb1d0d014213ffbef36cd795e288cb779c418d8f8370
+Loading cache for shader ClusterRenderShaderRD, variant 0
+Loading cache for shader ClusterRenderShaderRD, variant 1
+Shader 'ClusterStoreShaderRD' (group 0) SHA256: b1853594c81af4c5dfa70c4136296237d07308f5349bba4d05aaa78ab1522328
+Loading cache for shader ClusterStoreShaderRD, variant 0
+Shader 'ClusterDebugShaderRD' (group 0) SHA256: d789d0a9a9c2a2b0b6fd18239e92cf44cf6a09f2b3a70fd374d173d50a4be406
+Loading cache for shader ClusterDebugShaderRD, variant 0
+Shader 'SceneForwardClusteredShaderRD' (group 0) SHA256: c2ccf1fba03bf988835dba74b33ff9f9690ef985335908c22dcdd30d4d0def59
+Shader 'SceneForwardClusteredShaderRD' (group 1) SHA256: 3b57f606108ded8878ba68c5c59a308a1978b2ad7788fd022d00660d3b950daa
+Shader 'SceneForwardClusteredShaderRD' (group 2) SHA256: f992b32f15c3b360ad9fb2499081c03f580cd3bcd5c852dae5a18e441f4dcc90
+Shader 'SceneForwardClusteredShaderRD' (group 3) SHA256: 63029fb9eee2470d331573517cb058629ab991547b2cce9159a56a2524bf6ae4
+Loading cache for shader SceneForwardClusteredShaderRD, variant 0
+Loading cache for shader SceneForwardClusteredShaderRD, variant 1
+Loading cache for shader SceneForwardClusteredShaderRD, variant 2
+Loading cache for shader SceneForwardClusteredShaderRD, variant 3
+Loading cache for shader SceneForwardClusteredShaderRD, variant 4
+Loading cache for shader SceneForwardClusteredShaderRD, variant 5
+Loading cache for shader SceneForwardClusteredShaderRD, variant 6
+Loading cache for shader SceneForwardClusteredShaderRD, variant 7
+Loading cache for shader SceneForwardClusteredShaderRD, variant 0
+Loading cache for shader SceneForwardClusteredShaderRD, variant 1
+Loading cache for shader SceneForwardClusteredShaderRD, variant 2
+Loading cache for shader SceneForwardClusteredShaderRD, variant 3
+Loading cache for shader SceneForwardClusteredShaderRD, variant 4
+Loading cache for shader SceneForwardClusteredShaderRD, variant 5
+Loading cache for shader SceneForwardClusteredShaderRD, variant 6
+Loading cache for shader SceneForwardClusteredShaderRD, variant 7
+Loading cache for shader SceneForwardClusteredShaderRD, variant 0
+Loading cache for shader SceneForwardClusteredShaderRD, variant 1
+Loading cache for shader SceneForwardClusteredShaderRD, variant 2
+Loading cache for shader SceneForwardClusteredShaderRD, variant 3
+Loading cache for shader SceneForwardClusteredShaderRD, variant 4
+Loading cache for shader SceneForwardClusteredShaderRD, variant 5
+Loading cache for shader SceneForwardClusteredShaderRD, variant 6
+Loading cache for shader SceneForwardClusteredShaderRD, variant 7
+Shader 'BestFitNormalShaderRD' (group 0) SHA256: be7b506fb0d08c29b4041710889c21056b8092619f3689131a6dd641e054ad29
+Loading cache for shader BestFitNormalShaderRD, variant 0
+Shader 'IntegrateDfgShaderRD' (group 0) SHA256: 03e8c42f8cb7dde55d058fc79333416ad18fb6bd87bd1fb5d9a6ad14651ddaed
+Loading cache for shader IntegrateDfgShaderRD, variant 0
+Shader 'TaaResolveShaderRD' (group 0) SHA256: b72c9f24259db22023774f099c134ba5eb5e27abd84e9df475a2ab05404d0abb
+Loading cache for shader TaaResolveShaderRD, variant 0
+Shader 'Fsr2DepthClipPassShaderRD' (group 0) SHA256: 636f74877424985a3491c9f4aacd1e6a3bc5e7c47be7f5154bd8dbe63a109a6b
+Shader 'Fsr2ReconstructPreviousDepthPassShaderRD' (group 0) SHA256: 7bb138b53460583c5620036572edf3406f00775acd6cc00d6f13210abf2b576a
+Shader 'Fsr2LockPassShaderRD' (group 0) SHA256: e1f2a67ded37287c61ec8c8e1a93c5ef2f559e6cf8d3ee502740645f0ffb656e
+Shader 'Fsr2AccumulatePassShaderRD' (group 0) SHA256: 7e3388306b8b814b99d86d08901cb85411ed7874055da2a9ac7169350663fb24
+Shader 'Fsr2RcasPassShaderRD' (group 0) SHA256: 0a53240e7518f90b514d903b4572aedbe9103d60b7d67bc733918003c5971ca1
+Shader 'Fsr2ComputeLuminancePyramidPassShaderRD' (group 0) SHA256: ea30b9cf2586f5efa8adb0623d631dca2e08fcbffc511d15e430309048b62811
+Shader 'Fsr2AutogenReactivePassShaderRD' (group 0) SHA256: 15ad4238e088069ce62513ace17fccddc0a031c33651859b6182b345c260417d
+Shader 'Fsr2TcrAutogenPassShaderRD' (group 0) SHA256: 688ab227efbf4151af5ade3b8ebcdde4ec62216e405d7f11e51afb3fe8ad183f
+Shader 'SsEffectsDownsampleShaderRD' (group 0) SHA256: 97de52c4017d44cc8bc9cac07ec50ee0d950c87823a123bfe72d66c85e3b3575
+Loading cache for shader SsEffectsDownsampleShaderRD, variant 0
+Loading cache for shader SsEffectsDownsampleShaderRD, variant 1
+Loading cache for shader SsEffectsDownsampleShaderRD, variant 2
+Loading cache for shader SsEffectsDownsampleShaderRD, variant 3
+Loading cache for shader SsEffectsDownsampleShaderRD, variant 4
+Loading cache for shader SsEffectsDownsampleShaderRD, variant 5
+Loading cache for shader SsEffectsDownsampleShaderRD, variant 6
+Shader 'SsilShaderRD' (group 0) SHA256: f18f9d51995393e98ec76d65866e22e4264679600294eff5d76fb86a4d578a4d
+Loading cache for shader SsilShaderRD, variant 0
+Loading cache for shader SsilShaderRD, variant 1
+Loading cache for shader SsilShaderRD, variant 2
+Shader 'SsilImportanceMapShaderRD' (group 0) SHA256: a3a76b3fc50d25382d0ad7affa6f8aba064612da0acba818798f0d75df747359
+Loading cache for shader SsilImportanceMapShaderRD, variant 0
+Loading cache for shader SsilImportanceMapShaderRD, variant 1
+Loading cache for shader SsilImportanceMapShaderRD, variant 2
+Shader 'SsilBlurShaderRD' (group 0) SHA256: bc994cf24b385408b444f6309b8b8cc0c300e2add223d358ebac27a5cebd9b2b
+Loading cache for shader SsilBlurShaderRD, variant 0
+Loading cache for shader SsilBlurShaderRD, variant 1
+Loading cache for shader SsilBlurShaderRD, variant 2
+Shader 'SsilInterleaveShaderRD' (group 0) SHA256: 80a9244bd75179adf2d1606cc8a1f6c47b8ac606f9864a1846783007a5847725
+Loading cache for shader SsilInterleaveShaderRD, variant 0
+Loading cache for shader SsilInterleaveShaderRD, variant 1
+Loading cache for shader SsilInterleaveShaderRD, variant 2
+Shader 'SsaoShaderRD' (group 0) SHA256: dbe49ee25c27dfab06f4ceafdc245136a29423ac963551cb1ae3ac2d8a958d4b
+Loading cache for shader SsaoShaderRD, variant 0
+Loading cache for shader SsaoShaderRD, variant 1
+Loading cache for shader SsaoShaderRD, variant 2
+Shader 'SsaoImportanceMapShaderRD' (group 0) SHA256: a82018925d702b86595d2166661e310d060917d4e9ba15e44f761060c7b2de83
+Loading cache for shader SsaoImportanceMapShaderRD, variant 0
+Loading cache for shader SsaoImportanceMapShaderRD, variant 1
+Loading cache for shader SsaoImportanceMapShaderRD, variant 2
+Shader 'SsaoBlurShaderRD' (group 0) SHA256: 3ff5d62ff4747c7e9e9f6b8205a4437dc39f10b33be8fa73e629fa75fc0e0911
+Loading cache for shader SsaoBlurShaderRD, variant 0
+Loading cache for shader SsaoBlurShaderRD, variant 1
+Loading cache for shader SsaoBlurShaderRD, variant 2
+Shader 'SsaoInterleaveShaderRD' (group 0) SHA256: a9a9b2ffc2e8e2f1bd8faf3bef8e282ac615e84e8207b3a6d749db7b41115a81
+Loading cache for shader SsaoInterleaveShaderRD, variant 0
+Loading cache for shader SsaoInterleaveShaderRD, variant 1
+Loading cache for shader SsaoInterleaveShaderRD, variant 2
+Shader 'ScreenSpaceReflectionDownsampleShaderRD' (group 0) SHA256: e6325ac8b9fb9bcd737992e4214427dca872259a117a5e216101674446c7bbc7
+Loading cache for shader ScreenSpaceReflectionDownsampleShaderRD, variant 0
+Loading cache for shader ScreenSpaceReflectionDownsampleShaderRD, variant 1
+Loading cache for shader ScreenSpaceReflectionDownsampleShaderRD, variant 2
+Loading cache for shader ScreenSpaceReflectionDownsampleShaderRD, variant 3
+Shader 'ScreenSpaceReflectionHizShaderRD' (group 0) SHA256: efca221c673612faabbf11b6edf63ce1a9edff2e2832af6582fb7e1effb897fd
+Loading cache for shader ScreenSpaceReflectionHizShaderRD, variant 0
+Loading cache for shader ScreenSpaceReflectionHizShaderRD, variant 1
+Loading cache for shader ScreenSpaceReflectionHizShaderRD, variant 2
+Loading cache for shader ScreenSpaceReflectionHizShaderRD, variant 3
+Shader 'ScreenSpaceReflectionShaderRD' (group 0) SHA256: 3bd4227a42d4611084beddc1ec0cc27e071626bd471c96b27001ca3b5be9a5fd
+Loading cache for shader ScreenSpaceReflectionShaderRD, variant 0
+Shader 'ScreenSpaceReflectionFilterShaderRD' (group 0) SHA256: da59a83906e0f2e8a22548f117fe20cbea5b3be2e12acbd6b042d77f4eb1c457
+Loading cache for shader ScreenSpaceReflectionFilterShaderRD, variant 0
+Shader 'ScreenSpaceReflectionResolveShaderRD' (group 0) SHA256: 1fbb748efceb36664d4b25ed0b8b4a1e2f16fe2c8515897b284aafc846e99d5a
+Loading cache for shader ScreenSpaceReflectionResolveShaderRD, variant 0
+Shader 'SubsurfaceScatteringShaderRD' (group 0) SHA256: 67c90b70b25c773d8dba7dfab0941a884816dc2fc76ea6aab8ab19b0c93d28d4
+Loading cache for shader SubsurfaceScatteringShaderRD, variant 0
+Loading cache for shader SubsurfaceScatteringShaderRD, variant 1
+Loading cache for shader SubsurfaceScatteringShaderRD, variant 2
+Shader 'SkyShaderRD' (group 0) SHA256: 5090ce1739a75f47b8eba781fdd25da47220dbf3e500e5864faf5b69a441ea65
+Loading cache for shader SkyShaderRD, variant 0
+Loading cache for shader SkyShaderRD, variant 1
+Loading cache for shader SkyShaderRD, variant 2
+Loading cache for shader SkyShaderRD, variant 3
+Loading cache for shader SkyShaderRD, variant 4
+Loading cache for shader SkyShaderRD, variant 5
+Loading cache for shader SkyShaderRD, variant 0
+Loading cache for shader SkyShaderRD, variant 1
+Loading cache for shader SkyShaderRD, variant 2
+Loading cache for shader SkyShaderRD, variant 3
+Loading cache for shader SkyShaderRD, variant 4
+Loading cache for shader SkyShaderRD, variant 5
+Shader 'VoxelGiShaderRD' (group 0) SHA256: 6c4634e4f17397a23696bbc6304a53cc281b742527f6f1883d9548d226e90453
+Loading cache for shader VoxelGiShaderRD, variant 0
+Loading cache for shader VoxelGiShaderRD, variant 1
+Loading cache for shader VoxelGiShaderRD, variant 2
+Loading cache for shader VoxelGiShaderRD, variant 3
+Loading cache for shader VoxelGiShaderRD, variant 4
+Loading cache for shader VoxelGiShaderRD, variant 5
+Loading cache for shader VoxelGiShaderRD, variant 6
+Loading cache for shader VoxelGiShaderRD, variant 7
+Shader 'VoxelGiDebugShaderRD' (group 0) SHA256: e4f59199ebe30ae358ac4d800f8e12818a876bb4b13d27a7a08ff26dc58c4ac8
+Loading cache for shader VoxelGiDebugShaderRD, variant 0
+Loading cache for shader VoxelGiDebugShaderRD, variant 1
+Loading cache for shader VoxelGiDebugShaderRD, variant 2
+Loading cache for shader VoxelGiDebugShaderRD, variant 3
+Shader 'SdfgiPreprocessShaderRD' (group 0) SHA256: cd5f8b2fdd3632531a4f732ea1bbb7e2f7ecc333fe8b90b7f7c26d12ee02c55a
+Loading cache for shader SdfgiPreprocessShaderRD, variant 0
+Loading cache for shader SdfgiPreprocessShaderRD, variant 1
+Loading cache for shader SdfgiPreprocessShaderRD, variant 2
+Loading cache for shader SdfgiPreprocessShaderRD, variant 3
+Loading cache for shader SdfgiPreprocessShaderRD, variant 4
+Loading cache for shader SdfgiPreprocessShaderRD, variant 5
+Loading cache for shader SdfgiPreprocessShaderRD, variant 6
+Loading cache for shader SdfgiPreprocessShaderRD, variant 7
+Loading cache for shader SdfgiPreprocessShaderRD, variant 8
+Shader 'SdfgiDirectLightShaderRD' (group 0) SHA256: 0401a0195f37d9da13221e9bb1ca84b6f25642d117306f2939cf9b06d7c187e1
+Loading cache for shader SdfgiDirectLightShaderRD, variant 0
+Loading cache for shader SdfgiDirectLightShaderRD, variant 1
+Shader 'SdfgiIntegrateShaderRD' (group 0) SHA256: 38020518c3928864755a430bbea0312bdfdb8c51075dc2ace5bcddaae36070ad
+Loading cache for shader SdfgiIntegrateShaderRD, variant 0
+Loading cache for shader SdfgiIntegrateShaderRD, variant 1
+Loading cache for shader SdfgiIntegrateShaderRD, variant 2
+Loading cache for shader SdfgiIntegrateShaderRD, variant 3
+Shader 'GiShaderRD' (group 0) SHA256: d0db97061545374c4aad77fca934cb9bd70afea09ec5692aab7313678fd68fca
+Shader 'GiShaderRD' (group 1) SHA256: 7e279c117959c3fc75fc6bf369f7637e2f2ce5d12eeffb808ab9bc97af873bfc
+Loading cache for shader GiShaderRD, variant 0
+Loading cache for shader GiShaderRD, variant 1
+Loading cache for shader GiShaderRD, variant 2
+Loading cache for shader GiShaderRD, variant 3
+Loading cache for shader GiShaderRD, variant 4
+Loading cache for shader GiShaderRD, variant 0
+Loading cache for shader GiShaderRD, variant 1
+Loading cache for shader GiShaderRD, variant 2
+Loading cache for shader GiShaderRD, variant 3
+Loading cache for shader GiShaderRD, variant 4
+Shader 'SdfgiDebugShaderRD' (group 0) SHA256: 12dbfdf4517d9a7b37b4faeb432309599b5267d4cc29abaa587181dd5ddcdbc9
+Loading cache for shader SdfgiDebugShaderRD, variant 0
+Shader 'SdfgiDebugProbesShaderRD' (group 0) SHA256: 467fda70c797000ff6af05a8cb526e04218662a9be183aa2a7b46ad2f93cce77
+Loading cache for shader SdfgiDebugProbesShaderRD, variant 0
+Loading cache for shader SdfgiDebugProbesShaderRD, variant 1
+Loading cache for shader SdfgiDebugProbesShaderRD, variant 2
+Loading cache for shader SdfgiDebugProbesShaderRD, variant 3
+Shader 'VolumetricFogShaderRD' (group 0) SHA256: 1e2a055ad4b80929a577ea9e61f3c272034f521a8e1d3663211a5bf3696e28e8
+Shader 'VolumetricFogShaderRD' (group 1) SHA256: 59d8d6bad9e8029584ea03285e0d55a37dbda33a837032e499276ba2d0382d15
+Shader 'VolumetricFogShaderRD' (group 2) SHA256: 3f2d837801de79c51f543b1445b06125a26772d9cc66b7ab3294925e4c3bdfa9
+Shader 'VolumetricFogShaderRD' (group 3) SHA256: fb13248b2f1e9f68baf9d79451a7d5e06296b2ca4920c889f0cfa13da6ecf28c
+Loading cache for shader VolumetricFogShaderRD, variant 0
+Shader 'VolumetricFogProcessShaderRD' (group 0) SHA256: 88861d94108be6765a4f5a12bf3d2c020518bf6cea2d75339515d8bfcfa33cf0
+Shader 'VolumetricFogProcessShaderRD' (group 1) SHA256: 2a432b0c26391eeeb6b041b1f390a109d3963104cd63635466aa425cb951d2c3
+Shader 'VolumetricFogProcessShaderRD' (group 2) SHA256: 20617351d59bc7de5fdd02bae5348fb9c4e0c1ca2e1ca58374bed0f7833ae521
+Shader 'VolumetricFogProcessShaderRD' (group 3) SHA256: 7c889aecf88c66deff81aaa463066acbcc812aea1d2d5abed24f7d80232e0d6d
+Loading cache for shader VolumetricFogProcessShaderRD, variant 0
+Loading cache for shader VolumetricFogProcessShaderRD, variant 1
+Loading cache for shader VolumetricFogProcessShaderRD, variant 2
+Loading cache for shader VolumetricFogProcessShaderRD, variant 3
+Loading cache for shader VolumetricFogProcessShaderRD, variant 4
+Shader 'BokehDofShaderRD' (group 0) SHA256: 9eecad1b8d87d91c2928400706561caf4a8a604a0ce721538bb779a2bc51f876
+Loading cache for shader BokehDofShaderRD, variant 0
+Loading cache for shader BokehDofShaderRD, variant 1
+Loading cache for shader BokehDofShaderRD, variant 3
+Loading cache for shader BokehDofShaderRD, variant 5
+Loading cache for shader BokehDofShaderRD, variant 6
+Shader 'CopyShaderRD' (group 0) SHA256: 06416dbb331f92a2c651ac0fcedf5ba066aafc28e591c899ee8a8f8d9167a537
+Loading cache for shader CopyShaderRD, variant 0
+Loading cache for shader CopyShaderRD, variant 1
+Loading cache for shader CopyShaderRD, variant 2
+Loading cache for shader CopyShaderRD, variant 3
+Loading cache for shader CopyShaderRD, variant 4
+Loading cache for shader CopyShaderRD, variant 5
+Loading cache for shader CopyShaderRD, variant 6
+Loading cache for shader CopyShaderRD, variant 7
+Loading cache for shader CopyShaderRD, variant 8
+Loading cache for shader CopyShaderRD, variant 9
+Loading cache for shader CopyShaderRD, variant 10
+Loading cache for shader CopyShaderRD, variant 11
+Loading cache for shader CopyShaderRD, variant 12
+Shader 'CopyToFbShaderRD' (group 0) SHA256: 516ca1db49f0c89dd5ba5b5f4bb3c26316beafa783d4ea24b25e254d8fc1c428
+Loading cache for shader CopyToFbShaderRD, variant 0
+Loading cache for shader CopyToFbShaderRD, variant 1
+Loading cache for shader CopyToFbShaderRD, variant 2
+Loading cache for shader CopyToFbShaderRD, variant 3
+Shader 'CubeToDpShaderRD' (group 0) SHA256: e83b3bb7481a3ffcfdeab999671e26d0ae4d08e0fd57c3368f137e22ad78a1e9
+Loading cache for shader CubeToDpShaderRD, variant 0
+Shader 'CubeToOctmapShaderRD' (group 0) SHA256: 0a8d46601d323eeb200276345183d0f1446febb4d2b0a580f23bde0fe45e85fa
+Loading cache for shader CubeToOctmapShaderRD, variant 0
+Shader 'OctmapDownsamplerShaderRD' (group 0) SHA256: 2232c0d2bbd0444161f6eedf2e402237f04e43c0b0a4182ae60f382701c9e84e
+Loading cache for shader OctmapDownsamplerShaderRD, variant 0
+Loading cache for shader OctmapDownsamplerShaderRD, variant 1
+Shader 'OctmapFilterShaderRD' (group 0) SHA256: 69e12a24310984e7449782cf761a5e21046453235d7d53c5f7ea355f7e0b333e
+Loading cache for shader OctmapFilterShaderRD, variant 0
+Loading cache for shader OctmapFilterShaderRD, variant 1
+Loading cache for shader OctmapFilterShaderRD, variant 2
+Loading cache for shader OctmapFilterShaderRD, variant 3
+Loading cache for shader OctmapFilterShaderRD, variant 4
+Loading cache for shader OctmapFilterShaderRD, variant 5
+Loading cache for shader OctmapFilterShaderRD, variant 6
+Loading cache for shader OctmapFilterShaderRD, variant 7
+Shader 'OctmapRoughnessShaderRD' (group 0) SHA256: 8132261fb0413e611623bf6a3742240101d2f040003a5dee889bbfbb21633b8f
+Loading cache for shader OctmapRoughnessShaderRD, variant 0
+Loading cache for shader OctmapRoughnessShaderRD, variant 1
+Shader 'SpecularMergeShaderRD' (group 0) SHA256: 2ac072fb5419de33ce27c9014825f16cc6d4060426f4ba73059bc68094b6bfa8
+Loading cache for shader SpecularMergeShaderRD, variant 0
+Loading cache for shader SpecularMergeShaderRD, variant 1
+Loading cache for shader SpecularMergeShaderRD, variant 2
+Loading cache for shader SpecularMergeShaderRD, variant 3
+Shader 'ShadowFrustumShaderRD' (group 0) SHA256: ac0cd9c7a7b5adc08e5e0770aac36764b5ca298a1a412b5d5256e978ac014583
+Loading cache for shader ShadowFrustumShaderRD, variant 0
+Shader 'MotionVectorsShaderRD' (group 0) SHA256: 50b078842febfa35329120080e7954028fe9c0f19ee8582e6d69667cc29f6f8c
+Loading cache for shader MotionVectorsShaderRD, variant 0
+Shader 'LuminanceReduceShaderRD' (group 0) SHA256: 9f184666cb5c22b85364514685d89dda5bb3f1b85537ad6d60d04e41af01af01
+Loading cache for shader LuminanceReduceShaderRD, variant 0
+Loading cache for shader LuminanceReduceShaderRD, variant 1
+Loading cache for shader LuminanceReduceShaderRD, variant 2
+Shader 'SmaaEdgeDetectionShaderRD' (group 0) SHA256: 87693d8136d46b4b64459dbec139c5405b1cabacb2c3894415b131e8782efb2a
+Loading cache for shader SmaaEdgeDetectionShaderRD, variant 0
+Shader 'SmaaWeightCalculationShaderRD' (group 0) SHA256: e920add2247a504ee41de41046b3e7179eb4952232110cb2db89172c537039b8
+Loading cache for shader SmaaWeightCalculationShaderRD, variant 0
+Shader 'SmaaBlendingShaderRD' (group 0) SHA256: 28d6881ae8e064e7bb573261202e530fa9cd61edce48d444d046e61ab449ac36
+Loading cache for shader SmaaBlendingShaderRD, variant 0
+Shader 'TonemapShaderRD' (group 0) SHA256: eb9c653c5c11c28b3c78b4b6d2fb70ca4f70e114fea55281aaa38a313893ac6c
+Loading cache for shader TonemapShaderRD, variant 0
+Loading cache for shader TonemapShaderRD, variant 1
+Loading cache for shader TonemapShaderRD, variant 2
+Loading cache for shader TonemapShaderRD, variant 3
+Shader 'VrsShaderRD' (group 0) SHA256: 0ab6c7454d17aead7529b239657e8420143918f7e497a25a206e1bd0dd65ee07
+Loading cache for shader VrsShaderRD, variant 0
+Loading cache for shader VrsShaderRD, variant 2
+Loading cache for shader VrsShaderRD, variant 3
+Shader 'FsrUpscaleShaderRD' (group 0) SHA256: 9cc3728a0cf1dd7347aee49fe0cbe3009047f904f8dfbbe122c3ae35395cd1a6
+Loading cache for shader FsrUpscaleShaderRD, variant 0
+Loading cache for shader FsrUpscaleShaderRD, variant 1
+Shader 'ResolveShaderRD' (group 0) SHA256: cfd5775dd543f5734172100a77ad23587b240dead09ab7049fc1180f7b408828
+Loading cache for shader ResolveShaderRD, variant 0
+Loading cache for shader ResolveShaderRD, variant 1
+Loading cache for shader ResolveShaderRD, variant 2
+Shader 'BlitShaderRD' (group 0) SHA256: 60730ff5d181828d793048b679aedf660ec932db990c939f300e8875dc43b3cf
+WASAPI: Activated output_device using IAudioClient3 interface
+WASAPI: wFormatTag = 65534
+WASAPI: nChannels = 2
+WASAPI: nSamplesPerSec = 48000
+WASAPI: nAvgBytesPerSec = 384000
+WASAPI: nBlockAlign = 8
+WASAPI: wBitsPerSample = 32
+WASAPI: cbSize = 22
+WASAPI: mix_rate = 48000
+WASAPI: fundamental_period_frames = 480
+WASAPI: min_period_frames = 480
+WASAPI: max_period_frames = 480
+WASAPI: selected a period frame size of 480
+WASAPI: detected 2 channels
+WASAPI: audio buffer frames: 480 calculated latency: 10ms
+
+Loading cache for shader BlitShaderRD, variant 0
+Loading cache for shader BlitShaderRD, variant 1
+Loading cache for shader BlitShaderRD, variant 2
+Loading cache for shader BlitShaderRD, variant 3
+TextServer: Primary interface set to: "ICU / HarfBuzz / Graphite (Built-in)".
+Loading cache for shader CanvasShaderRD, variant 0
+Loading cache for shader CanvasShaderRD, variant 1
+Loading cache for shader CanvasShaderRD, variant 2
+Loading cache for shader CanvasShaderRD, variant 3
+Loading cache for shader CanvasShaderRD, variant 4
+Loading cache for shader CanvasShaderRD, variant 5
+CORE API HASH: 3472268009
+EDITOR API HASH: 2212757246
+SceneTreeFTI: traversal method DEFAULT
+Loading resource: res://scripts/boot.gd remapped: res://scripts/boot.gd
+Completed load for: 'res://scripts/boot.gd' remapped 'res://scripts/boot.gd' at thread -1
+MbedTLS: Some X509 certificates could not be parsed (1 certificates skipped).
+Loaded system CA certificates
+Loading resource: res://scenes/main.tscn remapped: res://scenes/main.tscn
+Loading resource: res://materials/toon.tres remapped: res://materials/toon.tres
+Loading resource: res://shaders/toon.gdshader remapped: res://shaders/toon.gdshader
+Completed load for: 'res://shaders/toon.gdshader' remapped 'res://shaders/toon.gdshader' at thread -1
+Loading resource: res://assets/palette/palette.png remapped: res://assets/palette/palette.png
+Loading resource: res://.godot/imported/palette.png-b13c181c721faee0cbeb2d01cd6465b0.ctex remapped: res://.godot/imported/palette.png-b13c181c721faee0cbeb2d01cd6465b0.ctex
+Completed load for: 'res://assets/palette/palette.png' remapped 'res://assets/palette/palette.png' at thread -1
+Loading resource: res://assets/palette/palette_emit.png remapped: res://assets/palette/palette_emit.png
+Loading resource: res://.godot/imported/palette_emit.png-2cfc60d1b85ac394cb365d0a74170310.ctex remapped: res://.godot/imported/palette_emit.png-2cfc60d1b85ac394cb365d0a74170310.ctex
+Completed load for: 'res://assets/palette/palette_emit.png' remapped 'res://assets/palette/palette_emit.png' at thread -1
+Loading cache for shader SceneForwardClusteredShaderRD, variant 0
+Loading cache for shader SceneForwardClusteredShaderRD, variant 1
+Loading cache for shader SceneForwardClusteredShaderRD, variant 2
+Loading cache for shader SceneForwardClusteredShaderRD, variant 3
+Loading cache for shader SceneForwardClusteredShaderRD, variant 4
+Loading cache for shader SceneForwardClusteredShaderRD, variant 5
+Loading cache for shader SceneForwardClusteredShaderRD, variant 6
+Loading cache for shader SceneForwardClusteredShaderRD, variant 7
+Completed load for: 'res://materials/toon.tres' remapped 'res://materials/toon.tres' at thread -1
+Loading resource: res://materials/candy.tres remapped: res://materials/candy.tres
+Loading resource: res://shaders/candy.gdshader remapped: res://shaders/candy.gdshader
+Completed load for: 'res://shaders/candy.gdshader' remapped 'res://shaders/candy.gdshader' at thread -1
+Loading cache for shader SceneForwardClusteredShaderRD, variant 0
+Loading cache for shader SceneForwardClusteredShaderRD, variant 1
+Loading cache for shader SceneForwardClusteredShaderRD, variant 2
+Loading cache for shader SceneForwardClusteredShaderRD, variant 3
+Loading cache for shader SceneForwardClusteredShaderRD, variant 4
+Loading cache for shader SceneForwardClusteredShaderRD, variant 5
+Loading cache for shader SceneForwardClusteredShaderRD, variant 6
+Loading cache for shader SceneForwardClusteredShaderRD, variant 7
+Completed load for: 'res://materials/candy.tres' remapped 'res://materials/candy.tres' at thread -1
+Loading resource: res://materials/halo.tres remapped: res://materials/halo.tres
+Loading resource: res://shaders/halo.gdshader remapped: res://shaders/halo.gdshader
+Completed load for: 'res://shaders/halo.gdshader' remapped 'res://shaders/halo.gdshader' at thread -1
+Loading cache for shader SceneForwardClusteredShaderRD, variant 0
+Loading cache for shader SceneForwardClusteredShaderRD, variant 1
+Loading cache for shader SceneForwardClusteredShaderRD, variant 2
+Loading cache for shader SceneForwardClusteredShaderRD, variant 3
+Loading cache for shader SceneForwardClusteredShaderRD, variant 4
+Loading cache for shader SceneForwardClusteredShaderRD, variant 5
+Loading cache for shader SceneForwardClusteredShaderRD, variant 6
+Loading cache for shader SceneForwardClusteredShaderRD, variant 7
+Completed load for: 'res://materials/halo.tres' remapped 'res://materials/halo.tres' at thread -1
+Loading resource: res://shaders/sky.gdshader remapped: res://shaders/sky.gdshader
+Completed load for: 'res://shaders/sky.gdshader' remapped 'res://shaders/sky.gdshader' at thread -1
+Loading resource: res://scripts/hud.gd remapped: res://scripts/hud.gd
+Completed load for: 'res://scripts/hud.gd' remapped 'res://scripts/hud.gd' at thread -1
+Loading resource: res://scripts/audio.gd remapped: res://scripts/audio.gd
+Completed load for: 'res://scripts/audio.gd' remapped 'res://scripts/audio.gd' at thread -1
+Loading cache for shader SkyShaderRD, variant 0
+Loading cache for shader SkyShaderRD, variant 1
+Loading cache for shader SkyShaderRD, variant 2
+Loading cache for shader SkyShaderRD, variant 3
+Loading cache for shader SkyShaderRD, variant 4
+Loading cache for shader SkyShaderRD, variant 5
+Completed load for: 'res://scenes/main.tscn' remapped 'res://scenes/main.tscn' at thread -1
+Loading resource: res://assets/models/sky/cloud_c.gltf remapped: res://assets/models/sky/cloud_c.gltf
+Loading resource: res://.godot/imported/cloud_c.gltf-134796a984828fea4521be1b12eb83b1.scn remapped: res://.godot/imported/cloud_c.gltf-134796a984828fea4521be1b12eb83b1.scn
+Loading cache for shader SceneForwardClusteredShaderRD, variant 0
+Loading cache for shader SceneForwardClusteredShaderRD, variant 1
+Loading cache for shader SceneForwardClusteredShaderRD, variant 2
+Loading cache for shader SceneForwardClusteredShaderRD, variant 3
+Loading cache for shader SceneForwardClusteredShaderRD, variant 4
+Loading cache for shader SceneForwardClusteredShaderRD, variant 5
+Loading cache for shader SceneForwardClusteredShaderRD, variant 6
+Loading cache for shader SceneForwardClusteredShaderRD, variant 7
+Completed load for: 'res://assets/models/sky/cloud_c.gltf' remapped 'res://assets/models/sky/cloud_c.gltf' at thread -1
+Loading resource: res://assets/models/props/parked_car.gltf remapped: res://assets/models/props/parked_car.gltf
+Loading resource: res://.godot/imported/parked_car.gltf-17e424955f958e5dee0d1109c9c07790.scn remapped: res://.godot/imported/parked_car.gltf-17e424955f958e5dee0d1109c9c07790.scn
+Completed load for: 'res://assets/models/props/parked_car.gltf' remapped 'res://assets/models/props/parked_car.gltf' at thread -1
+Loading resource: res://assets/models/props/cauldron.gltf remapped: res://assets/models/props/cauldron.gltf
+Loading resource: res://.godot/imported/cauldron.gltf-40dc67f3f23dbcb5ba0387eab31f62a0.scn remapped: res://.godot/imported/cauldron.gltf-40dc67f3f23dbcb5ba0387eab31f62a0.scn
+Completed load for: 'res://assets/models/props/cauldron.gltf' remapped 'res://assets/models/props/cauldron.gltf' at thread -1
+Loading resource: res://assets/models/sky/cloud_a.gltf remapped: res://assets/models/sky/cloud_a.gltf
+Loading resource: res://.godot/imported/cloud_a.gltf-ea138c6ef407a8cd0d811e6033ddce3c.scn remapped: res://.godot/imported/cloud_a.gltf-ea138c6ef407a8cd0d811e6033ddce3c.scn
+Completed load for: 'res://assets/models/sky/cloud_a.gltf' remapped 'res://assets/models/sky/cloud_a.gltf' at thread -1
+Loading resource: res://assets/models/props/inflatable_cat.gltf remapped: res://assets/models/props/inflatable_cat.gltf
+Loading resource: res://.godot/imported/inflatable_cat.gltf-3f1ae3135787235364b41e47f744514a.scn remapped: res://.godot/imported/inflatable_cat.gltf-3f1ae3135787235364b41e47f744514a.scn
+Completed load for: 'res://assets/models/props/inflatable_cat.gltf' remapped 'res://assets/models/props/inflatable_cat.gltf' at thread -1
+Loading resource: res://assets/models/props/inflatable_ghost.gltf remapped: res://assets/models/props/inflatable_ghost.gltf
+Loading resource: res://.godot/imported/inflatable_ghost.gltf-60ed9249744c8f6c41e539eef5168b35.scn remapped: res://.godot/imported/inflatable_ghost.gltf-60ed9249744c8f6c41e539eef5168b35.scn
+Completed load for: 'res://assets/models/props/inflatable_ghost.gltf' remapped 'res://assets/models/props/inflatable_ghost.gltf' at thread -1
+Loading resource: res://assets/models/props/bench.gltf remapped: res://assets/models/props/bench.gltf
+Loading resource: res://.godot/imported/bench.gltf-993c363acd92f38a3455a2cac50c92da.scn remapped: res://.godot/imported/bench.gltf-993c363acd92f38a3455a2cac50c92da.scn
+Completed load for: 'res://assets/models/props/bench.gltf' remapped 'res://assets/models/props/bench.gltf' at thread -1
+Loading resource: res://assets/models/sky/cloud_b.gltf remapped: res://assets/models/sky/cloud_b.gltf
+Loading resource: res://.godot/imported/cloud_b.gltf-0979e1fff84a728c429d85d4805260ca.scn remapped: res://.godot/imported/cloud_b.gltf-0979e1fff84a728c429d85d4805260ca.scn
+Completed load for: 'res://assets/models/sky/cloud_b.gltf' remapped 'res://assets/models/sky/cloud_b.gltf' at thread -1
+Loading resource: res://assets/models/props/rocking_chair.gltf remapped: res://assets/models/props/rocking_chair.gltf
+Loading resource: res://.godot/imported/rocking_chair.gltf-64106b62139e9d7311a5f53fe325fe68.scn remapped: res://.godot/imported/rocking_chair.gltf-64106b62139e9d7311a5f53fe325fe68.scn
+Completed load for: 'res://assets/models/props/rocking_chair.gltf' remapped 'res://assets/models/props/rocking_chair.gltf' at thread -1
+Loading resource: res://assets/models/props/porch_lantern.gltf remapped: res://assets/models/props/porch_lantern.gltf
+Loading resource: res://.godot/imported/porch_lantern.gltf-390dc28b78bd98b65d32f68623912b18.scn remapped: res://.godot/imported/porch_lantern.gltf-390dc28b78bd98b65d32f68623912b18.scn
+Completed load for: 'res://assets/models/props/porch_lantern.gltf' remapped 'res://assets/models/props/porch_lantern.gltf' at thread -1
+Loading resource: res://assets/models/props/mailbox.gltf remapped: res://assets/models/props/mailbox.gltf
+Loading resource: res://.godot/imported/mailbox.gltf-6545d083dda67eaccb1fb5639d623ff9.scn remapped: res://.godot/imported/mailbox.gltf-6545d083dda67eaccb1fb5639d623ff9.scn
+Completed load for: 'res://assets/models/props/mailbox.gltf' remapped 'res://assets/models/props/mailbox.gltf' at thread -1
+Loading resource: res://assets/models/props/flower_pot.gltf remapped: res://assets/models/props/flower_pot.gltf
+Loading resource: res://.godot/imported/flower_pot.gltf-e230a971e24782d70aa397d1ee57c87b.scn remapped: res://.godot/imported/flower_pot.gltf-e230a971e24782d70aa397d1ee57c87b.scn
+Completed load for: 'res://assets/models/props/flower_pot.gltf' remapped 'res://assets/models/props/flower_pot.gltf' at thread -1
+Loading resource: res://assets/models/props/bush_round.gltf remapped: res://assets/models/props/bush_round.gltf
+Loading resource: res://.godot/imported/bush_round.gltf-0ef426c5ea1c6496067478a935600ce5.scn remapped: res://.godot/imported/bush_round.gltf-0ef426c5ea1c6496067478a935600ce5.scn
+Completed load for: 'res://assets/models/props/bush_round.gltf' remapped 'res://assets/models/props/bush_round.gltf' at thread -1
+Loading resource: res://assets/models/props/tree_maple_gold.gltf remapped: res://assets/models/props/tree_maple_gold.gltf
+Loading resource: res://.godot/imported/tree_maple_gold.gltf-b03f1462fc5e5df764227e50805dbecd.scn remapped: res://.godot/imported/tree_maple_gold.gltf-b03f1462fc5e5df764227e50805dbecd.scn
+Completed load for: 'res://assets/models/props/tree_maple_gold.gltf' remapped 'res://assets/models/props/tree_maple_gold.gltf' at thread -1
+Loading resource: res://assets/models/props/tree_maple_orange.gltf remapped: res://assets/models/props/tree_maple_orange.gltf
+Loading resource: res://.godot/imported/tree_maple_orange.gltf-e1802149d1622a04bc4a3c67ce01f6b9.scn remapped: res://.godot/imported/tree_maple_orange.gltf-e1802149d1622a04bc4a3c67ce01f6b9.scn
+Completed load for: 'res://assets/models/props/tree_maple_orange.gltf' remapped 'res://assets/models/props/tree_maple_orange.gltf' at thread -1
+Loading resource: res://assets/models/props/jackolantern_happy.gltf remapped: res://assets/models/props/jackolantern_happy.gltf
+Loading resource: res://.godot/imported/jackolantern_happy.gltf-c7605b6f0c076edc0e8f5d367e0ff325.scn remapped: res://.godot/imported/jackolantern_happy.gltf-c7605b6f0c076edc0e8f5d367e0ff325.scn
+Completed load for: 'res://assets/models/props/jackolantern_happy.gltf' remapped 'res://assets/models/props/jackolantern_happy.gltf' at thread -1
+Loading resource: res://assets/models/props/pumpkin_small.gltf remapped: res://assets/models/props/pumpkin_small.gltf
+Loading resource: res://.godot/imported/pumpkin_small.gltf-e42d9347134f73f4afcf3d0771e2e400.scn remapped: res://.godot/imported/pumpkin_small.gltf-e42d9347134f73f4afcf3d0771e2e400.scn
+Completed load for: 'res://assets/models/props/pumpkin_small.gltf' remapped 'res://assets/models/props/pumpkin_small.gltf' at thread -1
+Loading resource: res://assets/models/candy/candy_chocolate_bar.gltf remapped: res://assets/models/candy/candy_chocolate_bar.gltf
+Loading resource: res://.godot/imported/candy_chocolate_bar.gltf-99f26a153bb0b89f2eca91ad34822b19.scn remapped: res://.godot/imported/candy_chocolate_bar.gltf-99f26a153bb0b89f2eca91ad34822b19.scn
+Completed load for: 'res://assets/models/candy/candy_chocolate_bar.gltf' remapped 'res://assets/models/candy/candy_chocolate_bar.gltf' at thread -1
+Loading resource: res://assets/models/props/pumpkin_round.gltf remapped: res://assets/models/props/pumpkin_round.gltf
+Loading resource: res://.godot/imported/pumpkin_round.gltf-15534760d457ee3540825ef20a50ff03.scn remapped: res://.godot/imported/pumpkin_round.gltf-15534760d457ee3540825ef20a50ff03.scn
+Completed load for: 'res://assets/models/props/pumpkin_round.gltf' remapped 'res://assets/models/props/pumpkin_round.gltf' at thread -1
+Loading resource: res://assets/models/props/lamp_post.gltf remapped: res://assets/models/props/lamp_post.gltf
+Loading resource: res://.godot/imported/lamp_post.gltf-43e9c120d2144d6252a2522cad852c03.scn remapped: res://.godot/imported/lamp_post.gltf-43e9c120d2144d6252a2522cad852c03.scn
+Completed load for: 'res://assets/models/props/lamp_post.gltf' remapped 'res://assets/models/props/lamp_post.gltf' at thread -1
+Loading resource: res://assets/models/props/pumpkin_tall.gltf remapped: res://assets/models/props/pumpkin_tall.gltf
+Loading resource: res://.godot/imported/pumpkin_tall.gltf-2930c93a84567bc7aae1086158141b87.scn remapped: res://.godot/imported/pumpkin_tall.gltf-2930c93a84567bc7aae1086158141b87.scn
+Completed load for: 'res://assets/models/props/pumpkin_tall.gltf' remapped 'res://assets/models/props/pumpkin_tall.gltf' at thread -1
+Loading resource: res://assets/models/props/jackolantern_surprised.gltf remapped: res://assets/models/props/jackolantern_surprised.gltf
+Loading resource: res://.godot/imported/jackolantern_surprised.gltf-82459d508cb01f53eba1ef27d9af26ae.scn remapped: res://.godot/imported/jackolantern_surprised.gltf-82459d508cb01f53eba1ef27d9af26ae.scn
+Completed load for: 'res://assets/models/props/jackolantern_surprised.gltf' remapped 'res://assets/models/props/jackolantern_surprised.gltf' at thread -1
+Loading resource: res://assets/models/candy/candy_wrapped_lemon.gltf remapped: res://assets/models/candy/candy_wrapped_lemon.gltf
+Loading resource: res://.godot/imported/candy_wrapped_lemon.gltf-10e254a88e71c4e60e814f0f792ad38c.scn remapped: res://.godot/imported/candy_wrapped_lemon.gltf-10e254a88e71c4e60e814f0f792ad38c.scn
+Completed load for: 'res://assets/models/candy/candy_wrapped_lemon.gltf' remapped 'res://assets/models/candy/candy_wrapped_lemon.gltf' at thread -1
+Loading resource: res://assets/models/candy/candy_wrapped_grape.gltf remapped: res://assets/models/candy/candy_wrapped_grape.gltf
+Loading resource: res://.godot/imported/candy_wrapped_grape.gltf-40c58745cbd503e9df32e32fdc311186.scn remapped: res://.godot/imported/candy_wrapped_grape.gltf-40c58745cbd503e9df32e32fdc311186.scn
+Completed load for: 'res://assets/models/candy/candy_wrapped_grape.gltf' remapped 'res://assets/models/candy/candy_wrapped_grape.gltf' at thread -1
+Loading resource: res://assets/models/candy/candy_wrapped_mint.gltf remapped: res://assets/models/candy/candy_wrapped_mint.gltf
+Loading resource: res://.godot/imported/candy_wrapped_mint.gltf-3a5c51760e5c0c741dbab3872b22508c.scn remapped: res://.godot/imported/candy_wrapped_mint.gltf-3a5c51760e5c0c741dbab3872b22508c.scn
+Completed load for: 'res://assets/models/candy/candy_wrapped_mint.gltf' remapped 'res://assets/models/candy/candy_wrapped_mint.gltf' at thread -1
+Loading resource: res://assets/models/props/scarecrow.gltf remapped: res://assets/models/props/scarecrow.gltf
+Loading resource: res://.godot/imported/scarecrow.gltf-4ab7fcb7fb674127222a9e3c1f7bfc6e.scn remapped: res://.godot/imported/scarecrow.gltf-4ab7fcb7fb674127222a9e3c1f7bfc6e.scn
+Completed load for: 'res://assets/models/props/scarecrow.gltf' remapped 'res://assets/models/props/scarecrow.gltf' at thread -1
+Loading resource: res://assets/models/sky/bat.gltf remapped: res://assets/models/sky/bat.gltf
+Loading resource: res://.godot/imported/bat.gltf-47a6bd50be83874616314db0bd212d50.scn remapped: res://.godot/imported/bat.gltf-47a6bd50be83874616314db0bd212d50.scn
+Completed load for: 'res://assets/models/sky/bat.gltf' remapped 'res://assets/models/sky/bat.gltf' at thread -1
+Loading resource: res://assets/models/props/gourd_cluster.gltf remapped: res://assets/models/props/gourd_cluster.gltf
+Loading resource: res://.godot/imported/gourd_cluster.gltf-a8a17a32697d616d94e3be4ba87d8e0c.scn remapped: res://.godot/imported/gourd_cluster.gltf-a8a17a32697d616d94e3be4ba87d8e0c.scn
+Completed load for: 'res://assets/models/props/gourd_cluster.gltf' remapped 'res://assets/models/props/gourd_cluster.gltf' at thread -1
+Loading resource: res://assets/models/characters/dragon_kid.gltf remapped: res://assets/models/characters/dragon_kid.gltf
+Loading resource: res://.godot/imported/dragon_kid.gltf-2e4f9bec41e69686881f696f16689ba5.scn remapped: res://.godot/imported/dragon_kid.gltf-2e4f9bec41e69686881f696f16689ba5.scn
+Completed load for: 'res://assets/models/characters/dragon_kid.gltf' remapped 'res://assets/models/characters/dragon_kid.gltf' at thread -1
+Loading resource: res://assets/models/candy/candy_wrapped_pink.gltf remapped: res://assets/models/candy/candy_wrapped_pink.gltf
+Loading resource: res://.godot/imported/candy_wrapped_pink.gltf-9e3b4f6aeec1edbf7557519a93777877.scn remapped: res://.godot/imported/candy_wrapped_pink.gltf-9e3b4f6aeec1edbf7557519a93777877.scn
+Completed load for: 'res://assets/models/candy/candy_wrapped_pink.gltf' remapped 'res://assets/models/candy/candy_wrapped_pink.gltf' at thread -1
+Loading resource: res://assets/models/props/hay_wagon.gltf remapped: res://assets/models/props/hay_wagon.gltf
+Loading resource: res://.godot/imported/hay_wagon.gltf-7fc37a49e994deac75d0f3ea4f9d59fa.scn remapped: res://.godot/imported/hay_wagon.gltf-7fc37a49e994deac75d0f3ea4f9d59fa.scn
+Completed load for: 'res://assets/models/props/hay_wagon.gltf' remapped 'res://assets/models/props/hay_wagon.gltf' at thread -1
+Loading resource: res://assets/models/props/jackolantern_wink.gltf remapped: res://assets/models/props/jackolantern_wink.gltf
+Loading resource: res://.godot/imported/jackolantern_wink.gltf-98e565105122e75e1d76b227dac60be3.scn remapped: res://.godot/imported/jackolantern_wink.gltf-98e565105122e75e1d76b227dac60be3.scn
+Completed load for: 'res://assets/models/props/jackolantern_wink.gltf' remapped 'res://assets/models/props/jackolantern_wink.gltf' at thread -1
+Loading resource: res://assets/models/props/swing_set.gltf remapped: res://assets/models/props/swing_set.gltf
+Loading resource: res://.godot/imported/swing_set.gltf-3b975a25807b84333d521938a126ac28.scn remapped: res://.godot/imported/swing_set.gltf-3b975a25807b84333d521938a126ac28.scn
+Completed load for: 'res://assets/models/props/swing_set.gltf' remapped 'res://assets/models/props/swing_set.gltf' at thread -1
+Loading resource: res://assets/models/candy/candy_lollipop.gltf remapped: res://assets/models/candy/candy_lollipop.gltf
+Loading resource: res://.godot/imported/candy_lollipop.gltf-45440ffd1aa114c83331f98f133abdd2.scn remapped: res://.godot/imported/candy_lollipop.gltf-45440ffd1aa114c83331f98f133abdd2.scn
+Completed load for: 'res://assets/models/candy/candy_lollipop.gltf' remapped 'res://assets/models/candy/candy_lollipop.gltf' at thread -1
+Loading resource: res://assets/models/props/vine_patch.gltf remapped: res://assets/models/props/vine_patch.gltf
+Loading resource: res://.godot/imported/vine_patch.gltf-fa71e8bffdf56315ddd1dea8f281207b.scn remapped: res://.godot/imported/vine_patch.gltf-fa71e8bffdf56315ddd1dea8f281207b.scn
+Completed load for: 'res://assets/models/props/vine_patch.gltf' remapped 'res://assets/models/props/vine_patch.gltf' at thread -1
+Loading resource: res://assets/models/props/jackolantern_toothy.gltf remapped: res://assets/models/props/jackolantern_toothy.gltf
+Loading resource: res://.godot/imported/jackolantern_toothy.gltf-92d59cb4685400c10f0b5ee5973076e9.scn remapped: res://.godot/imported/jackolantern_toothy.gltf-92d59cb4685400c10f0b5ee5973076e9.scn
+Completed load for: 'res://assets/models/props/jackolantern_toothy.gltf' remapped 'res://assets/models/props/jackolantern_toothy.gltf' at thread -1
+Loading resource: res://assets/models/props/tree_maple_red.gltf remapped: res://assets/models/props/tree_maple_red.gltf
+Loading resource: res://.godot/imported/tree_maple_red.gltf-ff5cd216e50857474a76a5b20d101b20.scn remapped: res://.godot/imported/tree_maple_red.gltf-ff5cd216e50857474a76a5b20d101b20.scn
+Completed load for: 'res://assets/models/props/tree_maple_red.gltf' remapped 'res://assets/models/props/tree_maple_red.gltf' at thread -1
+Loading resource: res://assets/models/props/jackolantern_sleepy.gltf remapped: res://assets/models/props/jackolantern_sleepy.gltf
+Loading resource: res://.godot/imported/jackolantern_sleepy.gltf-e5897039b9941d7c45a7459ea37d2ed3.scn remapped: res://.godot/imported/jackolantern_sleepy.gltf-e5897039b9941d7c45a7459ea37d2ed3.scn
+Completed load for: 'res://assets/models/props/jackolantern_sleepy.gltf' remapped 'res://assets/models/props/jackolantern_sleepy.gltf' at thread -1
+Loading resource: res://assets/models/props/giant_pumpkin.gltf remapped: res://assets/models/props/giant_pumpkin.gltf
+Loading resource: res://.godot/imported/giant_pumpkin.gltf-519cc052546a738d4284398b0eb37287.scn remapped: res://.godot/imported/giant_pumpkin.gltf-519cc052546a738d4284398b0eb37287.scn
+Completed load for: 'res://assets/models/props/giant_pumpkin.gltf' remapped 'res://assets/models/props/giant_pumpkin.gltf' at thread -1
+Loading resource: res://assets/models/props/paper_lantern.gltf remapped: res://assets/models/props/paper_lantern.gltf
+Loading resource: res://.godot/imported/paper_lantern.gltf-0dac84b0708aded28573d3cf3779edcc.scn remapped: res://.godot/imported/paper_lantern.gltf-0dac84b0708aded28573d3cf3779edcc.scn
+Completed load for: 'res://assets/models/props/paper_lantern.gltf' remapped 'res://assets/models/props/paper_lantern.gltf' at thread -1
+Loading resource: res://assets/models/props/hay_bale_round.gltf remapped: res://assets/models/props/hay_bale_round.gltf
+Loading resource: res://.godot/imported/hay_bale_round.gltf-c11dc16b9419dcb2fd4197d624681850.scn remapped: res://.godot/imported/hay_bale_round.gltf-c11dc16b9419dcb2fd4197d624681850.scn
+Completed load for: 'res://assets/models/props/hay_bale_round.gltf' remapped 'res://assets/models/props/hay_bale_round.gltf' at thread -1
+Loading resource: res://assets/models/props/corn_stalks.gltf remapped: res://assets/models/props/corn_stalks.gltf
+Loading resource: res://.godot/imported/corn_stalks.gltf-7d51e04c31d57e4900780c8f5719d386.scn remapped: res://.godot/imported/corn_stalks.gltf-7d51e04c31d57e4900780c8f5719d386.scn
+Completed load for: 'res://assets/models/props/corn_stalks.gltf' remapped 'res://assets/models/props/corn_stalks.gltf' at thread -1
+Loading resource: res://assets/models/props/hay_bale.gltf remapped: res://assets/models/props/hay_bale.gltf
+Loading resource: res://.godot/imported/hay_bale.gltf-8489ff9cb73c787df1f80b77d89f8f43.scn remapped: res://.godot/imported/hay_bale.gltf-8489ff9cb73c787df1f80b77d89f8f43.scn
+Completed load for: 'res://assets/models/props/hay_bale.gltf' remapped 'res://assets/models/props/hay_bale.gltf' at thread -1
+Loading resource: res://assets/models/props/wheelbarrow.gltf remapped: res://assets/models/props/wheelbarrow.gltf
+Loading resource: res://.godot/imported/wheelbarrow.gltf-532cb7e161e2cfdfa3ef732af73eae5e.scn remapped: res://.godot/imported/wheelbarrow.gltf-532cb7e161e2cfdfa3ef732af73eae5e.scn
+Completed load for: 'res://assets/models/props/wheelbarrow.gltf' remapped 'res://assets/models/props/wheelbarrow.gltf' at thread -1
+Loading resource: res://assets/models/props/sunflower.gltf remapped: res://assets/models/props/sunflower.gltf
+Loading resource: res://.godot/imported/sunflower.gltf-239bf2b3a037b0f268f60288e3a49393.scn remapped: res://.godot/imported/sunflower.gltf-239bf2b3a037b0f268f60288e3a49393.scn
+Completed load for: 'res://assets/models/props/sunflower.gltf' remapped 'res://assets/models/props/sunflower.gltf' at thread -1
+Loading resource: res://assets/models/props/string_bulb.gltf remapped: res://assets/models/props/string_bulb.gltf
+Loading resource: res://.godot/imported/string_bulb.gltf-7741aba6f7f52f276ed2a05ef8afd89c.scn remapped: res://.godot/imported/string_bulb.gltf-7741aba6f7f52f276ed2a05ef8afd89c.scn
+Completed load for: 'res://assets/models/props/string_bulb.gltf' remapped 'res://assets/models/props/string_bulb.gltf' at thread -1
+Loading resource: res://assets/models/props/crate.gltf remapped: res://assets/models/props/crate.gltf
+Loading resource: res://.godot/imported/crate.gltf-384027dd126cd7714bb5687faf5a3b71.scn remapped: res://.godot/imported/crate.gltf-384027dd126cd7714bb5687faf5a3b71.scn
+Completed load for: 'res://assets/models/props/crate.gltf' remapped 'res://assets/models/props/crate.gltf' at thread -1
+Loading resource: res://assets/models/props/barrel.gltf remapped: res://assets/models/props/barrel.gltf
+Loading resource: res://.godot/imported/barrel.gltf-ba339d21b173cc41f80ff436e12c46cd.scn remapped: res://.godot/imported/barrel.gltf-ba339d21b173cc41f80ff436e12c46cd.scn
+Completed load for: 'res://assets/models/props/barrel.gltf' remapped 'res://assets/models/props/barrel.gltf' at thread -1
+Loading resource: res://assets/models/candy/candy_golden_bar.gltf remapped: res://assets/models/candy/candy_golden_bar.gltf
+Loading resource: res://.godot/imported/candy_golden_bar.gltf-d064876ab1719ed5f26b2319e0a58ce9.scn remapped: res://.godot/imported/candy_golden_bar.gltf-d064876ab1719ed5f26b2319e0a58ce9.scn
+Completed load for: 'res://assets/models/candy/candy_golden_bar.gltf' remapped 'res://assets/models/candy/candy_golden_bar.gltf' at thread -1
+Loading resource: res://assets/models/props/leaf_pile.gltf remapped: res://assets/models/props/leaf_pile.gltf
+Loading resource: res://.godot/imported/leaf_pile.gltf-144456fa9409ac9291d9327d3335ddd9.scn remapped: res://.godot/imported/leaf_pile.gltf-144456fa9409ac9291d9327d3335ddd9.scn
+Completed load for: 'res://assets/models/props/leaf_pile.gltf' remapped 'res://assets/models/props/leaf_pile.gltf' at thread -1
+Loading cache for shader SceneForwardClusteredShaderRD, variant 0
+Loading cache for shader SceneForwardClusteredShaderRD, variant 1
+Loading cache for shader SceneForwardClusteredShaderRD, variant 2
+Loading cache for shader SceneForwardClusteredShaderRD, variant 3
+Loading cache for shader SceneForwardClusteredShaderRD, variant 4
+Loading cache for shader SceneForwardClusteredShaderRD, variant 5
+Loading cache for shader SceneForwardClusteredShaderRD, variant 6
+Loading cache for shader SceneForwardClusteredShaderRD, variant 7
+Trick or Treat: night seed 103 stats { "seed": 103, "lots": 11, "props": 244, "candy": 559, "candy_raised": 33, "candy_dropped": 5, "platforms": 185, "reachable_platforms": 171, "lights": 21, "openness_failures": 0, "assets_published": 50, "plan_ms": 49.332, "build_ms": 20.994, "notes": [], "households": ["0: Stargazers (2 storey)", "1: Spooky-cute superfans - Inflatable Wonderland (2 storey, garage)", "2: Pumpkin fanatics (1 storey)", "3: Young family - Tree House yard (1 storey)", "4: Cozy grandparents (2 storey)", "5: Crafty artists (1 storey)", "6: Sporty family (2 storey)", "7: Minimalists (1 storey)", "8: Green thumbs - Sunflower house (2 storey)", "9: Bakers (1 storey, garage)", "10: Tinkerers (1 storey)"] }
+MultiUmaBuffer 'RENDER_LIST_OPAQUE' used a total of 0 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+MultiUmaBuffer 'RENDER_LIST_ALPHA' used a total of 0 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+MultiUmaBuffer 'RENDER_LIST_SECONDARY' used a total of 0 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+CAPTURED S:\Repos\trick-or-treat\art\review\captures\leak.png
+XR: Clearing primary interface
+XR: Removed interface "Native mobile"
+XR: Removed interface "OpenXR"
+Freeing Default Tex_Blit Shader
+MultiUmaBuffer 'RENDER_LIST_OPAQUE' used a total of 1 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+MultiUmaBuffer 'RENDER_LIST_MOTION' used a total of 0 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+MultiUmaBuffer 'RENDER_LIST_ALPHA' used a total of 1 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+MultiUmaBuffer 'RENDER_LIST_SECONDARY' used a total of 1 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+MultiUmaBuffer 'CANVAS_INSTANCE_DATA' used a total of 1 buffers. A large number may indicate a waste of VRAM and can be brought down by tweaking MAX_EXTRA_BUFFERS for this buffer.
+Accessibility: window 0 adapter destroyed.

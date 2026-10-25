@@ -1,0 +1,1010 @@
+{
+ "trim_white": {
+  "col": 0,
+  "row": 0,
+  "u": 0.03125,
+  "v": 0.03125,
+  "glow": false
+ },
+ "cream": {
+  "col": 1,
+  "row": 0,
+  "u": 0.09375,
+  "v": 0.03125,
+  "glow": false
+ },
+ "bone": {
+  "col": 2,
+  "row": 0,
+  "u": 0.15625,
+  "v": 0.03125,
+  "glow": false
+ },
+ "stone_light": {
+  "col": 3,
+  "row": 0,
+  "u": 0.21875,
+  "v": 0.03125,
+  "glow": false
+ },
+ "stone": {
+  "col": 4,
+  "row": 0,
+  "u": 0.28125,
+  "v": 0.03125,
+  "glow": false
+ },
+ "stone_dark": {
+  "col": 5,
+  "row": 0,
+  "u": 0.34375,
+  "v": 0.03125,
+  "glow": false
+ },
+ "asphalt": {
+  "col": 6,
+  "row": 0,
+  "u": 0.40625,
+  "v": 0.03125,
+  "glow": false
+ },
+ "road_line": {
+  "col": 7,
+  "row": 0,
+  "u": 0.46875,
+  "v": 0.03125,
+  "glow": false
+ },
+ "sidewalk": {
+  "col": 8,
+  "row": 0,
+  "u": 0.53125,
+  "v": 0.03125,
+  "glow": false
+ },
+ "charcoal": {
+  "col": 9,
+  "row": 0,
+  "u": 0.59375,
+  "v": 0.03125,
+  "glow": false
+ },
+ "ink": {
+  "col": 10,
+  "row": 0,
+  "u": 0.65625,
+  "v": 0.03125,
+  "glow": false
+ },
+ "shadow_navy": {
+  "col": 11,
+  "row": 0,
+  "u": 0.71875,
+  "v": 0.03125,
+  "glow": false
+ },
+ "silver": {
+  "col": 12,
+  "row": 0,
+  "u": 0.78125,
+  "v": 0.03125,
+  "glow": false
+ },
+ "iron": {
+  "col": 13,
+  "row": 0,
+  "u": 0.84375,
+  "v": 0.03125,
+  "glow": false
+ },
+ "wood_dark": {
+  "col": 14,
+  "row": 0,
+  "u": 0.90625,
+  "v": 0.03125,
+  "glow": false
+ },
+ "wood": {
+  "col": 15,
+  "row": 0,
+  "u": 0.96875,
+  "v": 0.03125,
+  "glow": false
+ },
+ "wood_light": {
+  "col": 0,
+  "row": 1,
+  "u": 0.03125,
+  "v": 0.09375,
+  "glow": false
+ },
+ "plank": {
+  "col": 1,
+  "row": 1,
+  "u": 0.09375,
+  "v": 0.09375,
+  "glow": false
+ },
+ "bark": {
+  "col": 2,
+  "row": 1,
+  "u": 0.15625,
+  "v": 0.09375,
+  "glow": false
+ },
+ "bark_dark": {
+  "col": 3,
+  "row": 1,
+  "u": 0.21875,
+  "v": 0.09375,
+  "glow": false
+ },
+ "straw": {
+  "col": 4,
+  "row": 1,
+  "u": 0.28125,
+  "v": 0.09375,
+  "glow": false
+ },
+ "straw_dark": {
+  "col": 5,
+  "row": 1,
+  "u": 0.34375,
+  "v": 0.09375,
+  "glow": false
+ },
+ "hay": {
+  "col": 6,
+  "row": 1,
+  "u": 0.40625,
+  "v": 0.09375,
+  "glow": false
+ },
+ "rope": {
+  "col": 7,
+  "row": 1,
+  "u": 0.46875,
+  "v": 0.09375,
+  "glow": false
+ },
+ "wicker": {
+  "col": 8,
+  "row": 1,
+  "u": 0.53125,
+  "v": 0.09375,
+  "glow": false
+ },
+ "cardboard": {
+  "col": 9,
+  "row": 1,
+  "u": 0.59375,
+  "v": 0.09375,
+  "glow": false
+ },
+ "brick": {
+  "col": 10,
+  "row": 1,
+  "u": 0.65625,
+  "v": 0.09375,
+  "glow": false
+ },
+ "brick_dark": {
+  "col": 11,
+  "row": 1,
+  "u": 0.71875,
+  "v": 0.09375,
+  "glow": false
+ },
+ "terracotta": {
+  "col": 12,
+  "row": 1,
+  "u": 0.78125,
+  "v": 0.09375,
+  "glow": false
+ },
+ "clay": {
+  "col": 13,
+  "row": 1,
+  "u": 0.84375,
+  "v": 0.09375,
+  "glow": false
+ },
+ "leather": {
+  "col": 14,
+  "row": 1,
+  "u": 0.90625,
+  "v": 0.09375,
+  "glow": false
+ },
+ "rust": {
+  "col": 15,
+  "row": 1,
+  "u": 0.96875,
+  "v": 0.09375,
+  "glow": false
+ },
+ "pumpkin": {
+  "col": 0,
+  "row": 2,
+  "u": 0.03125,
+  "v": 0.15625,
+  "glow": false
+ },
+ "pumpkin_dark": {
+  "col": 1,
+  "row": 2,
+  "u": 0.09375,
+  "v": 0.15625,
+  "glow": false
+ },
+ "pumpkin_light": {
+  "col": 2,
+  "row": 2,
+  "u": 0.15625,
+  "v": 0.15625,
+  "glow": false
+ },
+ "amber": {
+  "col": 3,
+  "row": 2,
+  "u": 0.21875,
+  "v": 0.15625,
+  "glow": false
+ },
+ "burnt_amber": {
+  "col": 4,
+  "row": 2,
+  "u": 0.28125,
+  "v": 0.15625,
+  "glow": false
+ },
+ "candy_corn_yellow": {
+  "col": 5,
+  "row": 2,
+  "u": 0.34375,
+  "v": 0.15625,
+  "glow": false
+ },
+ "candy_corn_white": {
+  "col": 6,
+  "row": 2,
+  "u": 0.40625,
+  "v": 0.15625,
+  "glow": false
+ },
+ "gourd_green": {
+  "col": 7,
+  "row": 2,
+  "u": 0.46875,
+  "v": 0.15625,
+  "glow": false
+ },
+ "gourd_yellow": {
+  "col": 8,
+  "row": 2,
+  "u": 0.53125,
+  "v": 0.15625,
+  "glow": false
+ },
+ "gourd_white": {
+  "col": 9,
+  "row": 2,
+  "u": 0.59375,
+  "v": 0.15625,
+  "glow": false
+ },
+ "stem_green": {
+  "col": 10,
+  "row": 2,
+  "u": 0.65625,
+  "v": 0.15625,
+  "glow": false
+ },
+ "stem_brown": {
+  "col": 11,
+  "row": 2,
+  "u": 0.71875,
+  "v": 0.15625,
+  "glow": false
+ },
+ "apple_red": {
+  "col": 12,
+  "row": 2,
+  "u": 0.78125,
+  "v": 0.15625,
+  "glow": false
+ },
+ "apple_green": {
+  "col": 13,
+  "row": 2,
+  "u": 0.84375,
+  "v": 0.15625,
+  "glow": false
+ },
+ "caramel": {
+  "col": 14,
+  "row": 2,
+  "u": 0.90625,
+  "v": 0.15625,
+  "glow": false
+ },
+ "cinnamon": {
+  "col": 15,
+  "row": 2,
+  "u": 0.96875,
+  "v": 0.15625,
+  "glow": false
+ },
+ "maple_red": {
+  "col": 0,
+  "row": 3,
+  "u": 0.03125,
+  "v": 0.21875,
+  "glow": false
+ },
+ "maple_orange": {
+  "col": 1,
+  "row": 3,
+  "u": 0.09375,
+  "v": 0.21875,
+  "glow": false
+ },
+ "golden_leaf": {
+  "col": 2,
+  "row": 3,
+  "u": 0.15625,
+  "v": 0.21875,
+  "glow": false
+ },
+ "rust_leaf": {
+  "col": 3,
+  "row": 3,
+  "u": 0.21875,
+  "v": 0.21875,
+  "glow": false
+ },
+ "olive": {
+  "col": 4,
+  "row": 3,
+  "u": 0.28125,
+  "v": 0.21875,
+  "glow": false
+ },
+ "moss": {
+  "col": 5,
+  "row": 3,
+  "u": 0.34375,
+  "v": 0.21875,
+  "glow": false
+ },
+ "lawn": {
+  "col": 6,
+  "row": 3,
+  "u": 0.40625,
+  "v": 0.21875,
+  "glow": false
+ },
+ "lawn_dark": {
+  "col": 7,
+  "row": 3,
+  "u": 0.46875,
+  "v": 0.21875,
+  "glow": false
+ },
+ "hedge": {
+  "col": 8,
+  "row": 3,
+  "u": 0.53125,
+  "v": 0.21875,
+  "glow": false
+ },
+ "hedge_dark": {
+  "col": 9,
+  "row": 3,
+  "u": 0.59375,
+  "v": 0.21875,
+  "glow": false
+ },
+ "pine": {
+  "col": 10,
+  "row": 3,
+  "u": 0.65625,
+  "v": 0.21875,
+  "glow": false
+ },
+ "sage_leaf": {
+  "col": 11,
+  "row": 3,
+  "u": 0.71875,
+  "v": 0.21875,
+  "glow": false
+ },
+ "vine": {
+  "col": 12,
+  "row": 3,
+  "u": 0.78125,
+  "v": 0.21875,
+  "glow": false
+ },
+ "vine_dark": {
+  "col": 13,
+  "row": 3,
+  "u": 0.84375,
+  "v": 0.21875,
+  "glow": false
+ },
+ "sunflower_yellow": {
+  "col": 14,
+  "row": 3,
+  "u": 0.90625,
+  "v": 0.21875,
+  "glow": false
+ },
+ "sunflower_center": {
+  "col": 15,
+  "row": 3,
+  "u": 0.96875,
+  "v": 0.21875,
+  "glow": false
+ },
+ "house_cream": {
+  "col": 0,
+  "row": 4,
+  "u": 0.03125,
+  "v": 0.28125,
+  "glow": false
+ },
+ "house_sage": {
+  "col": 1,
+  "row": 4,
+  "u": 0.09375,
+  "v": 0.28125,
+  "glow": false
+ },
+ "house_teal": {
+  "col": 2,
+  "row": 4,
+  "u": 0.15625,
+  "v": 0.28125,
+  "glow": false
+ },
+ "house_butter": {
+  "col": 3,
+  "row": 4,
+  "u": 0.21875,
+  "v": 0.28125,
+  "glow": false
+ },
+ "house_plum": {
+  "col": 4,
+  "row": 4,
+  "u": 0.28125,
+  "v": 0.28125,
+  "glow": false
+ },
+ "house_barnred": {
+  "col": 5,
+  "row": 4,
+  "u": 0.34375,
+  "v": 0.28125,
+  "glow": false
+ },
+ "house_lavender": {
+  "col": 6,
+  "row": 4,
+  "u": 0.40625,
+  "v": 0.28125,
+  "glow": false
+ },
+ "house_mint": {
+  "col": 7,
+  "row": 4,
+  "u": 0.46875,
+  "v": 0.28125,
+  "glow": false
+ },
+ "house_peach": {
+  "col": 8,
+  "row": 4,
+  "u": 0.53125,
+  "v": 0.28125,
+  "glow": false
+ },
+ "house_sky": {
+  "col": 9,
+  "row": 4,
+  "u": 0.59375,
+  "v": 0.28125,
+  "glow": false
+ },
+ "roof_slate": {
+  "col": 10,
+  "row": 4,
+  "u": 0.65625,
+  "v": 0.28125,
+  "glow": false
+ },
+ "roof_plum": {
+  "col": 11,
+  "row": 4,
+  "u": 0.71875,
+  "v": 0.28125,
+  "glow": false
+ },
+ "roof_teal": {
+  "col": 12,
+  "row": 4,
+  "u": 0.78125,
+  "v": 0.28125,
+  "glow": false
+ },
+ "roof_red": {
+  "col": 13,
+  "row": 4,
+  "u": 0.84375,
+  "v": 0.28125,
+  "glow": false
+ },
+ "roof_brown": {
+  "col": 14,
+  "row": 4,
+  "u": 0.90625,
+  "v": 0.28125,
+  "glow": false
+ },
+ "roof_moss": {
+  "col": 15,
+  "row": 4,
+  "u": 0.96875,
+  "v": 0.28125,
+  "glow": false
+ },
+ "candy_pink": {
+  "col": 0,
+  "row": 5,
+  "u": 0.03125,
+  "v": 0.34375,
+  "glow": false
+ },
+ "candy_mint": {
+  "col": 1,
+  "row": 5,
+  "u": 0.09375,
+  "v": 0.34375,
+  "glow": false
+ },
+ "candy_grape": {
+  "col": 2,
+  "row": 5,
+  "u": 0.15625,
+  "v": 0.34375,
+  "glow": false
+ },
+ "candy_lemon": {
+  "col": 3,
+  "row": 5,
+  "u": 0.21875,
+  "v": 0.34375,
+  "glow": false
+ },
+ "candy_cherry": {
+  "col": 4,
+  "row": 5,
+  "u": 0.28125,
+  "v": 0.34375,
+  "glow": false
+ },
+ "candy_blue": {
+  "col": 5,
+  "row": 5,
+  "u": 0.34375,
+  "v": 0.34375,
+  "glow": false
+ },
+ "foil_gold": {
+  "col": 6,
+  "row": 5,
+  "u": 0.40625,
+  "v": 0.34375,
+  "glow": false
+ },
+ "foil_silver": {
+  "col": 7,
+  "row": 5,
+  "u": 0.46875,
+  "v": 0.34375,
+  "glow": false
+ },
+ "choco": {
+  "col": 8,
+  "row": 5,
+  "u": 0.53125,
+  "v": 0.34375,
+  "glow": false
+ },
+ "choco_dark": {
+  "col": 9,
+  "row": 5,
+  "u": 0.59375,
+  "v": 0.34375,
+  "glow": false
+ },
+ "wrapper_red": {
+  "col": 10,
+  "row": 5,
+  "u": 0.65625,
+  "v": 0.34375,
+  "glow": false
+ },
+ "wrapper_purple": {
+  "col": 11,
+  "row": 5,
+  "u": 0.71875,
+  "v": 0.34375,
+  "glow": false
+ },
+ "wrapper_green": {
+  "col": 12,
+  "row": 5,
+  "u": 0.78125,
+  "v": 0.34375,
+  "glow": false
+ },
+ "lolly_white": {
+  "col": 13,
+  "row": 5,
+  "u": 0.84375,
+  "v": 0.34375,
+  "glow": false
+ },
+ "gumball_red": {
+  "col": 14,
+  "row": 5,
+  "u": 0.90625,
+  "v": 0.34375,
+  "glow": false
+ },
+ "gumball_blue": {
+  "col": 15,
+  "row": 5,
+  "u": 0.96875,
+  "v": 0.34375,
+  "glow": false
+ },
+ "dragon_teal": {
+  "col": 0,
+  "row": 6,
+  "u": 0.03125,
+  "v": 0.40625,
+  "glow": false
+ },
+ "dragon_teal_dark": {
+  "col": 1,
+  "row": 6,
+  "u": 0.09375,
+  "v": 0.40625,
+  "glow": false
+ },
+ "dragon_teal_light": {
+  "col": 2,
+  "row": 6,
+  "u": 0.15625,
+  "v": 0.40625,
+  "glow": false
+ },
+ "dragon_belly": {
+  "col": 3,
+  "row": 6,
+  "u": 0.21875,
+  "v": 0.40625,
+  "glow": false
+ },
+ "dragon_horn": {
+  "col": 4,
+  "row": 6,
+  "u": 0.28125,
+  "v": 0.40625,
+  "glow": false
+ },
+ "skin": {
+  "col": 5,
+  "row": 6,
+  "u": 0.34375,
+  "v": 0.40625,
+  "glow": false
+ },
+ "skin_shade": {
+  "col": 6,
+  "row": 6,
+  "u": 0.40625,
+  "v": 0.40625,
+  "glow": false
+ },
+ "hair_brown": {
+  "col": 7,
+  "row": 6,
+  "u": 0.46875,
+  "v": 0.40625,
+  "glow": false
+ },
+ "cheek_pink": {
+  "col": 8,
+  "row": 6,
+  "u": 0.53125,
+  "v": 0.40625,
+  "glow": false
+ },
+ "eye_white": {
+  "col": 9,
+  "row": 6,
+  "u": 0.59375,
+  "v": 0.40625,
+  "glow": false
+ },
+ "ghost_white": {
+  "col": 10,
+  "row": 6,
+  "u": 0.65625,
+  "v": 0.40625,
+  "glow": false
+ },
+ "cat_black": {
+  "col": 11,
+  "row": 6,
+  "u": 0.71875,
+  "v": 0.40625,
+  "glow": false
+ },
+ "cat_orange": {
+  "col": 12,
+  "row": 6,
+  "u": 0.78125,
+  "v": 0.40625,
+  "glow": false
+ },
+ "witch_purple": {
+  "col": 13,
+  "row": 6,
+  "u": 0.84375,
+  "v": 0.40625,
+  "glow": false
+ },
+ "witch_green": {
+  "col": 14,
+  "row": 6,
+  "u": 0.90625,
+  "v": 0.40625,
+  "glow": false
+ },
+ "denim": {
+  "col": 15,
+  "row": 6,
+  "u": 0.96875,
+  "v": 0.40625,
+  "glow": false
+ },
+ "flannel_red": {
+  "col": 0,
+  "row": 7,
+  "u": 0.03125,
+  "v": 0.46875,
+  "glow": false
+ },
+ "flannel_dark": {
+  "col": 1,
+  "row": 7,
+  "u": 0.09375,
+  "v": 0.46875,
+  "glow": false
+ },
+ "quilt_blue": {
+  "col": 2,
+  "row": 7,
+  "u": 0.15625,
+  "v": 0.46875,
+  "glow": false
+ },
+ "quilt_yellow": {
+  "col": 3,
+  "row": 7,
+  "u": 0.21875,
+  "v": 0.46875,
+  "glow": false
+ },
+ "banner_orange": {
+  "col": 4,
+  "row": 7,
+  "u": 0.28125,
+  "v": 0.46875,
+  "glow": false
+ },
+ "banner_purple": {
+  "col": 5,
+  "row": 7,
+  "u": 0.34375,
+  "v": 0.46875,
+  "glow": false
+ },
+ "banner_green": {
+  "col": 6,
+  "row": 7,
+  "u": 0.40625,
+  "v": 0.46875,
+  "glow": false
+ },
+ "metal_red": {
+  "col": 7,
+  "row": 7,
+  "u": 0.46875,
+  "v": 0.46875,
+  "glow": false
+ },
+ "metal_green": {
+  "col": 8,
+  "row": 7,
+  "u": 0.53125,
+  "v": 0.46875,
+  "glow": false
+ },
+ "metal_blue": {
+  "col": 9,
+  "row": 7,
+  "u": 0.59375,
+  "v": 0.46875,
+  "glow": false
+ },
+ "mailbox_black": {
+  "col": 10,
+  "row": 7,
+  "u": 0.65625,
+  "v": 0.46875,
+  "glow": false
+ },
+ "lamp_black": {
+  "col": 11,
+  "row": 7,
+  "u": 0.71875,
+  "v": 0.46875,
+  "glow": false
+ },
+ "water_blue": {
+  "col": 12,
+  "row": 7,
+  "u": 0.78125,
+  "v": 0.46875,
+  "glow": false
+ },
+ "water_deep": {
+  "col": 13,
+  "row": 7,
+  "u": 0.84375,
+  "v": 0.46875,
+  "glow": false
+ },
+ "lilypad": {
+  "col": 14,
+  "row": 7,
+  "u": 0.90625,
+  "v": 0.46875,
+  "glow": false
+ },
+ "felt_teal": {
+  "col": 15,
+  "row": 7,
+  "u": 0.96875,
+  "v": 0.46875,
+  "glow": false
+ },
+ "glow_window": {
+  "col": 0,
+  "row": 8,
+  "u": 0.03125,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_window_warm": {
+  "col": 1,
+  "row": 8,
+  "u": 0.09375,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_jack": {
+  "col": 2,
+  "row": 8,
+  "u": 0.15625,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_jack_hot": {
+  "col": 3,
+  "row": 8,
+  "u": 0.21875,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_lantern": {
+  "col": 4,
+  "row": 8,
+  "u": 0.28125,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_lantern_red": {
+  "col": 5,
+  "row": 8,
+  "u": 0.34375,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_lantern_pink": {
+  "col": 6,
+  "row": 8,
+  "u": 0.40625,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_candle": {
+  "col": 7,
+  "row": 8,
+  "u": 0.46875,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_moon": {
+  "col": 8,
+  "row": 8,
+  "u": 0.53125,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_firefly": {
+  "col": 9,
+  "row": 8,
+  "u": 0.59375,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_candy_gold": {
+  "col": 10,
+  "row": 8,
+  "u": 0.65625,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_porch": {
+  "col": 11,
+  "row": 8,
+  "u": 0.71875,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_lamp": {
+  "col": 12,
+  "row": 8,
+  "u": 0.78125,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_magic_teal": {
+  "col": 13,
+  "row": 8,
+  "u": 0.84375,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_purple": {
+  "col": 14,
+  "row": 8,
+  "u": 0.90625,
+  "v": 0.53125,
+  "glow": true
+ },
+ "glow_white": {
+  "col": 15,
+  "row": 8,
+  "u": 0.96875,
+  "v": 0.53125,
+  "glow": true
+ }
+}

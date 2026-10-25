@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:32:41 UTC",
+    "thread_id":  "01a16f66-35b9-7850-8f48-c6468e7e6827",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f66-35b9-7850-8f48-c6468e7e6827\\exec-669bfbc9-68e8-417c-8ffb-70aabfe09749.png",
+    "sha256":  "69136b9d586d2eeb585ad5f17953ac92b0296a7853cdd78a7f8ee58e2b5e9cff",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: hay straw strands running vertically, bundled fibrous painterly strokes",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

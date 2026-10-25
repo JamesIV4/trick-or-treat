@@ -1,0 +1,9 @@
+﻿Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+Vulkan 1.4.351 - Forward+ - Using Device #0: NVIDIA - NVIDIA GeForce RTX 5060 Ti
+
+Loaded Acorn Court in 40 ms
+Trick or Treat: world seed 101 home Acorn Court
+BOT t=10.0136451721191 collected=32/376 wallet=47 doorbells=1 hits=3 kills=0 chunks=42 stuck=2.15386343002319 fps=135.0 pos=(9.158333, 0.65058, 22.51567)
+BOT t=20.0166969299316 collected=57/376 wallet=87 doorbells=1 hits=3 kills=1 chunks=43 stuck=4.04229593276978 fps=112.0 pos=(24.00811, 1.165615, 19.76339)
+BOT t=30.0222091674805 collected=92/376 wallet=160 doorbells=1 hits=3 kills=2 chunks=46 stuck=4.58866548538208 fps=121.0 pos=(38.35406, 2.921459, 28.57363)
+BOT_DONE seconds=40.0023765563965 collected=92/376 wallet=160 perfect_bonus=53 doorbells=1 hits=3 kills=2 stuck_seconds=11.0389995574951

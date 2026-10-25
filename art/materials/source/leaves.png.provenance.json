@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:32:08 UTC",
+    "thread_id":  "01a16f65-ace7-7842-b705-792719b9ee9f",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f65-ace7-7842-b705-792719b9ee9f\\exec-54b9bd5f-26f7-447d-8047-4e3997a9c4d8.png",
+    "sha256":  "0a22d17969e747eb13949929ba5704d46bbdb29cc1ddd94f72e28117b95e0338",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: dense cluster of overlapping maple leaves, stylized chunky leaf shapes with soft edges, value variation only",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

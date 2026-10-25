@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:35:30 UTC",
+    "thread_id":  "01a16f68-7a9d-7052-aa8c-6bcbd9b0976f",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f68-7a9d-7052-aa8c-6bcbd9b0976f\\exec-4094d423-f76a-4e7c-b4ff-5a0284e76ef5.png",
+    "sha256":  "af084117806f661a61cbb04c4911dbb1febd9e6b76b7e37043d26999f344f3b5",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: diagonal wooden garden lattice, criss-cross slats with dark gaps between them",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

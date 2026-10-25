@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:38:58 UTC",
+    "thread_id":  "01a16f6b-fd83-7900-9928-9b558c1b76ec",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f6b-fd83-7900-9928-9b558c1b76ec\\exec-0efed20c-b5d0-4f53-b1f6-d30b4fb53556.png",
+    "sha256":  "45f145476198de8ce8f58967927060c1a6845f2fa697137e9aa24ffd07b90bae",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: painted metal sheet with soft horizontal brushed streaks running evenly across the whole tile, gentle long light and dark brush bands, a few very subtle tiny scratches, smooth and clean",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

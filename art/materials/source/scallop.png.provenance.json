@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:34:39 UTC",
+    "thread_id":  "01a16f67-f1db-7d32-afe8-3b16c1106558",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f67-f1db-7d32-afe8-3b16c1106558\\exec-8d4b9f1b-59c7-4286-8c7d-6fb43ea33aca.png",
+    "sha256":  "1a22d11e23ba1bfcbb017ce9951ed1ecd937e32859ac6e161c530cff42511bed",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: Victorian fish-scale roof shingles, rounded scallop rows, staggered, exactly 7 rows",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

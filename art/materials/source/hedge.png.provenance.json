@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:32:18 UTC",
+    "thread_id":  "01a16f65-ace6-7532-b2e7-8a3a1f014675",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f65-ace6-7532-b2e7-8a3a1f014675\\exec-a4b42cee-62dc-426e-93ed-8ada7f2137d4.png",
+    "sha256":  "57add8cd9b46dee6ffa1791eb9a0ce35d3a3025c41da74df645bfe00de84bfd2",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: dense hedge of tiny rounded leaves in painterly clumps",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

@@ -1,0 +1,487 @@
+{
+ "comment": "Root-owned. Workers read only. collision: none | box | cylinder | trunk (cylinder r=radius, h=height at origin). walkable: top surface is a platform for traversal and candy trails. sockets: required socket_<name> empties. parts: required named child nodes (characters).",
+ "assets": [
+  {
+   "id": "dragon_kid",
+   "path": "characters/dragon_kid",
+   "lane": "characters_candy",
+   "tris": 9000,
+   "collision": "none",
+   "parts": [
+    "body",
+    "head",
+    "wing_l",
+    "wing_r",
+    "tail",
+    "leg_l",
+    "leg_r",
+    "arm_l",
+    "arm_r",
+    "bucket",
+    "bucket_candy"
+   ],
+   "sockets": [
+    "bucket_light"
+   ],
+   "brief": "1.1 m child in a plush teal dragon onesie: hood with two tiny cream horns, round face showing (skin, big ink eyes with white highlights, pink cheeks), cream belly, stubby felt wings on the back, a fat bouncy tail, mitten hands, round boots. Holds an orange jack-o'-lantern bucket (glowing face cut, rope handle) in the right hand. Every part is its own object parented to an empty root 'dragon_kid' at the feet; each part's origin sits at its joint (hips for legs, shoulders for arms, neck for head, wing roots, tail base) so the game can animate it procedurally. bucket is a child of arm_r; bucket_candy is a child of bucket (a heap of candy inside it that the game scales from 0 to 1 as it fills)."
+  },
+  {
+   "id": "candy_wrapped_pink",
+   "path": "candy/candy_wrapped_pink",
+   "lane": "characters_candy",
+   "tris": 400,
+   "collision": "none",
+   "brief": "Classic twist-wrapped candy, about 0.32 m long (chunky, readable from 15 m). Body bubblegum pink with lolly_white stripe, twisted ends. Origin at its centre (it floats)."
+  },
+  {
+   "id": "candy_wrapped_mint",
+   "path": "candy/candy_wrapped_mint",
+   "lane": "characters_candy",
+   "tris": 400,
+   "collision": "none",
+   "brief": "Same shape as candy_wrapped_pink in candy_mint."
+  },
+  {
+   "id": "candy_wrapped_grape",
+   "path": "candy/candy_wrapped_grape",
+   "lane": "characters_candy",
+   "tris": 400,
+   "collision": "none",
+   "brief": "Same shape in candy_grape."
+  },
+  {
+   "id": "candy_wrapped_lemon",
+   "path": "candy/candy_wrapped_lemon",
+   "lane": "characters_candy",
+   "tris": 400,
+   "collision": "none",
+   "brief": "Same shape in candy_lemon."
+  },
+  {
+   "id": "candy_chocolate_bar",
+   "path": "candy/candy_chocolate_bar",
+   "lane": "characters_candy",
+   "tris": 400,
+   "collision": "none",
+   "brief": "Chunky chocolate bar 0.42 m long, half unwrapped: wrapper_red foil sleeve, choco squares exposed, foil_silver edge. Origin at centre."
+  },
+  {
+   "id": "candy_lollipop",
+   "path": "candy/candy_lollipop",
+   "lane": "characters_candy",
+   "tris": 500,
+   "collision": "none",
+   "brief": "Giant swirl lollipop, disc 0.5 m across on a lolly_white stick, swirl of candy_cherry / lolly_white / candy_lemon. Origin at disc centre."
+  },
+  {
+   "id": "candy_golden_bar",
+   "path": "candy/candy_golden_bar",
+   "lane": "characters_candy",
+   "tris": 500,
+   "collision": "none",
+   "brief": "Full-size prize bar 0.6 m long in foil_gold wrapper with glow_candy_gold band so it glows. Origin at centre."
+  },
+  {
+   "id": "pumpkin_round",
+   "path": "props/pumpkin_round",
+   "lane": "pumpkins_farm",
+   "tris": 1400,
+   "collision": "cylinder",
+   "walkable": true,
+   "brief": "Plump squat pumpkin 0.6 m wide, 0.45 m tall, 8 soft lobes, curly stem. Readable ridges."
+  },
+  {
+   "id": "pumpkin_tall",
+   "path": "props/pumpkin_tall",
+   "lane": "pumpkins_farm",
+   "tris": 1400,
+   "collision": "cylinder",
+   "walkable": true,
+   "brief": "Taller pumpkin 0.5 m wide, 0.6 m tall, pumpkin_light tone with pumpkin_dark grooves."
+  },
+  {
+   "id": "pumpkin_small",
+   "path": "props/pumpkin_small",
+   "lane": "pumpkins_farm",
+   "tris": 900,
+   "collision": "none",
+   "brief": "Little pie pumpkin 0.3 m wide, deep pumpkin_dark orange, chunky stem."
+  },
+  {
+   "id": "gourd_cluster",
+   "path": "props/gourd_cluster",
+   "lane": "pumpkins_farm",
+   "tris": 1400,
+   "collision": "none",
+   "brief": "Cluster of 4-5 small gourds (gourd_green, gourd_yellow, gourd_white, warty) about 0.5 m across."
+  },
+  {
+   "id": "jackolantern_happy",
+   "path": "props/jackolantern_happy",
+   "lane": "pumpkins_farm",
+   "tris": 1600,
+   "collision": "cylinder",
+   "walkable": true,
+   "sockets": [
+    "light"
+   ],
+   "brief": "Carved pumpkin 0.55 m wide with a big happy face: triangle eyes, wide smile. Carved holes are inset faces painted glow_jack (flickering orange glow), rims painted pumpkin_dark. Face points -Y (front). socket_light sits inside at the candle."
+  },
+  {
+   "id": "jackolantern_wink",
+   "path": "props/jackolantern_wink",
+   "lane": "pumpkins_farm",
+   "tris": 1600,
+   "collision": "cylinder",
+   "walkable": true,
+   "sockets": [
+    "light"
+   ],
+   "brief": "As jackolantern_happy but winking (one crescent eye) with a cheeky grin."
+  },
+  {
+   "id": "jackolantern_surprised",
+   "path": "props/jackolantern_surprised",
+   "lane": "pumpkins_farm",
+   "tris": 1600,
+   "collision": "cylinder",
+   "walkable": true,
+   "sockets": [
+    "light"
+   ],
+   "brief": "Round surprised eyes and an O mouth. Taller pumpkin."
+  },
+  {
+   "id": "jackolantern_toothy",
+   "path": "props/jackolantern_toothy",
+   "lane": "pumpkins_farm",
+   "tris": 1600,
+   "collision": "cylinder",
+   "walkable": true,
+   "sockets": [
+    "light"
+   ],
+   "brief": "Big friendly grin with two square teeth. Use glow_jack_hot for the mouth."
+  },
+  {
+   "id": "jackolantern_sleepy",
+   "path": "props/jackolantern_sleepy",
+   "lane": "pumpkins_farm",
+   "tris": 1600,
+   "collision": "cylinder",
+   "walkable": true,
+   "sockets": [
+    "light"
+   ],
+   "brief": "Sleepy closed-crescent eyes and small smile, squat pumpkin."
+  },
+  {
+   "id": "giant_pumpkin",
+   "path": "props/giant_pumpkin",
+   "lane": "pumpkins_farm",
+   "tris": 3500,
+   "collision": "cylinder",
+   "walkable": true,
+   "brief": "Prize giant pumpkin 1.8 m wide, 1.2 m tall, slightly lopsided, big curly stem, a blue first-prize ribbon rosette (quilt_blue) pinned on front. A platform you can stand on."
+  },
+  {
+   "id": "hay_bale",
+   "path": "props/hay_bale",
+   "lane": "pumpkins_farm",
+   "tris": 800,
+   "collision": "box",
+   "walkable": true,
+   "brief": "Rectangular bale 1.1 x 0.6 x 0.55 m (L x W x H), rounded edges, two rope bands, straw tufts. Main platform helper: top must be flat-ish."
+  },
+  {
+   "id": "hay_bale_round",
+   "path": "props/hay_bale_round",
+   "lane": "pumpkins_farm",
+   "tris": 1000,
+   "collision": "cylinder",
+   "walkable": true,
+   "brief": "Round bale standing upright on its flat end, 1.2 m diameter, 1.0 m tall, spiral on top. Walkable."
+  },
+  {
+   "id": "scarecrow",
+   "path": "props/scarecrow",
+   "lane": "pumpkins_farm",
+   "tris": 4000,
+   "collision": "cylinder",
+   "brief": "Friendly scarecrow 1.9 m tall on a wooden post: burlap-sack face (cardboard tone) with stitched smile, button eyes, floppy witch-free straw hat, flannel_red shirt with patches, denim overalls, straw poking from cuffs, arms out on a crossbar. Cute, never creepy."
+  },
+  {
+   "id": "corn_stalks",
+   "path": "props/corn_stalks",
+   "lane": "pumpkins_farm",
+   "tris": 1500,
+   "collision": "cylinder",
+   "brief": "Bundle of dried corn stalks tied with rope, 1.8 m tall, straw / straw_dark leaves, splayed top."
+  },
+  {
+   "id": "hay_wagon",
+   "path": "props/hay_wagon",
+   "lane": "pumpkins_farm",
+   "tris": 3000,
+   "collision": "box",
+   "walkable": true,
+   "brief": "Little hay wagon 2.4 x 1.3 m, bed 0.7 m high, metal_red sides, four chunky wheels, hay heap in back. Walkable bed."
+  },
+  {
+   "id": "wheelbarrow",
+   "path": "props/wheelbarrow",
+   "lane": "pumpkins_farm",
+   "tris": 1400,
+   "collision": "box",
+   "brief": "Wooden wheelbarrow with one front wheel, holding three small pumpkins."
+  },
+  {
+   "id": "crate",
+   "path": "props/crate",
+   "lane": "pumpkins_farm",
+   "tris": 600,
+   "collision": "box",
+   "walkable": true,
+   "brief": "Wooden apple crate 0.7 m cube, slatted, rounded edges. Platform helper."
+  },
+  {
+   "id": "barrel",
+   "path": "props/barrel",
+   "lane": "pumpkins_farm",
+   "tris": 900,
+   "collision": "cylinder",
+   "walkable": true,
+   "brief": "Wooden barrel 0.6 m wide, 0.85 m tall, iron hoops. Platform helper."
+  },
+  {
+   "id": "sunflower",
+   "path": "props/sunflower",
+   "lane": "pumpkins_farm",
+   "tris": 1400,
+   "collision": "trunk",
+   "radius": 0.06,
+   "height": 2.0,
+   "brief": "Oversized sunflower 2.4 m tall, head 0.9 m across facing -Y and tilted slightly down, big leaves on the stalk."
+  },
+  {
+   "id": "leaf_pile",
+   "path": "props/leaf_pile",
+   "lane": "pumpkins_farm",
+   "tris": 1000,
+   "collision": "none",
+   "brief": "Mound of autumn leaves 1.4 m across, 0.4 m high, mixed maple_red / maple_orange / golden_leaf faceted leaf chips."
+  },
+  {
+   "id": "vine_patch",
+   "path": "props/vine_patch",
+   "lane": "pumpkins_farm",
+   "tris": 1500,
+   "collision": "none",
+   "brief": "Flat ground decal-like patch of curly pumpkin vines with big leaves, 1.6 m across, under 0.2 m high. Used around pumpkins in patches."
+  },
+  {
+   "id": "tree_maple_red",
+   "path": "props/tree_maple_red",
+   "lane": "yard_street",
+   "tris": 4000,
+   "collision": "trunk",
+   "radius": 0.25,
+   "height": 2.5,
+   "sockets": [
+    "branch"
+   ],
+   "brief": "Storybook maple 5 m tall: chunky slightly curved bark trunk, canopy of 4-6 faceted icosphere blobs in maple_red with some maple_orange. socket_branch on a low strong branch (about 2.6 m up, offset 1 m) for swings and lantern strings."
+  },
+  {
+   "id": "tree_maple_orange",
+   "path": "props/tree_maple_orange",
+   "lane": "yard_street",
+   "tris": 4000,
+   "collision": "trunk",
+   "radius": 0.25,
+   "height": 2.5,
+   "sockets": [
+    "branch"
+   ],
+   "brief": "Variant: 4.5 m, rounder canopy in maple_orange and golden_leaf."
+  },
+  {
+   "id": "tree_maple_gold",
+   "path": "props/tree_maple_gold",
+   "lane": "yard_street",
+   "tris": 4000,
+   "collision": "trunk",
+   "radius": 0.22,
+   "height": 2.5,
+   "sockets": [
+    "branch"
+   ],
+   "brief": "Variant: 5.5 m, taller oval canopy in golden_leaf with rust_leaf accents."
+  },
+  {
+   "id": "bush_round",
+   "path": "props/bush_round",
+   "lane": "yard_street",
+   "tris": 900,
+   "collision": "cylinder",
+   "brief": "Round hedge bush 1 m wide in hedge with hedge_dark underside."
+  },
+  {
+   "id": "mailbox",
+   "path": "props/mailbox",
+   "lane": "yard_street",
+   "tris": 800,
+   "collision": "cylinder",
+   "brief": "Classic rounded-top mailbox on a wooden post, 1.2 m tall, red flag up. Box colour mailbox_black (game may vary)."
+  },
+  {
+   "id": "lamp_post",
+   "path": "props/lamp_post",
+   "lane": "yard_street",
+   "tris": 1200,
+   "collision": "trunk",
+   "radius": 0.12,
+   "height": 3.2,
+   "sockets": [
+    "light"
+   ],
+   "brief": "Old-fashioned street lamp 3.4 m tall, lamp_black, curly bracket, lantern head with glow_lamp glass. socket_light at the glass."
+  },
+  {
+   "id": "paper_lantern",
+   "path": "props/paper_lantern",
+   "lane": "yard_street",
+   "tris": 600,
+   "collision": "none",
+   "sockets": [
+    "hang",
+    "light"
+   ],
+   "brief": "Round paper lantern 0.35 m, glow_lantern body with dark ribs, hangs from socket_hang at its top (origin at socket_hang)."
+  },
+  {
+   "id": "porch_lantern",
+   "path": "props/porch_lantern",
+   "lane": "yard_street",
+   "tris": 600,
+   "collision": "none",
+   "sockets": [
+    "light"
+   ],
+   "brief": "Wall-mounted porch lantern 0.4 m tall with glow_porch glass, origin at the wall mount, it sticks out toward -Y."
+  },
+  {
+   "id": "string_bulb",
+   "path": "props/string_bulb",
+   "lane": "yard_street",
+   "tris": 80,
+   "collision": "none",
+   "brief": "Tiny round party bulb 0.1 m in glow_lantern, origin at top. Instanced along string lights by the game."
+  },
+  {
+   "id": "rocking_chair",
+   "path": "props/rocking_chair",
+   "lane": "yard_street",
+   "tris": 1400,
+   "collision": "box",
+   "brief": "Wooden rocking chair with a folded quilt (quilt_blue / quilt_yellow), facing -Y."
+  },
+  {
+   "id": "bench",
+   "path": "props/bench",
+   "lane": "yard_street",
+   "tris": 1200,
+   "collision": "box",
+   "walkable": true,
+   "brief": "Garden bench 1.5 m, wood slats, iron legs."
+  },
+  {
+   "id": "swing_set",
+   "path": "props/swing_set",
+   "lane": "yard_street",
+   "tris": 2400,
+   "collision": "box",
+   "walkable": true,
+   "brief": "Kids' A-frame swing set 2.6 m wide, 2.2 m tall, metal_blue frame, two swings with metal_red seats. Top bar walkable."
+  },
+  {
+   "id": "flower_pot",
+   "path": "props/flower_pot",
+   "lane": "yard_street",
+   "tris": 900,
+   "collision": "cylinder",
+   "walkable": true,
+   "brief": "Terracotta pot 0.5 m with orange mums (maple_orange / golden_leaf blobs)."
+  },
+  {
+   "id": "inflatable_ghost",
+   "path": "props/inflatable_ghost",
+   "lane": "yard_street",
+   "tris": 1600,
+   "collision": "cylinder",
+   "brief": "Puffy inflatable ghost 2 m tall, ghost_white, round ink eyes and open happy mouth, little arms up, slightly saggy."
+  },
+  {
+   "id": "inflatable_cat",
+   "path": "props/inflatable_cat",
+   "lane": "yard_street",
+   "tris": 1600,
+   "collision": "cylinder",
+   "brief": "Inflatable black cat 1.8 m tall sitting, cat_black with cat_orange eyes, wearing a witch_purple witch hat."
+  },
+  {
+   "id": "cauldron",
+   "path": "props/cauldron",
+   "lane": "yard_street",
+   "tris": 1400,
+   "collision": "cylinder",
+   "walkable": true,
+   "brief": "Round iron cauldron 1 m wide on three stubby legs, bubbling glow_magic_teal potion with big bubble blobs on top."
+  },
+  {
+   "id": "parked_car",
+   "path": "props/parked_car",
+   "lane": "yard_street",
+   "tris": 4000,
+   "collision": "box",
+   "walkable": true,
+   "brief": "Rounded toy-like hatchback 3.6 x 1.7 x 1.5 m in a soft colour (house_sky), chunky wheels, front faces -Y. Roof is a platform. Headlights off (silver)."
+  },
+  {
+   "id": "cloud_a",
+   "path": "sky/cloud_a",
+   "lane": "yard_street",
+   "tris": 1500,
+   "collision": "none",
+   "brief": "Chunky cute storm cloud puff cluster about 14 m long, flat-ish bottom, 5-7 overlapping faceted blobs, roof_slate colour. Origin at its centre."
+  },
+  {
+   "id": "cloud_b",
+   "path": "sky/cloud_b",
+   "lane": "yard_street",
+   "tris": 1500,
+   "collision": "none",
+   "brief": "Variant cloud 10 m, rounder."
+  },
+  {
+   "id": "cloud_c",
+   "path": "sky/cloud_c",
+   "lane": "yard_street",
+   "tris": 1500,
+   "collision": "none",
+   "brief": "Variant cloud 18 m, long and lumpy."
+  },
+  {
+   "id": "bat",
+   "path": "sky/bat",
+   "lane": "yard_street",
+   "tris": 400,
+   "collision": "none",
+   "parts": [
+    "wing_l",
+    "wing_r"
+   ],
+   "brief": "Cute round bat 0.5 m wingspan, charcoal, with wing_l / wing_r child objects (origin at the shoulder) so the game can flap them."
+  }
+ ]
+}

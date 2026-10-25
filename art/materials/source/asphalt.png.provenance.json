@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:30:57 UTC",
+    "thread_id":  "01a16f64-6fdd-7ac3-a9cd-d14cc4712655",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f64-6fdd-7ac3-a9cd-d14cc4712655\\exec-fa46fa26-7317-4716-821f-91cb91d77da1.png",
+    "sha256":  "49bb8ce908bd5985765a9c88e0d014e3df23408a27cf3277b7d76c19890875d6",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: road asphalt, soft painterly speckled grain, gentle patches and very faint hairline cracks",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

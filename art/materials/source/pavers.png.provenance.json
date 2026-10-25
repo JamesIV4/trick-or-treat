@@ -1,0 +1,13 @@
+{
+  "tool": "Codex built-in image_gen via codex exec",
+  "codex_version": "codex-cli 0.160.0",
+  "generated_utc": "2026-10-24 19:39:21 UTC",
+  "thread_id": "01a16f6b-fd80-7950-93de-0610744819e6",
+  "codex_source_file": "C:\\Users\\james\\.codex\\generated_images\\01a16f6b-fd80-7950-93de-0610744819e6\\exec-c90d9870-7722-454a-8f59-0de9e0167b17.png",
+  "sha256": "235bfe91c9f21a6de9e23af4066f8ecb566dcb21590f6309ae7f6d3a46202d14",
+  "prompt": "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: square garden paving stones in a perfect 3 by 3 grid filling the tile, soft rounded edges, small even gaps between them, half a gap along each outer edge of the image so the grid repeats perfectly when tiled",
+  "references": [],
+  "transparent_requested": false,
+  "note": "AI-generated image. Not original game source art; use as texture/reference material only.",
+  "postprocess": "np.roll by (+209, +209) px (half a paver) so the image edges fall inside stones and the original edge seam sits in a grout line; then a 60 px feathered copy of a neighbouring grout crossing pasted over a small checker artifact the generator left at the original corner. Unmodified generator output: art/materials/source/raw/pavers_v2.png (sha256 above refers to that file)."
+}

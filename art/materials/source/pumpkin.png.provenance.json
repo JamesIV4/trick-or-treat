@@ -1,0 +1,13 @@
+{
+  "tool": "Codex built-in image_gen via codex exec",
+  "codex_version": "codex-cli 0.160.0",
+  "generated_utc": "2026-10-24 19:39:07 UTC",
+  "thread_id": "01a16f6b-fd78-74c0-9f82-51bb28725946",
+  "codex_source_file": "C:\\Users\\james\\.codex\\generated_images\\01a16f6b-fd78-74c0-9f82-51bb28725946\\exec-acea85b4-372a-48fd-afa4-5ff4ea68ba40.png",
+  "sha256": "80fd214758af154ebe44fc551c3dfffdaf2bf0ba1c8b083a17d53ffa3e777c09",
+  "prompt": "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: pumpkin skin surface with soft vertical ribs, exactly 4 identical straight parallel ribs across the tile, each rib a full-height vertical column with the groove between ribs exactly at the left and right edges, faint speckles and subtle bumps, smooth and friendly",
+  "references": [],
+  "transparent_requested": false,
+  "note": "AI-generated image. Not original game source art; use as texture/reference material only.",
+  "postprocess": "np.roll by +157 px horizontally (half a rib) so the image edges fall mid-rib and the original edge seam sits in a groove. Unmodified generator output: art/materials/source/raw/pumpkin_v2.png (sha256 above refers to that file)."
+}

@@ -1,0 +1,15 @@
+[
+  {"id": "dragon_kid", "gltf": "game/assets/models/characters/dragon_kid.gltf", "sheet": "art/review/sheets/dragon_kid.png", "tris": 2976, "gates": "PASS",
+   "notes": "Extra sheets: dragon_kid_close.png (front, front 3/4, back 3/4, side) and dragon_kid_far.png (35 deg down, ~70 px tall). Root empty 'dragon_kid' at the feet; body/head/wing_l/wing_r/tail/leg_l/leg_r/arm_l/arm_r are direct children, bucket is a child of arm_r (origin at the handle grip), bucket_candy a child of bucket (origin on the bucket floor), socket_bucket_light a child of bucket at the bucket centre. All parts have identity rotation and no parent-inverse, origin at the joint. Character right = Blender -X. 24 tris under budget, so there is no headroom for more detail."},
+  {"id": "candy_wrapped_pink", "gltf": "game/assets/models/candy/candy_wrapped_pink.gltf", "sheet": "art/review/sheets/candy_wrapped_pink.png", "tris": 120, "gates": "PASS",
+   "notes": "Twisted lathe body with two lolly_white spiral stripes and fanned twist ends; 0.33 m long along X. Exactly on the 120 budget."},
+  {"id": "candy_wrapped_mint", "gltf": "game/assets/models/candy/candy_wrapped_mint.gltf", "sheet": "art/review/sheets/candy_wrapped_mint.png", "tris": 120, "gates": "PASS", "notes": "Same mesh as pink in candy_mint."},
+  {"id": "candy_wrapped_grape", "gltf": "game/assets/models/candy/candy_wrapped_grape.gltf", "sheet": "art/review/sheets/candy_wrapped_grape.png", "tris": 120, "gates": "PASS", "notes": "Same mesh in candy_grape."},
+  {"id": "candy_wrapped_lemon", "gltf": "game/assets/models/candy/candy_wrapped_lemon.gltf", "sheet": "art/review/sheets/candy_wrapped_lemon.png", "tris": 120, "gates": "PASS", "notes": "Same mesh in candy_lemon. The lolly_white stripe has the least contrast against lemon."},
+  {"id": "candy_chocolate_bar", "gltf": "game/assets/models/candy/candy_chocolate_bar.gltf", "sheet": "art/review/sheets/candy_chocolate_bar.png", "tris": 116, "gates": "PASS",
+   "notes": "0.42 m bar, half in a bevelled wrapper_red sleeve, foil_silver lip, 2x2 bevelled choco squares on a choco_dark slab."},
+  {"id": "candy_lollipop", "gltf": "game/assets/models/candy/candy_lollipop.gltf", "sheet": "art/review/sheets/candy_lollipop.png", "tris": 140, "gates": "PASS",
+   "notes": "0.5 m domed lens disc facing -Y with twisted rings, so the cherry/white/lemon arms really spiral on both faces; lolly_white stick 0.46 m. Origin at the disc centre."},
+  {"id": "candy_golden_bar", "gltf": "game/assets/models/candy/candy_golden_bar.gltf", "sheet": "art/review/sheets/candy_golden_bar.png", "tris": 148, "gates": "PASS",
+   "notes": "0.6 m foil_gold bar with crimped ends, a glow_candy_gold centre band and a raised gold star on top. Reads a bit like a belt buckle; the glow only shows in game."}
+]

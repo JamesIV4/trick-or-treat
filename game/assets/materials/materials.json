@@ -1,0 +1,226 @@
+[
+ {
+  "index": 0,
+  "name": "flat",
+  "scale": 1.0,
+  "strength": 0.0,
+  "normal": 0.0,
+  "origin": "flat"
+ },
+ {
+  "index": 1,
+  "name": "siding",
+  "scale": 2.0,
+  "strength": 0.9,
+  "normal": 0.8,
+  "origin": "painted"
+ },
+ {
+  "index": 2,
+  "name": "shingles",
+  "scale": 2.0,
+  "strength": 0.9,
+  "normal": 0.9,
+  "origin": "painted"
+ },
+ {
+  "index": 3,
+  "name": "planks",
+  "scale": 1.6,
+  "strength": 0.85,
+  "normal": 0.7,
+  "origin": "painted"
+ },
+ {
+  "index": 4,
+  "name": "wood",
+  "scale": 1.0,
+  "strength": 0.6,
+  "normal": 0.35,
+  "origin": "painted"
+ },
+ {
+  "index": 5,
+  "name": "brick",
+  "scale": 1.5,
+  "strength": 0.9,
+  "normal": 0.9,
+  "origin": "painted"
+ },
+ {
+  "index": 6,
+  "name": "stone",
+  "scale": 1.6,
+  "strength": 0.9,
+  "normal": 1.0,
+  "origin": "painted"
+ },
+ {
+  "index": 7,
+  "name": "pavers",
+  "scale": 1.5,
+  "strength": 0.85,
+  "normal": 0.8,
+  "origin": "painted"
+ },
+ {
+  "index": 8,
+  "name": "concrete",
+  "scale": 2.0,
+  "strength": 0.55,
+  "normal": 0.35,
+  "origin": "painted"
+ },
+ {
+  "index": 9,
+  "name": "asphalt",
+  "scale": 3.0,
+  "strength": 0.55,
+  "normal": 0.4,
+  "origin": "painted"
+ },
+ {
+  "index": 10,
+  "name": "grass",
+  "scale": 2.5,
+  "strength": 0.75,
+  "normal": 0.45,
+  "origin": "painted"
+ },
+ {
+  "index": 11,
+  "name": "bark",
+  "scale": 1.2,
+  "strength": 0.9,
+  "normal": 0.9,
+  "origin": "painted"
+ },
+ {
+  "index": 12,
+  "name": "leaves",
+  "scale": 1.2,
+  "strength": 0.8,
+  "normal": 0.8,
+  "origin": "painted"
+ },
+ {
+  "index": 13,
+  "name": "hedge",
+  "scale": 1.0,
+  "strength": 0.8,
+  "normal": 0.8,
+  "origin": "painted"
+ },
+ {
+  "index": 14,
+  "name": "straw",
+  "scale": 1.0,
+  "strength": 0.9,
+  "normal": 0.8,
+  "origin": "painted"
+ },
+ {
+  "index": 15,
+  "name": "pumpkin",
+  "scale": 1.0,
+  "strength": 0.65,
+  "normal": 0.6,
+  "origin": "painted"
+ },
+ {
+  "index": 16,
+  "name": "felt",
+  "scale": 0.6,
+  "strength": 0.55,
+  "normal": 0.5,
+  "origin": "painted"
+ },
+ {
+  "index": 17,
+  "name": "denim",
+  "scale": 0.5,
+  "strength": 0.7,
+  "normal": 0.5,
+  "origin": "painted"
+ },
+ {
+  "index": 18,
+  "name": "burlap",
+  "scale": 0.5,
+  "strength": 0.85,
+  "normal": 0.7,
+  "origin": "painted"
+ },
+ {
+  "index": 19,
+  "name": "metal",
+  "scale": 1.0,
+  "strength": 0.4,
+  "normal": 0.3,
+  "origin": "painted"
+ },
+ {
+  "index": 20,
+  "name": "paper",
+  "scale": 0.6,
+  "strength": 0.45,
+  "normal": 0.3,
+  "origin": "painted"
+ },
+ {
+  "index": 21,
+  "name": "stucco",
+  "scale": 1.5,
+  "strength": 0.7,
+  "normal": 0.6,
+  "origin": "painted"
+ },
+ {
+  "index": 22,
+  "name": "scallop",
+  "scale": 1.5,
+  "strength": 0.9,
+  "normal": 0.9,
+  "origin": "painted"
+ },
+ {
+  "index": 23,
+  "name": "soil",
+  "scale": 1.5,
+  "strength": 0.85,
+  "normal": 0.7,
+  "origin": "painted"
+ },
+ {
+  "index": 24,
+  "name": "lattice",
+  "scale": 1.0,
+  "strength": 0.95,
+  "normal": 0.9,
+  "origin": "painted"
+ },
+ {
+  "index": 25,
+  "name": "fabric",
+  "scale": 0.5,
+  "strength": 0.6,
+  "normal": 0.45,
+  "origin": "painted"
+ },
+ {
+  "index": 26,
+  "name": "vinyl",
+  "scale": 1.0,
+  "strength": 0.45,
+  "normal": 0.5,
+  "origin": "painted"
+ },
+ {
+  "index": 27,
+  "name": "cloud",
+  "scale": 6.0,
+  "strength": 0.6,
+  "normal": 0.5,
+  "origin": "painted"
+ }
+]

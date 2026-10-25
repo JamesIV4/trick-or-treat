@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:35:12 UTC",
+    "thread_id":  "01a16f68-7aa9-7ed3-8439-754ef3b3ccd9",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f68-7aa9-7ed3-8439-754ef3b3ccd9\\exec-fafcd036-24fd-4d6b-9f2b-c36e3f159170.png",
+    "sha256":  "319f80992872962c84245cdc47cf2e0b6e223c72fa062a25ebf346ced7e50776",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: soft cotton flannel with a faint plaid check pattern",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

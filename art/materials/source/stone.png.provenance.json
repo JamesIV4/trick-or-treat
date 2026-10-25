@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:30:14 UTC",
+    "thread_id":  "01a16f63-fa4f-7c03-b670-90489ce1e2cd",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f63-fa4f-7c03-b670-90489ce1e2cd\\exec-926dc73d-540b-4259-b90f-47035d128e1f.png",
+    "sha256":  "6ca9e14aee9f55f80be5c43566a71d7f8e28a57fae423b3c48d1b602a65cb7b0",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: rounded fieldstone blocks of varied sizes fitted together with soft mortar, cobbled stone wall",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

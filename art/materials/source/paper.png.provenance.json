@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:33:50 UTC",
+    "thread_id":  "01a16f67-47e1-7cd1-b71f-1447e3e24ae9",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f67-47e1-7cd1-b71f-1447e3e24ae9\\exec-7069ee95-9810-45b6-b9c5-3ec0358eaf83.png",
+    "sha256":  "ded99432db6d8da70e4bae9e3273f564abbf63cb5b17b89d1452e290c2223e9d",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: thin lantern paper with soft fibres and faint horizontal rib lines",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

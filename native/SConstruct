@@ -1,0 +1,12 @@
+from pathlib import Path
+
+env = SConscript("third_party/godot-cpp/SConstruct", {"api_version": "4.7"})
+env.Append(CPPPATH=["src"])
+env.Append(CXXFLAGS=["-std=c++17"] if env.get("use_mingw", False) or env["platform"] == "linux" else [])
+if env["platform"] == "windows" and env.get("use_mingw", False):
+    env.Append(LINKFLAGS=["-static-libgcc", "-static-libstdc++", "-static"])
+sources = Glob("src/*.cpp") + Glob("src/*/*.cpp")
+project = Path(ARGUMENTS.get("project_dir", "../game"))
+library = env.SharedLibrary(str(project / "native" / ("totnative" + env["suffix"] + env["SHLIBSUFFIX"])), sources)
+env.NoCache(library)
+Default(library)

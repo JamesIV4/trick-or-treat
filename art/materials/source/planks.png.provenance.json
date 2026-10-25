@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:29:46 UTC",
+    "thread_id":  "01a16f63-5dad-72c2-8a93-a6a688b2168e",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f63-5dad-72c2-8a93-a6a688b2168e\\exec-fcb5bedd-2d68-4b7a-a26d-76ed01d64071.png",
+    "sha256":  "4de338c87a24c8b7b077fe6c85cf63d7aa25fb1f0a9472329e212d908d08f2fb",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: wooden deck planks running vertically, exactly 5 planks with small gaps and tiny nail dots, gentle grain",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

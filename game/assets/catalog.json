@@ -1,0 +1,282 @@
+{
+ "assets": [
+  {
+   "id": "dragon_kid",
+   "path": "characters/dragon_kid",
+   "collision": "none"
+  },
+  {
+   "id": "candy_wrapped_pink",
+   "path": "candy/candy_wrapped_pink",
+   "collision": "none"
+  },
+  {
+   "id": "candy_wrapped_mint",
+   "path": "candy/candy_wrapped_mint",
+   "collision": "none"
+  },
+  {
+   "id": "candy_wrapped_grape",
+   "path": "candy/candy_wrapped_grape",
+   "collision": "none"
+  },
+  {
+   "id": "candy_wrapped_lemon",
+   "path": "candy/candy_wrapped_lemon",
+   "collision": "none"
+  },
+  {
+   "id": "candy_chocolate_bar",
+   "path": "candy/candy_chocolate_bar",
+   "collision": "none"
+  },
+  {
+   "id": "candy_lollipop",
+   "path": "candy/candy_lollipop",
+   "collision": "none"
+  },
+  {
+   "id": "candy_golden_bar",
+   "path": "candy/candy_golden_bar",
+   "collision": "none"
+  },
+  {
+   "id": "pumpkin_round",
+   "path": "props/pumpkin_round",
+   "collision": "cylinder",
+   "walkable": true
+  },
+  {
+   "id": "pumpkin_tall",
+   "path": "props/pumpkin_tall",
+   "collision": "cylinder",
+   "walkable": true
+  },
+  {
+   "id": "pumpkin_small",
+   "path": "props/pumpkin_small",
+   "collision": "none"
+  },
+  {
+   "id": "gourd_cluster",
+   "path": "props/gourd_cluster",
+   "collision": "none"
+  },
+  {
+   "id": "jackolantern_happy",
+   "path": "props/jackolantern_happy",
+   "collision": "cylinder",
+   "walkable": true
+  },
+  {
+   "id": "jackolantern_wink",
+   "path": "props/jackolantern_wink",
+   "collision": "cylinder",
+   "walkable": true
+  },
+  {
+   "id": "jackolantern_surprised",
+   "path": "props/jackolantern_surprised",
+   "collision": "cylinder",
+   "walkable": true
+  },
+  {
+   "id": "jackolantern_toothy",
+   "path": "props/jackolantern_toothy",
+   "collision": "cylinder",
+   "walkable": true
+  },
+  {
+   "id": "jackolantern_sleepy",
+   "path": "props/jackolantern_sleepy",
+   "collision": "cylinder",
+   "walkable": true
+  },
+  {
+   "id": "giant_pumpkin",
+   "path": "props/giant_pumpkin",
+   "collision": "cylinder",
+   "walkable": true
+  },
+  {
+   "id": "hay_bale",
+   "path": "props/hay_bale",
+   "collision": "box",
+   "walkable": true
+  },
+  {
+   "id": "hay_bale_round",
+   "path": "props/hay_bale_round",
+   "collision": "cylinder",
+   "walkable": true
+  },
+  {
+   "id": "scarecrow",
+   "path": "props/scarecrow",
+   "collision": "cylinder"
+  },
+  {
+   "id": "corn_stalks",
+   "path": "props/corn_stalks",
+   "collision": "cylinder"
+  },
+  {
+   "id": "hay_wagon",
+   "path": "props/hay_wagon",
+   "collision": "box",
+   "walkable": true
+  },
+  {
+   "id": "wheelbarrow",
+   "path": "props/wheelbarrow",
+   "collision": "box"
+  },
+  {
+   "id": "crate",
+   "path": "props/crate",
+   "collision": "box",
+   "walkable": true
+  },
+  {
+   "id": "barrel",
+   "path": "props/barrel",
+   "collision": "cylinder",
+   "walkable": true
+  },
+  {
+   "id": "sunflower",
+   "path": "props/sunflower",
+   "collision": "trunk",
+   "radius": 0.06,
+   "height": 2.0
+  },
+  {
+   "id": "leaf_pile",
+   "path": "props/leaf_pile",
+   "collision": "none"
+  },
+  {
+   "id": "vine_patch",
+   "path": "props/vine_patch",
+   "collision": "none"
+  },
+  {
+   "id": "tree_maple_red",
+   "path": "props/tree_maple_red",
+   "collision": "trunk",
+   "radius": 0.25,
+   "height": 2.5
+  },
+  {
+   "id": "tree_maple_orange",
+   "path": "props/tree_maple_orange",
+   "collision": "trunk",
+   "radius": 0.25,
+   "height": 2.5
+  },
+  {
+   "id": "tree_maple_gold",
+   "path": "props/tree_maple_gold",
+   "collision": "trunk",
+   "radius": 0.22,
+   "height": 2.5
+  },
+  {
+   "id": "bush_round",
+   "path": "props/bush_round",
+   "collision": "cylinder"
+  },
+  {
+   "id": "mailbox",
+   "path": "props/mailbox",
+   "collision": "cylinder"
+  },
+  {
+   "id": "lamp_post",
+   "path": "props/lamp_post",
+   "collision": "trunk",
+   "radius": 0.12,
+   "height": 3.2
+  },
+  {
+   "id": "paper_lantern",
+   "path": "props/paper_lantern",
+   "collision": "none"
+  },
+  {
+   "id": "porch_lantern",
+   "path": "props/porch_lantern",
+   "collision": "none"
+  },
+  {
+   "id": "string_bulb",
+   "path": "props/string_bulb",
+   "collision": "none"
+  },
+  {
+   "id": "rocking_chair",
+   "path": "props/rocking_chair",
+   "collision": "box"
+  },
+  {
+   "id": "bench",
+   "path": "props/bench",
+   "collision": "box",
+   "walkable": true
+  },
+  {
+   "id": "swing_set",
+   "path": "props/swing_set",
+   "collision": "box",
+   "walkable": true
+  },
+  {
+   "id": "flower_pot",
+   "path": "props/flower_pot",
+   "collision": "cylinder",
+   "walkable": true
+  },
+  {
+   "id": "inflatable_ghost",
+   "path": "props/inflatable_ghost",
+   "collision": "cylinder"
+  },
+  {
+   "id": "inflatable_cat",
+   "path": "props/inflatable_cat",
+   "collision": "cylinder"
+  },
+  {
+   "id": "cauldron",
+   "path": "props/cauldron",
+   "collision": "cylinder",
+   "walkable": true
+  },
+  {
+   "id": "parked_car",
+   "path": "props/parked_car",
+   "collision": "box",
+   "walkable": true
+  },
+  {
+   "id": "cloud_a",
+   "path": "sky/cloud_a",
+   "collision": "none"
+  },
+  {
+   "id": "cloud_b",
+   "path": "sky/cloud_b",
+   "collision": "none"
+  },
+  {
+   "id": "cloud_c",
+   "path": "sky/cloud_c",
+   "collision": "none"
+  },
+  {
+   "id": "bat",
+   "path": "sky/bat",
+   "collision": "none"
+  }
+ ]
+}

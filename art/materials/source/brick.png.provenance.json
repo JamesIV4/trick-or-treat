@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:30:07 UTC",
+    "thread_id":  "01a16f63-d32a-7f31-ae61-4a4b4eb1584a",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f63-d32a-7f31-ae61-4a4b4eb1584a\\exec-8555b1ab-bc44-40ab-b2ec-2b53766a73b3.png",
+    "sha256":  "de7b4236a9bb44211a19a3dc162337c564fa32e92130b29b94f474c51f2c2581",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: chunky rounded bricks in running bond, exactly 8 courses, soft lighter mortar lines, slightly irregular",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

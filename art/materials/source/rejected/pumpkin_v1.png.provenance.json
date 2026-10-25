@@ -1,0 +1,14 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-10-24 19:32:51 UTC",
+    "thread_id":  "01a16f66-5ccf-7333-96de-10e475ef8ae1",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a16f66-5ccf-7333-96de-10e475ef8ae1\\exec-00dae5cf-e1d3-493e-a88e-0c7e88029b95.png",
+    "sha256":  "bc6a2770aa15eaf64ebbf2dd12b3d7b48d4f5cee58c14373d5eca7ed9f6d01ac",
+    "prompt":  "Seamless tileable square texture, top-down orthographic view, hand-painted stylized game texture for a cozy toy-like low-poly game, soft painterly brush strokes, even flat lighting with no cast shadows or vignette, neutral light grey colour with only subtle hue variation so it can be tinted later, no text, no border, edges must tile seamlessly. Subject: pumpkin skin surface with soft vertical ribs, faint speckles and subtle bumps, smooth and friendly",
+    "references":  [
+
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

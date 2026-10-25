@@ -1,0 +1,20 @@
+# Godot
+game/.godot/
+game/native/*.dll
+game/native/*.so
+game/native/*.a
+game/native/*.exp
+game/native/*.lib
+
+# Native build
+native/third_party/
+native/extension_api.json
+native/.sconsign.dblite
+native/build.log
+native/src/**/*.o
+native/src/*.o
+
+# Art scratch
+art/team/**/_zoom/
+art/review/sheets/_*.png
+__pycache__/
