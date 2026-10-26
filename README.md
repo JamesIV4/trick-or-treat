@@ -27,12 +27,13 @@ native\BuildNative.ps1                 # first run clones the pinned godot-cpp a
 | --- | --- | --- |
 | Move | WASD | Left stick |
 | Jump / wing flap (again in the air) / glide (hold) | Space | A |
-| Fireball (homes in on a nearby monster, else what is ahead) | F, R or left click | Y or RB |
+| Fireball (homes in on a nearby monster, else what is ahead) | F, R or left click | Y or RT |
 | Tail spin (wider pickup, swats monsters, small hover in the air) | E or J | X |
 | Roll (ground) / ground pound with a fire ring (air) | Shift or K | B |
 | Hanging from a ledge: climb up / let go | Space / Ctrl | A / B |
 | Candy shop | Tab | Start |
 | Summon / leave the Pumpkin Cruiser (once bought) | V | LB |
+| Switch to the next costume found | T | RB |
 | Orbit camera | Q / C, or right-mouse drag | Right stick |
 | New world | N | Back |
 | HUD / debug panel / lightning toggle | H / F3 / L | |

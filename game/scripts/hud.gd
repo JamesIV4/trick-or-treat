@@ -33,6 +33,7 @@ var _hint: Label
 var _hint_t := 10.0
 var _debug: Label
 var _callout: Label
+var _callout_tw: Tween
 var _banner: Label
 var _banner_sub: Label
 var _hurt: ColorRect
@@ -162,7 +163,7 @@ func _ready() -> void:
 	_hint.offset_top = -64
 	_hint.offset_bottom = -24
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_prompt(_hint, "Move {move}   Jump {jump} (again: flap, hold: glide)   Fire {attack}   Spin {spin}   Roll, pound {roll}   Ledge: push in or {jump} to climb, pull away or {drop} to drop   Shop {shop}   Car {summon_car}   Pause {pause}   Camera {camera}")
+	_prompt(_hint, "Move {move}   Jump {jump} (again: flap, hold: glide)   Fire {attack}   Spin {spin}   Roll, pound {roll}   Ledge: push in or {jump} to climb, pull away or {drop} to drop   Shop {shop}   Car {summon_car}   Costume {next_costume}   Pause {pause}   Camera {camera}")
 
 	_debug = _label(16, Color(0.8, 1.0, 0.8))
 	_root.add_child(_debug)
@@ -376,10 +377,13 @@ func callout(text: String, level: int) -> void:
 	_callout.modulate.a = 1.0
 	_callout.scale = Vector2(0.3, 0.3)
 	_callout.rotation = -0.12
-	var tw := create_tween().set_parallel(true)
-	tw.tween_property(_callout, "scale", Vector2(1.0, 1.0), 0.35).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_callout, "rotation", 0.0, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.chain().tween_property(_callout, "modulate:a", 0.0, 0.5).set_delay(1.0)
+	# A new callout restarts the pop and the fade (the last one's fade must not cut this one short).
+	if _callout_tw:
+		_callout_tw.kill()
+	_callout_tw = create_tween().set_parallel(true)
+	_callout_tw.tween_property(_callout, "scale", Vector2(1.0, 1.0), 0.35).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_callout_tw.tween_property(_callout, "rotation", 0.0, 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_callout_tw.chain().tween_property(_callout, "modulate:a", 0.0, 0.5).set_delay(1.0)
 
 
 func toast(text: String) -> void:

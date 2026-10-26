@@ -36,12 +36,13 @@ Monsters have overrun the neighborhoods! Pumpkin hoppers, ghosts, spiders, bats 
 |---|---|---|
 | Move | WASD | Left stick |
 | Jump (again to flap, hold to glide) | Space | A |
-| Cast fire | F / Left click | Y / RB |
+| Cast fire | F / Left click | Y / RT |
 | Spin | E | X |
 | Roll / ground pound (in the air) | Shift | B |
 | Climb up a ledge / drop from a ledge | Space / Ctrl | A / B |
 | Camera | Q / C | Right stick |
 | Summon the car / get in and out | V | LB |
+| Switch costume | T | RB |
 | Shop | Tab | Start |
 | Switch shop tabs | Q / E | LB / RB |
 | Pause | Esc | Back |

@@ -12,6 +12,7 @@ const KEYS := {
 	"drop": [KEY_CTRL], # let go of a ledge (B on the gamepad, shared with roll)
 	"attack": [KEY_F, KEY_R],
 	"summon_car": [KEY_V],
+	"next_costume": [KEY_T],
 	"shop": [KEY_TAB],
 	"cam_left": [KEY_Q, KEY_LEFT],
 	"cam_right": [KEY_C, KEY_RIGHT],
@@ -30,8 +31,9 @@ const BUTTONS := {
 	"roll": [JOY_BUTTON_B],
 	"drop": [JOY_BUTTON_B],
 	"spin": [JOY_BUTTON_X],
-	"attack": [JOY_BUTTON_Y, JOY_BUTTON_RIGHT_SHOULDER],
+	"attack": [JOY_BUTTON_Y], # and RT (TRIGGERS)
 	"summon_car": [JOY_BUTTON_LEFT_SHOULDER],
+	"next_costume": [JOY_BUTTON_RIGHT_SHOULDER],
 	"shop": [JOY_BUTTON_START],
 	"pause": [JOY_BUTTON_BACK],
 	"shop_tab_prev": [JOY_BUTTON_LEFT_SHOULDER],
@@ -58,6 +60,11 @@ const MOUSE := {
 	"attack": [MOUSE_BUTTON_LEFT],
 }
 
+# Triggers pressed like buttons.
+const TRIGGERS := {
+	"attack": [JOY_AXIS_TRIGGER_RIGHT],
+}
+
 const AXES := {
 	"move_left": [JOY_AXIS_LEFT_X, -1.0],
 	"move_right": [JOY_AXIS_LEFT_X, 1.0],
@@ -70,7 +77,7 @@ const AXES := {
 
 
 func _enter_tree() -> void:
-	for action in KEYS.keys() + BUTTONS.keys() + AXES.keys() + MOUSE.keys():
+	for action in KEYS.keys() + BUTTONS.keys() + AXES.keys() + MOUSE.keys() + TRIGGERS.keys():
 		if not InputMap.has_action(action):
 			InputMap.add_action(action, 0.2)
 	for action in KEYS:
@@ -87,6 +94,12 @@ func _enter_tree() -> void:
 		for button in MOUSE[action]:
 			var ev := InputEventMouseButton.new()
 			ev.button_index = button
+			InputMap.action_add_event(action, ev)
+	for action in TRIGGERS:
+		for axis in TRIGGERS[action]:
+			var ev := InputEventJoypadMotion.new()
+			ev.axis = axis
+			ev.axis_value = 1.0
 			InputMap.action_add_event(action, ev)
 	for action in AXES:
 		var ev := InputEventJoypadMotion.new()

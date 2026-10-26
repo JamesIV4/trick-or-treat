@@ -1478,8 +1478,37 @@ void FestivalGame::update_costume_pickups(float dt) {
 	co.push_back(3);
 	call_ui("callout", co);
 	Array t;
-	t.push_back(vformat("You found the %s costume! Wear it from the shop's Costumes tab ({shop}).", COSTUMES[found].name));
+	t.push_back(vformat("You found the %s costume! Switch costumes with {next_costume}.", COSTUMES[found].name));
 	call_ui("toast", t);
+}
+
+void FestivalGame::cycle_costume() {
+	int next = costume_;
+	for (int i = 1; i < COSTUME_COUNT; ++i) {
+		const int k = (costume_ + i) % COSTUME_COUNT;
+		if (costume_found_[k]) {
+			next = k;
+			break;
+		}
+	}
+	if (next == costume_) {
+		call_audio("play_denied"); // nothing else found yet
+		Array t;
+		t.push_back(String("No other costumes yet. They're hidden high above rooftops in other neighborhoods and towns."));
+		call_ui("toast", t);
+		return;
+	}
+	costume_ = next;
+	player_->set_visual(gen_->instantiate_asset(COSTUMES[next].id));
+	player_->set_tail_style(String(COSTUMES[next].id) == "kid_cat" ? 1 : 0);
+	if (Vfx *v = Vfx::get()) {
+		v->candy_sparkles(player_->get_global_position() + Vector3(0, 0.7f, 0), Color(0.8f, 0.6f, 1.0f), 40, 3.0f, 0.8f, 0.9f);
+	}
+	call_audio("play_teleport");
+	Array co;
+	co.push_back(String(COSTUMES[next].name));
+	co.push_back(1);
+	call_ui("callout", co);
 }
 
 void FestivalGame::on_shop_tab(int dir) {
@@ -2094,6 +2123,8 @@ void FestivalGame::_process(double delta) {
 			open_shop();
 		} else if (in->is_action_just_pressed("summon_car")) {
 			toggle_car();
+		} else if (in->is_action_just_pressed("next_costume") && !(car_ && car_->driving())) {
+			cycle_costume();
 		}
 	}
 

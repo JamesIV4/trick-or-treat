@@ -14,7 +14,7 @@ const PATH := "user://settings.cfg"
 const BootScript := preload("res://scripts/boot.gd")
 
 const DEFAULTS := {
-	"display": {"window_mode": 0, "resolution": "native", "upscaler": 1, "vsync": 0, "max_fps": 0,
+	"display": {"window_mode": 0, "resolution": "native", "vsync": 0, "max_fps": 0,
 		"brightness": 1.0, "show_fps": false},
 	"graphics": {"preset": 3, "shadows": 4, "ssao": 4, "ssil": 2, "ssr": 2, "volumetric_fog": 2,
 		"glow": true, "dof": true, "contact_ao": true, "sharpen": true, "vignette": true, "aa": 2, "aniso": 2},
@@ -56,6 +56,7 @@ const REBIND := [
 	["roll", "Roll / ground pound", true, true],
 	["drop", "Drop from a ledge", true, true],
 	["summon_car", "Car: summon, get in or out", true, true],
+	["next_costume", "Switch costume", true, true],
 	["shop", "Shop", true, true],
 	["pause", "Pause", true, true],
 	["cam_left", "Turn the camera left", true, false],
@@ -242,8 +243,7 @@ func rows(tab: String) -> Array:
 				fps_labels.append("Unlimited" if f == 0 else ("Monitor (%d Hz)" % _refresh_rate() if f < 0 else "%d" % f))
 			return [
 				_choice("display", "window_mode", "Window mode", "Borderless fullscreen switches apps instantly. Exclusive fullscreen can have a little less latency.", [0, 1, 2], ["Borderless fullscreen", "Exclusive fullscreen", "Windowed"]),
-				_choice("display", "resolution", "Resolution", "Windowed: the window's size. Fullscreen: the 3D world renders at this size and is scaled to the screen (the menus stay sharp).", res_values, res_labels),
-				_choice("display", "upscaler", "Upscaling", "How the 3D view is scaled up when the resolution is below the screen's.", [0, 1, 2], ["Bilinear", "AMD FSR 1.0", "AMD FSR 2.2"]),
+				_choice("display", "resolution", "Resolution", "The window's size in windowed mode. Fullscreen always uses the screen's own resolution.", res_values, res_labels),
 				_choice("display", "vsync", "VSync", "Syncs frames to the monitor: no tearing, a little more input latency.", [0, 1, 2], ["Off", "On", "Adaptive"]),
 				_choice("display", "max_fps", "Frame rate limit", "Caps the frame rate (saves power and heat).", FPS_LIMITS, fps_labels),
 				_range("display", "brightness", "Brightness", "Makes the night lighter or darker.", 0.6, 1.4, 0.05, "%d%%", 100.0),
@@ -336,13 +336,11 @@ func _apply_display() -> void:
 			if DisplayServer.window_get_mode() != mode:
 				DisplayServer.window_set_mode(mode)
 			_place_window(res)
-		root.scaling_3d_scale = 1.0
-	else:
-		if DisplayServer.window_get_mode() != mode:
-			DisplayServer.window_set_mode(mode)
-		root.scaling_3d_scale = clampf(minf(float(res.x) / screen.x, float(res.y) / screen.y), 0.25, 1.0)
-	var scalers := [Viewport.SCALING_3D_MODE_BILINEAR, Viewport.SCALING_3D_MODE_FSR, Viewport.SCALING_3D_MODE_FSR2]
-	root.scaling_3d_mode = scalers[clampi(int(get_value("display", "upscaler")), 0, 2)]
+	elif DisplayServer.window_get_mode() != mode:
+		DisplayServer.window_set_mode(mode)
+	# No upscaling: the 3D view always renders at the window's full size.
+	root.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
+	root.scaling_3d_scale = 1.0
 	var vsyncs := [DisplayServer.VSYNC_DISABLED, DisplayServer.VSYNC_ENABLED, DisplayServer.VSYNC_ADAPTIVE]
 	DisplayServer.window_set_vsync_mode(vsyncs[clampi(int(get_value("display", "vsync")), 0, 2)])
 	var fps := int(get_value("display", "max_fps"))
@@ -526,6 +524,11 @@ func _restore_default(action: String, kind: String) -> void:
 			var b := InputEventJoypadButton.new()
 			b.button_index = button
 			InputMap.action_add_event(action, b)
+		for axis: int in BootScript.TRIGGERS.get(action, []):
+			var t := InputEventJoypadMotion.new()
+			t.axis = axis
+			t.axis_value = 1.0
+			InputMap.action_add_event(action, t)
 
 
 func _encode(ev: InputEvent) -> Dictionary:

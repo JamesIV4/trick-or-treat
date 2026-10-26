@@ -109,6 +109,7 @@ private:
 	void monster_event(const char *event, const godot::Vector3 &pos);
 	void gather_targets(std::vector<Damageable *> &out);
 	void toggle_car();
+	void cycle_costume(); // wear the next costume found (next_costume: RB, or T)
 	void open_shop();
 	// Shop tabs: 0 upgrades, 1 car paint, 2 costumes (switched with the bumpers / Q and E).
 	int shop_tab_ = 0;
