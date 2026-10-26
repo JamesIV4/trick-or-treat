@@ -18,3 +18,7 @@ native/src/*.o
 art/team/**/_zoom/
 art/review/sheets/_*.png
 __pycache__/
+
+# Review renders (sheets, in-engine previews, captures) are local working output, not committed
+art/review/**/*.png
+art/review/**/*.png.log

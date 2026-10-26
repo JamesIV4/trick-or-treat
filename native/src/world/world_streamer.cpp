@@ -668,33 +668,40 @@ void WorldStreamer::build_signpost(MeshBuilder &m, Node3D *root, const RegionPla
 	for (size_t k = 0; k < arms.size(); ++k) {
 		const Vector3 d = arms[k].dir;
 		const Vector3 side = Vector3(0, 1, 0).cross(d);
-		const float y = 2.5f - 0.36f * float(k);
-		const Vector3 c = p + Vector3(0, y, 0) + d * 0.62f;
-		m.set_transform(Transform3D(Basis(d, Vector3(0, 1, 0), d.cross(Vector3(0, 1, 0))), c));
-		m.rounded_box(Vector3(), Vector3(0.6f, 0.14f, 0.035f), 0.02f, board);
-		m.set_transform(Transform3D());
-		const Vector3 tip = c + d * 0.78f;
-		for (float sd : { -1.0f, 1.0f }) {
-			m.tri_out(c + d * 0.6f + Vector3(0, 0.14f, 0) + side * (0.035f * sd), tip + side * (0.035f * sd), c + d * 0.6f - Vector3(0, 0.14f, 0) + side * (0.035f * sd), board,
-					c + d * 0.6f - side * sd);
-		}
-		for (float sd : { -1.0f, 1.0f }) {
+		const float y = 2.45f - 0.48f * float(k);
+		// The lettering sets the board: a long place name gets a longer arm (never smaller text).
+		const String name = String::utf8(arms[k].name.c_str()).to_upper();
+		Label3D *labels[2];
+		for (int f = 0; f < 2; ++f) {
 			Label3D *l = memnew(Label3D);
 			l->set_font(display_font());
-			l->set_text(String::utf8(arms[k].name.c_str()).to_upper());
+			l->set_text(name);
 			l->set_font_size(64);
-			l->set_outline_size(10);
-			l->set_pixel_size(0.0036f);
-			l->set_modulate(Color(0.25f, 0.14f, 0.08f));
-			l->set_outline_modulate(Color(0.95f, 0.82f, 0.55f, 0.0f));
+			l->set_outline_size(14);
+			l->set_pixel_size(0.0056f);
+			l->set_modulate(Color(1.0f, 0.98f, 0.94f));
+			l->set_outline_modulate(Color(0.22f, 0.12f, 0.07f));
 			l->set_draw_flag(Label3D::FLAG_DOUBLE_SIDED, false);
-			// Each face reads toward the arrow's point.
-			const Vector3 face = side * sd;
-			const Vector3 x = face.cross(Vector3(0, 1, 0)) * -1.0f;
-			l->set_transform(Transform3D(Basis(x, Vector3(0, 1, 0), face), c + face * 0.045f + d * 0.05f));
-			root->add_child(l);
+			fit_label(l, 1e3f, 0.32f); // only the height is fixed (the board is 0.4 m tall)
+			labels[f] = l;
 		}
-	}
+		const float half = Math::max(0.6f, label_width(labels[0]) * 0.5f + 0.12f);
+		const Vector3 c = p + Vector3(0, y, 0) + d * (half + 0.02f);
+		m.set_transform(Transform3D(Basis(d, Vector3(0, 1, 0), d.cross(Vector3(0, 1, 0))), c));
+		m.rounded_box(Vector3(), Vector3(half, 0.2f, 0.035f), 0.02f, board);
+		m.set_transform(Transform3D());
+		const Vector3 tip = c + d * (half + 0.18f);
+		for (float sd : { -1.0f, 1.0f }) {
+			m.tri_out(c + d * half + Vector3(0, 0.2f, 0) + side * (0.035f * sd), tip + side * (0.035f * sd), c + d * half - Vector3(0, 0.2f, 0) + side * (0.035f * sd), board,
+					c + d * half - side * sd);
+		}
+		for (int f = 0; f < 2; ++f) {
+			// Each face reads toward the arrow's point.
+			const Vector3 face = side * (f == 0 ? -1.0f : 1.0f);
+			const Vector3 x = face.cross(Vector3(0, 1, 0)) * -1.0f;
+			labels[f]->set_transform(Transform3D(Basis(x, Vector3(0, 1, 0), face), c + face * 0.045f + d * 0.05f));
+			root->add_child(labels[f]);
+		}	}
 }
 
 // ---------------------------------------------------------------- horizon
@@ -771,7 +778,7 @@ void WorldStreamer::load_area(const RegionPlan &r) {
 			gen->open_door(l);
 		}
 		if (st.lot_cleared[l]) {
-			gen->light_up_house(l);
+			gen->close_house(l, false);
 		}
 	}
 	Area &stored = areas_[k] = a;

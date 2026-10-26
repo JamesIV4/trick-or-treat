@@ -28,6 +28,7 @@
 
 #include "gen/candy_kinds.h"
 #include "play/candy_field.h"
+#include "play/vfx.h"
 
 using namespace godot;
 
@@ -256,10 +257,101 @@ void NeighborhoodGenerator::open_door(int lot) {
 }
 
 void NeighborhoodGenerator::light_up_house(int lot) {
-	if (lot >= 0 && lot < int(glow_.size())) {
-		glow_[lot].lit = true;
-		glow_[lot].pulse = 1.0f;
+	close_house(lot, true);
+}
+
+namespace {
+// Porch glow while a house still has candy to give, and once it's done for the night.
+constexpr float PORCH_OPEN = 1.7f, PORCH_DONE = 0.45f;   // porch light energy
+constexpr float LANTERN_OPEN = 1.35f, LANTERN_DONE = 0.2f; // lantern glow_boost
+constexpr float JACK_DONE = 0.12f;                        // a blown-out jack-o'-lantern
+constexpr float CLOSE_TIME = 1.2f;                        // the porch winds down over this long
+} // namespace
+
+void NeighborhoodGenerator::close_house(int lot, bool animate) {
+	if (lot < 0 || lot >= int(glow_.size()) || glow_[lot].closed) {
+		return;
 	}
+	LotGlow &g = glow_[lot];
+	g.closed = true;
+	g.t = animate ? 0.0f : CLOSE_TIME + 1.0f;
+	build_thanks_sign(lot);
+	if (animate) {
+		// The candles blow out with a little puff of smoke.
+		if (Vfx *vfx = Vfx::get()) {
+			for (const Vector3 &p : g.jack_pos) {
+				vfx->smoke(p + Vector3(0, 0.35f, 0), Color(0.85f, 0.85f, 0.9f), 0.45f, 3);
+			}
+		}
+	}
+}
+
+// A hanging wooden "Thank you!" sign under the porch light (or the shop's awning), facing the
+// street, with a small glowing lantern of its own beside it so the closed porch still feels warm.
+void NeighborhoodGenerator::build_thanks_sign(int lot) {
+	if (!world_ || lot < 0 || lot >= int(ctx_->lots.size())) {
+		return;
+	}
+	const Lot &L = ctx_->lots[lot];
+	const Basis face = L.xf.basis.orthonormalized(); // +Z toward the street
+	Node3D *root = memnew(Node3D);
+	root->set_name(vformat("ThanksSign%d", lot));
+	const Vector3 at = L.porch_light + face.xform(Vector3(0, -0.62f, 0.12f));
+	root->set_transform(Transform3D(face.scaled(Vector3(1.3f, 1.3f, 1.3f)), at));
+	world_->add_child(root);
+	MeshBuilder b;
+	// Two little chains from a bracket, and a rounded plank with a painted border.
+	b.box(Vector3(0, 0.36f, 0), Vector3(0.36f, 0.025f, 0.03f), pal::LAMP_BLACK);
+	for (float sx : { -0.26f, 0.26f }) {
+		b.box(Vector3(sx, 0.24f, 0), Vector3(0.008f, 0.12f, 0.008f), pal::IRON);
+	}
+	b.rounded_box(Vector3(0, 0, 0), Vector3(0.34f, 0.13f, 0.025f), 0.03f, mat_cell(pal::WOOD_LIGHT, mat::PLANKS));
+	b.rounded_box(Vector3(0, 0, 0.012f), Vector3(0.31f, 0.105f, 0.018f), 0.02f, mat_cell(pal::BUNTING_CREAM, mat::FLAT));
+	MeshInstance3D *board = memnew(MeshInstance3D);
+	board->set_mesh(b.build());
+	board->set_material_override(toon_);
+	root->add_child(board);
+	Label3D *txt = memnew(Label3D);
+	txt->set_text("Thank you!");
+	txt->set_font(display_font());
+	txt->set_font_size(64);
+	txt->set_pixel_size(0.0028f);
+	txt->set_modulate(Color(0.55f, 0.22f, 0.12f));
+	txt->set_outline_size(0);
+	txt->set_position(Vector3(0, 0.03f, 0.034f));
+	fit_label(txt, 0.54f, 0.1f);
+	root->add_child(txt);
+	Label3D *sub = memnew(Label3D);
+	sub->set_text("Happy Halloween");
+	sub->set_font(display_font());
+	sub->set_font_size(32);
+	sub->set_pixel_size(0.0028f);
+	sub->set_modulate(Color(0.45f, 0.3f, 0.6f));
+	sub->set_outline_size(0);
+	sub->set_position(Vector3(0, -0.058f, 0.034f));
+	fit_label(sub, 0.5f, 0.05f);
+	root->add_child(sub);
+	// The sign's own lantern, hanging beside it.
+	MeshBuilder lb;
+	const Vector3 lp(0.52f, 0.05f, 0.02f);
+	lb.box(lp + Vector3(0, 0.31f, 0), Vector3(0.006f, 0.1f, 0.006f), pal::IRON);
+	lb.cylinder(lp + Vector3(0, 0.15f, 0), 0.06f, 0.05f, 8, pal::LAMP_BLACK, 0.02f);
+	lb.blob(lp + Vector3(0, 0.08f, 0), Vector3(0.055f, 0.07f, 0.055f), pal::GLOW_LANTERN, 1);
+	lb.cylinder(lp + Vector3(0, -0.005f, 0), 0.05f, 0.025f, 8, pal::LAMP_BLACK);
+	MeshInstance3D *lan = memnew(MeshInstance3D);
+	lan->set_mesh(lb.build());
+	lan->set_material_override(toon_);
+	root->add_child(lan);
+	OmniLight3D *o = memnew(OmniLight3D);
+	o->set_position(lp + Vector3(0, 0.08f, 0.15f));
+	o->set_color(Color(1.0f, 0.78f, 0.45f));
+	o->set_param(Light3D::PARAM_ENERGY, 0.9f);
+	o->set_param(Light3D::PARAM_RANGE, 3.2f);
+	o->set_param(Light3D::PARAM_ATTENUATION, 1.4f);
+	o->set_shadow(false);
+	root->add_child(o);
+	glow_[lot].sign = root;
+	glow_[lot].sign_rest = root->get_transform();
 }
 
 void NeighborhoodGenerator::_process(double delta) {
@@ -333,18 +425,37 @@ void NeighborhoodGenerator::_process(double delta) {
 			}
 		}
 	}
+	// Houses done for the night: the porch winds down, and the thank-you sign drops in and swings.
 	for (LotGlow &g : glow_) {
-		if (!g.lit || g.pulse <= 0.0f) {
+		if (!g.closed || g.t > CLOSE_TIME + 3.0f) {
 			continue;
 		}
-		// Celebration pulse that settles to "lanterns lit".
-		g.pulse = Math::max(0.0f, g.pulse - dt * 0.6f);
-		const float boost = 1.7f + g.pulse * 2.5f;
+		g.t += dt;
+		const float k = Math::smoothstep(0.0f, CLOSE_TIME, g.t);
 		for (GeometryInstance3D *gi : g.lanterns) {
-			gi->set_instance_shader_parameter("glow_boost", boost);
+			gi->set_instance_shader_parameter("glow_boost", Math::lerp(LANTERN_OPEN, LANTERN_DONE, k));
+		}
+		const float blow = Math::smoothstep(0.0f, 0.25f, g.t); // candles go out quickly
+		for (GeometryInstance3D *gi : g.jacks) {
+			gi->set_instance_shader_parameter("glow_boost", Math::lerp(1.0f, JACK_DONE, blow));
+		}
+		for (OmniLight3D *o : g.jack_lights) {
+			o->set_visible(blow < 0.99f);
+			o->set_param(Light3D::PARAM_ENERGY, Math::lerp(o->get_param(Light3D::PARAM_ENERGY), 0.0f, blow));
 		}
 		if (g.porch) {
-			g.porch->set_param(Light3D::PARAM_ENERGY, 1.7f + g.pulse * 2.5f);
+			g.porch->set_param(Light3D::PARAM_ENERGY, Math::lerp(PORCH_OPEN, PORCH_DONE, k));
+		}
+		if (g.sign) {
+			// Drops from above, bounces, then a soft swing that settles.
+			const float s = Math::max(0.0f, g.t - 0.3f);
+			const float drop = s < 0.35f ? (1.0f - s / 0.35f) * (1.0f - s / 0.35f) * 0.6f : std::abs(std::sin((s - 0.35f) * 9.0f)) * 0.06f * std::exp(-(s - 0.35f) * 5.0f);
+			const float swing = std::sin(s * 5.0f) * 0.12f * std::exp(-s * 1.3f);
+			g.sign->set_visible(g.t > 0.3f);
+			Transform3D xf = g.sign_rest;
+			xf.origin += Vector3(0, drop, 0);
+			xf.basis = xf.basis * Basis(Vector3(1, 0, 0), swing);
+			g.sign->set_transform(xf);
 		}
 	}
 }
@@ -443,6 +554,9 @@ void NeighborhoodGenerator::build_signs(Node3D *world) {
 		l->set_modulate(s.color);
 		l->set_outline_modulate(Color(0.12f, 0.05f, 0.08f));
 		l->set_transform(s.xf);
+		if (s.width > 0.0f) {
+			fit_label(l, s.width, s.height > 0.0f ? s.height : 1e3f);
+		}
 		l->set_draw_flag(Label3D::FLAG_DOUBLE_SIDED, false);
 		l->set_draw_flag(Label3D::FLAG_SHADED, false);
 		world->add_child(l);
@@ -729,9 +843,15 @@ void NeighborhoodGenerator::build_props(Node3D *world) {
 			squishies_.push_back(s);
 		}
 		if (pp.id == "porch_lantern" && pp.lot >= 0) {
-			// Unlit until the house is cleared: the porch lanterns are diegetic progress.
-			set_instance_param_recursive(n, "glow_boost", 0.18f);
+			// Lit while the house still has candy to give; they dim once it's trick-or-treated.
+			set_instance_param_recursive(n, "glow_boost", LANTERN_OPEN);
 			collect_geometry(n, glow_[pp.lot].lanterns);
+		}
+		if (pp.id.rfind("jackolantern", 0) == 0 && pp.lot >= 0 && pp.lot < int(ctx_->lots.size()) &&
+				pp.xf.origin.distance_to(ctx_->lots[pp.lot].porch_light) < 6.0f) {
+			// Jack-o'-lanterns on and by the porch blow out when the house is done.
+			collect_geometry(n, glow_[pp.lot].jacks);
+			glow_[pp.lot].jack_pos.push_back(pp.xf.origin);
 		}
 		const AssetInfo *a = assets_->get(pp.id);
 		auto it = a->sockets.find("light");
@@ -837,6 +957,9 @@ void NeighborhoodGenerator::build_lights(Node3D *world) {
 		root->add_child(o);
 		if (l.kind == LIGHT_PORCH && l.lot >= 0) {
 			glow_[l.lot].porch = o;
+		}
+		if (l.kind == LIGHT_JACK && l.lot >= 0 && l.lot < int(ctx_->lots.size()) && l.pos.distance_to(ctx_->lots[l.lot].porch_light) < 6.0f) {
+			glow_[l.lot].jack_lights.push_back(o);
 		}
 	}
 	ctx_->stats.lights = int(lights.size());

@@ -56,6 +56,8 @@ SPECS = [
       color="amber", wrap="sunflower_yellow"),
     S("candy_caramel_cube", 0, "caramel_cube", 0.25, "#ffa040", "Soft rounded caramel cube with a white zigzag drizzle.", color="caramel", drizzle="lolly_white"),
     S("candy_fudge_cube", 0, "caramel_cube", 0.25, "#ff8a1f", "Rounded chocolate fudge cube with an orange zigzag drizzle.", color="choco", drizzle="candy_orange"),
+    S("candy_swedish_fish", 0, "swedish_fish", 0.32, "#ff3b4e", "Plump red gummy fish (a Swedish fish): forked tail, "
+      "little fins, an embossed eye and scales.", color="licorice_red", accent="wrapper_red"),
     S("candy_licorice_twist", 0, "licorice", 0.33, "#ff2a3a", "Twisted red licorice rope with star cross-section.", color="licorice_red", cap="leaf_maroon"),
     S("candy_licorice_rainbow", 0, "licorice", 0.33, "#ff4fb8", "Twisted licorice rope in rainbow bands.", color="candy_cherry",
       bands=["candy_cherry", "candy_orange", "candy_lemon", "candy_green", "candy_blue", "candy_violet"]),

@@ -1,4 +1,4 @@
-﻿"""candy_variety batch03: ~84 new candy pickups built from parametric families.
+"""candy_variety batch03: ~84 new candy pickups built from parametric families.
 
 Run (Blender 5.1, headless, from the repo root):
   blender --background --factory-startup --python art/team/candy_variety/batch03/build_variety.py -- [ids|tier0..3] [--sheet] [--notile] [--lift]
@@ -305,6 +305,46 @@ def gummy_bat(spec):
         f = C.decal(tree, V((s * 0.013, -0.3, -0.018)), V((0, 1, 0)), [(-1, 1), (1, 1), (0, -1)], 0.014, "lolly_white",
                     off=0.003, name=f"f{s}")
         parts += [x for x in (e, pu, f) if x]
+    return parts
+
+
+def fish_outline():
+    """Swedish fish silhouette (unit coords, nose at -x): a plump oval body with a little dorsal and
+    belly fin, and a forked tail."""
+    out = []
+    for deg in range(32, 329, 9):
+        a = math.radians(deg)
+        x, y = -0.2 + 0.75 * math.cos(a), 0.46 * math.sin(a)
+        y += 0.08 * math.exp(-((deg - 92) / 28.0) ** 2)      # a soft hump of a dorsal fin
+        y -= 0.05 * math.exp(-((deg - 262) / 18.0) ** 2)     # belly fin
+        out.append((x, y))
+    out += [(0.6, -0.17), (0.8, -0.38), (0.97, -0.55), (1.03, -0.45), (0.86, -0.12), (0.82, 0.0), (0.86, 0.12), (1.03, 0.45),
+            (0.97, 0.55), (0.8, 0.38), (0.6, 0.17)]
+    return out
+
+
+def swedish_fish(spec):
+    p = spec["p"]
+    c, acc = p["color"], p["accent"]
+    ob = C.puffy("fish", fish_outline(), 0.34, 0.09, c, edge=0.6)
+    tree = C.tree_of([ob])
+    parts = [ob]
+    for side, ray in ((-1, V((0, 1, 0))), (1, V((0, -1, 0)))):
+        y0 = 0.3 * side                                          # cast from outside this face
+        # an embossed eye with a dark pupil, scale ovals in rows behind the gills, a gill curve
+        e = C.blob(f"eye{side}", tree, V((-0.1, y0, 0.022)), ray, 0.018, c, flat=0.5)
+        pu = C.decal(tree, V((-0.102, y0, 0.022)), ray, C.ngon(7), 0.016, "ink", off=0.01, name=f"pupil{side}")
+        parts += [x for x in (e, pu) if x]
+        for i, (x, z) in enumerate([(-0.02, 0.022), (-0.02, -0.02), (0.012, 0.0), (0.012, 0.042), (0.012, -0.04),
+                                    (0.044, 0.022), (0.044, -0.02)]):
+            sc = C.decal(tree, V((x, y0, z)), ray, C.ngon(6, sx=0.8), 0.022, acc, off=0.003, name=f"sc{side}{i}")
+            if sc:
+                parts.append(sc)
+        for i, z in enumerate((0.05, 0.0, -0.05)):
+            g = C.decal(tree, V((-0.06 + 0.006 * abs(i - 1), y0, z * 0.6)), ray, [(-0.25, -1), (0.25, -1), (0.25, 1), (-0.25, 1)],
+                        0.03, acc, off=0.003, name=f"gill{side}{i}")
+            if g:
+                parts.append(g)
     return parts
 
 
@@ -1298,6 +1338,7 @@ FAMILIES = {
     "twist": twist, "gumball_trio": gumball_trio, "gumball_rainbow": gumball_rainbow, "jawbreaker": jawbreaker,
     "eyeball": eyeball, "popcorn_ball": popcorn_ball, "caramel_cube": caramel_cube, "jellybean": jellybean, "jelly_trio": jelly_trio,
     "gummy_bear": gummy_bear, "gummy_worm": gummy_worm, "gummy_bat": gummy_bat, "gummy_ring": gummy_ring,
+    "swedish_fish": swedish_fish,
     "peppermint": peppermint, "butterscotch": butterscotch, "coin": coin, "corn": corn, "gumdrop": gumdrop,
     "gumdrop_pile": gumdrop_pile, "kiss": kiss, "licorice": licorice, "licorice_wheel": licorice_wheel,
     "sour_belt": sour_belt, "candy_buttons": candy_buttons, "rock_candy": rock_candy, "marsh_ghost": marsh_ghost,

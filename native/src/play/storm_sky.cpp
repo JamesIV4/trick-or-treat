@@ -1,5 +1,6 @@
 #include "play/storm_sky.h"
 
+#include <godot_cpp/classes/geometry_instance3d.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/math.hpp>
 
@@ -41,20 +42,40 @@ void StormSky::setup(NeighborhoodGenerator *gen, const Vector3 &center, const Ve
 	bats_.clear();
 	gen_ = gen;
 	center_ = center;
+	target_ = godot::Vector3(center.x, 0.0f, center.z);
+	base_y_ = center.y;
 	moon_dir_ = moon_dir.normalized();
 	rng_ = Rng(seed ^ 0x5eedc10dULL);
 	const char *ids[] = { "cloud_a", "cloud_b", "cloud_c" };
-	for (int i = 0; i < 8; ++i) {
+	// A big friendly flock: spread evenly round the sky (jittered), closer and lower than distant
+	// weather, so they fill the skyline in every direction.
+	constexpr int COUNT = 16;
+	for (int i = 0; i < COUNT; ++i) {
 		Cloud c;
 		c.node = gen->instantiate_asset(ids[rng_.irange(0, 2)]);
-		c.angle = rng_.range(0.0f, Math_TAU);
-		c.radius = rng_.range(150.0f, 210.0f);
-		c.height = rng_.range(38.0f, 58.0f);
-		c.speed = rng_.range(0.003f, 0.007f);
-		c.scale = rng_.range(2.6f, 4.2f);
-		c.node->set_scale(Vector3(c.scale, c.scale * rng_.range(0.8f, 1.0f), c.scale));
-		set_instance_param_recursive(c.node, "rim_strength", 0.6f);
-		set_instance_param_recursive(c.node, "rim_color", Color(0.75f, 0.78f, 1.0f));
+		c.angle = (float(i) + rng_.range(-0.35f, 0.35f)) * float(Math_TAU) / float(COUNT);
+		c.radius = rng_.range(85.0f, 165.0f);
+		c.height = rng_.range(24.0f, 40.0f) + (c.radius - 85.0f) * 0.08f;
+		c.speed = rng_.range(0.004f, 0.008f);
+		c.scale = rng_.range(3.4f, 5.4f);
+		c.node->set_scale(Vector3(c.scale, c.scale * rng_.range(0.85f, 1.0f), c.scale));
+		// No shadows from the clouds: far beyond the moon's shadow range they only threw blocky
+		// shadow-map steps onto each other.
+		{
+			std::vector<Node *> stack = { c.node };
+			while (!stack.empty()) {
+				Node *n = stack.back();
+				stack.pop_back();
+				if (GeometryInstance3D *gi = Object::cast_to<GeometryInstance3D>(n)) {
+					gi->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
+				}
+				for (int k = 0; k < n->get_child_count(); ++k) {
+					stack.push_back(n->get_child(k));
+				}
+			}
+		}
+		set_instance_param_recursive(c.node, "rim_strength", 0.8f);
+		set_instance_param_recursive(c.node, "rim_color", Color(0.86f, 0.8f, 1.0f));
 		add_child(c.node);
 		clouds_.push_back(c);
 	}
@@ -91,10 +112,18 @@ void StormSky::spawn_bats() {
 
 void StormSky::_process(double delta) {
 	const float dt = float(delta);
+	// Follow the player across the ground only, lazily (snapping after a teleport).
+	const Vector3 flat_c(center_.x, 0.0f, center_.z);
+	if (flat_c.distance_to(target_) > 150.0f) {
+		center_ = Vector3(target_.x, base_y_, target_.z);
+	} else {
+		const Vector3 f = flat_c.lerp(target_, 1.0f - std::exp(-dt * 0.08f));
+		center_ = Vector3(f.x, base_y_, f.z);
+	}
 	for (Cloud &c : clouds_) {
 		c.angle += c.speed * dt;
 		c.node->set_position(center_ + Vector3(std::cos(c.angle) * c.radius, c.height, std::sin(c.angle) * c.radius));
-		c.node->set_rotation(Vector3(0, -c.angle, 0));
+		c.node->set_rotation(Vector3(0, -c.angle + float(Math_PI) * 0.5f, 0)); // broadside to the middle, not end-on
 	}
 	// Heat lightning: dim and slow, never more than one burst every 20 s.
 	next_flash_ -= dt;

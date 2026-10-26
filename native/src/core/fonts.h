@@ -4,6 +4,8 @@
 
 #include <godot_cpp/classes/font_file.hpp>
 #include <godot_cpp/classes/font_variation.hpp>
+#include <godot_cpp/classes/label3d.hpp>
+#include <godot_cpp/core/math.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/text_server.hpp>
@@ -41,6 +43,35 @@ inline godot::Ref<godot::Font> display_font() {
 	fv->set_variation_opentype(axes);
 	font = fv;
 	return font;
+}
+
+// A Label3D's text width in metres at its current font, size, outline and pixel size.
+inline float label_width(godot::Label3D *l) {
+	godot::Ref<godot::Font> f = l->get_font();
+	if (f.is_null()) {
+		return 0.0f;
+	}
+	const godot::Vector2 sz = f->get_string_size(l->get_text(), godot::HORIZONTAL_ALIGNMENT_LEFT, -1, l->get_font_size());
+	return (sz.x + float(l->get_outline_size())) * l->get_pixel_size();
+}
+
+// Shrinks a Label3D's pixel size (never grows it) so its text fits inside max_w x max_h metres,
+// measured with its own font, size and outline: lettering always sits inside its sign board.
+inline void fit_label(godot::Label3D *l, float max_w, float max_h) {
+	godot::Ref<godot::Font> f = l->get_font();
+	if (f.is_null() || l->get_text().is_empty()) {
+		return;
+	}
+	const godot::Vector2 sz = f->get_string_size(l->get_text(), godot::HORIZONTAL_ALIGNMENT_LEFT, -1, l->get_font_size());
+	const float w = sz.x + float(l->get_outline_size()), h = f->get_height(l->get_font_size()) * 0.82f + float(l->get_outline_size());
+	float px = l->get_pixel_size();
+	if (w > 0.0f) {
+		px = godot::Math::min(px, max_w / w);
+	}
+	if (h > 0.0f) {
+		px = godot::Math::min(px, max_h / h);
+	}
+	l->set_pixel_size(px);
 }
 
 } // namespace tot

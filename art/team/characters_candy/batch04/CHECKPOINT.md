@@ -1,5 +1,40 @@
 # characters_candy / batch04 checkpoint: unlockable player costumes
 
+## 2026-10-26 fidelity pass (current)
+
+The user asked to match the fidelity of "Five Kids in Halloween Costumes.png" (crops in ref/) and,
+asked whether it was a design target, chose to follow the image (designs, colours, accessories),
+keeping the kid's face, the candy bucket and the wand. Later directions: no wings on the ghost,
+witch or pumpkin (the game shows magic dust on double jumps and hovers instead); better witch hair;
+no hair on top of the pumpkin cap; the cat's tail an S (not a C) that undulates smoothly.
+
+| Asset | Tris / budget | Optional parts | Height | Engine preview |
+| --- | --- | --- | --- | --- |
+| kid_ghost | 11482 / 16000 | none | 1.100 m | art/review/engine/kid_ghost.png |
+| kid_cat | 13614 / 16000 | tail (continuous S, swished in the toon shader) | 1.227 m | art/review/engine/kid_cat.png |
+| kid_witch | 15240 / 16000 | none (the cape is part of the body) | 1.332 m (hat) | art/review/engine/kid_witch.png |
+| kid_skeleton | 15456 / 16000 | none | 1.127 m | art/review/engine/kid_skeleton.png |
+| kid_pumpkin | 15544 / 16000 | none | 1.213 m (stem) | art/review/engine/kid_pumpkin.png |
+
+Budgets went from 10000 to 16000 (the player character; one on screen). Each costume's builder now
+lives in its own costume_<name>.py (helpers in costume_common.py) so they can be worked on in
+parallel. Shared additions in kid_kit.py: sneaker() (chunky high-top, ~1600 tris a foot, colour
+dict), strip() (clean curved appliques), paint_grid() (grid-aligned paint on lathes), and
+rm(hand_color=, hand_mat=) (mitts/gloves with the hand shape unchanged). Review:
+uild_costumes.py -- <ids> --close --pose also renders <id>_close.png (1024 px) and
+<id>_feet.png, before the glide pose.
+
+In game (dragon_controller.cpp): costumes without wings get a magic-dust burst on the double jump and
+a dust stream while hovering (no rings); the cat's tail sways at the root while the toon shader's
+	ail_wave instance uniform sends a sideways wave from root to tip (set per frame on the tail's
+meshes); the wand spin has no ring and the spin is 1.5x faster.
+
+Weak / unresolved: the sneakers eat most of the budget (450-1700 tris left per costume); the
+skeleton's sockets are shaped for the elevated gameplay camera and look a little squat straight on;
+the pumpkin's bangs are pointed tufts; the witch's locks are slightly tube-like straight from behind;
+the pumpkin's upper arms sit inside the body in the fixed arm pose.
+
+## Earlier build (batch04 first pass, superseded)
 ## Built (all gates PASS, rig check PASS, catalog published)
 
 | Asset | Tris / budget | Optional parts | Height | Engine preview |

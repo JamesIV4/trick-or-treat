@@ -108,7 +108,8 @@ struct Yard {
 
 	// Candidate -> score -> weighted pick among the best three.
 	bool place(const std::string &id, float radius, Rect zone, Facing facing, const std::function<float(float, float)> &score,
-			Vector3 *out = nullptr, float scale = 1.0f, float route_clear = 1.1f, bool collide = true, float wind = 0.0f, int cost = 1) {
+			Vector3 *out = nullptr, float scale = 1.0f, float route_clear = 1.1f, bool collide = true, float wind = 0.0f, int cost = 1,
+			const std::function<bool(float, float)> &fits = nullptr) {
 		if (budget <= 0 || !zone.valid()) {
 			return false;
 		}
@@ -118,7 +119,7 @@ struct Yard {
 		std::vector<Cand> cands;
 		for (int i = 0; i < 18; ++i) {
 			const float x = rng.range(zone.x0, zone.x1), z = rng.range(zone.z0, zone.z1);
-			if (ctx.occupied_at(lot.index, x, z, radius) || ctx.route_distance(lot.index, x, z) < route_clear + radius) {
+			if (ctx.occupied_at(lot.index, x, z, radius) || ctx.route_distance(lot.index, x, z) < route_clear + radius || (fits && !fits(x, z))) {
 				continue;
 			}
 			cands.push_back({ score(x, z) + rng.range(0.0f, 0.35f), x, z });
@@ -135,6 +136,38 @@ struct Yard {
 		put(id, Vector3(c.x, 0, c.z), yaw_for(facing, c.x, c.z), scale, collide, rng.range(-0.03f, 0.03f), wind, cost);
 		if (out) {
 			*out = Vector3(c.x, 0, c.z);
+		}
+		return true;
+	}
+
+	// Nothing solid within r of (x, z) at ground level in this lot (house, porch, shed, fences, hedges,
+	// planters...), and the whole circle inside the lot's fences and back edge.
+	bool clear_of_solids(float x, float z, float r, float max_bottom = 1.2f) const {
+		if (std::abs(x) > fence - r || z < -lot.depth + r + 0.4f || z > -0.6f - r) {
+			return false;
+		}
+		const Transform3D inv = lot.xf.affine_inverse();
+		const Vector3 p(x, 0.0f, z);
+		for (const OBox &o : ctx.boxes) {
+			if (o.lot != lot.index || o.xf.origin.y - o.half.y > max_bottom) {
+				continue;
+			}
+			const Vector3 l = (inv * o.xf).affine_inverse().xform(p);
+			// Distance from the circle's centre to the box footprint (in the box's frame).
+			const float dx = Math::max(0.0f, std::abs(l.x) - o.half.x), dz = Math::max(0.0f, std::abs(l.z) - o.half.z);
+			if (dx * dx + dz * dz < r * r) {
+				return false;
+			}
+		}
+		// Props already standing here (pumpkins, hay, planters...): keep a little gap to each.
+		for (const PropPlacement &pp : ctx.props) {
+			if (pp.lot != lot.index) {
+				continue;
+			}
+			const Vector3 l = inv.xform(pp.xf.origin);
+			if (Vector2(l.x - x, l.z - z).length() < r + 0.45f) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -521,7 +554,9 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 		const float big = (lot.persona == Persona::YoungFamily || lot.persona == Persona::Sporty) ? 0.7f : (lot.persona == Persona::Minimalists ? 0.0f : 0.3f);
 		if (lot.landmark != Landmark::TreeHouse && rng.chance(big)) {
 			y.budget = std::max(y.budget, 3);
-			y.place("trampoline_large", 2.1f, back, Facing::Random, [&](float, float z) { return -z * 0.05f; }, nullptr, 1.0f, 1.2f, true, 0.0f, 3);
+			// The whole mat and frame clear of hedges, fences, sheds and the house (not just its centre).
+			y.place("trampoline_large", 2.1f, back, Facing::Random, [&](float, float z) { return -z * 0.05f; }, nullptr, 1.0f, 1.2f, true, 0.0f, 3,
+					[&](float x, float z) { return y.clear_of_solids(x, z, 2.2f); });
 		}
 		if (rng.chance(lot.persona == Persona::Minimalists ? 0.25f : 0.7f)) {
 			const Transform3D inv = lot.xf.affine_inverse();
@@ -550,17 +585,9 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 									ctx.route_distance(lot.index, p.x, p.z) < 0.8f) {
 								continue;
 							}
-							bool clear = true;
-							for (const OBox &o : ctx.boxes) {
-								if (o.lot != lot.index || o.xf.origin.y - o.half.y > 0.5f) {
-									continue;
-								}
-								const Vector3 l = (inv * o.xf).affine_inverse().xform(p);
-								if (std::abs(l.x) < o.half.x + 0.65f && std::abs(l.z) < o.half.z + 0.65f) {
-									clear = false;
-									break;
-								}
-							}
+							// The whole mini trampoline (about 0.9 m across the frame) clear of everything solid
+							// at ground level, and of the lot's edges.
+							const bool clear = y.clear_of_solids(p.x, p.z, 0.95f, 1.2f);
 							const float score = p.z * 0.15f + rng.range(0.0f, 0.5f); // street side first
 							if (clear && score > best_score) {
 								best_score = score;
@@ -618,31 +645,14 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 			}
 			y.place("giant_pumpkin", 1.2f, front, Facing::Street, [&](float x, float z) { return -std::abs(z - (pz1 + 2.5f)) - std::abs(x - h.door_x) * 0.1f; });
 			y.place("wheelbarrow", 0.8f, front, Facing::Random, any);
-			// Vine ramp: a twisting green ramp from the lawn up to the porch roof (walkable, about 33 degrees).
+			// Hay-bale steps up to the porch roof (1, 2, 3 bales high), like the scarecrow yard's.
 			{
-				const float roof = h.deck_h + 2.3f;
-				const float len = roof / std::tan(Math::deg_to_rad(33.0f));
-				const float x_end = ds > 0 ? px1 + 0.1f : px0 - 0.1f;
-				const float x_start = x_end + ds * len;
-				const float z = y.zf + h.porch_d * 0.5f;
-				const Vector3 a(x_start, 0.0f, z), b(x_end, roof, z);
-				const Vector3 d = b - a;
-				const float L = d.length();
-				const float ang = std::atan2(roof, len);
-				// Low end on the lawn, high end at the porch roof: with ds > 0 it climbs toward -x.
-				const Basis tilt = Basis(Vector3(0, 0, 1), ds > 0 ? -ang : ang);
-				const Vector3 c = (a + b) * 0.5f + Vector3(0, -0.12f, 0);
-				m.set_transform(Transform3D(tilt, c));
-				m.rounded_box(Vector3(), Vector3(L * 0.5f, 0.15f, 0.7f), 0.08f, mat_cell(pal::VINE_DARK, mat::BARK), mat_cell(pal::VINE, mat::HEDGE));
-				for (float s = -L * 0.5f; s < L * 0.5f; s += 0.7f) {
-					m.blob(Vector3(s, 0.18f, (int(s * 3) & 1) ? 0.55f : -0.55f), Vector3(0.32f, 0.1f, 0.28f), mat_cell(pal::VINE, mat::LEAVES), 0);
+				const float x_end = ds > 0 ? px1 + 0.7f : px0 - 0.7f;
+				for (int k = 0; k < 3; ++k) {
+					const Vector3 p(x_end + ds * (2 - k) * 1.05f, 0, y.zf + h.porch_d * 0.5f);
+					y.bale_stack(p, Math_PI * 0.5f, k + 1, k == 0);
 				}
-				m.set_transform(Transform3D());
-				ctx.add_box(lot.index, c, Vector3(L * 0.5f, 0.15f, 0.7f), true, 0.0f, tilt);
-				lot.summit_route.insert(lot.summit_route.begin(), Vector3((x_start + x_end) * 0.5f, roof * 0.5f + 0.1f, z));
-				ctx.occupy(lot.index, (x_start + x_end) * 0.5f, z, 1.0f);
-			}
-			break;
+			}			break;
 		}
 		case Landmark::Scarecrow: {
 			Vector3 sc;

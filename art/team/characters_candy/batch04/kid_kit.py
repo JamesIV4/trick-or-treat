@@ -179,6 +179,45 @@ def decal(name, tree, outline, center, ray, up=(0, 0, 1), lift=0.004, thick=0.00
     return D.mesh(bm, name, color, mat, "box", smooth=False)
 
 
+def strip(name, tree, rows, center, ray, up=(0, 0, 1), lift=0.001, thick=0.004, color="ink", mat="flat"):
+    """A curved applique band (a swoosh, a stripe, a bone): rows [(u, v_top, v_bottom)] along the band in
+    the decal() plane, each edge vertex conformed to the surface. Built as quads between the two edges,
+    so concave and crescent shapes stay clean (decal() fans a single polygon)."""
+    ray = V(ray).normalized()
+    rgt = ray.cross(V(up)).normalized()
+    upv = rgt.cross(ray).normalized()
+
+    def onto(u, v):
+        q = V(center) + rgt * u + upv * v
+        loc, nrm = on_surface(tree, q, ray)
+        return (q, -ray) if loc is None else (loc, nrm)
+    bm = bmesh.new()
+    T, B, Tb, Bb = [], [], [], []
+    for u, vt, vb in rows:
+        for v, front, back in ((vt, T, Tb), (vb, B, Bb)):
+            loc, nrm = onto(u, v)
+            front.append(bm.verts.new(loc + nrm * (lift + thick)))
+            back.append(bm.verts.new(loc - nrm * 0.002))
+    n = len(rows)
+    fronts = [(T[i], T[i + 1], B[i + 1], B[i]) for i in range(n - 1)]
+    walls = [(T[i + 1], T[i], Tb[i], Tb[i + 1]) for i in range(n - 1)]              # top edge
+    walls += [(B[i], B[i + 1], Bb[i + 1], Bb[i]) for i in range(n - 1)]             # bottom edge
+    walls += [(T[0], B[0], Bb[0], Tb[0]), (B[-1], T[-1], Tb[-1], Bb[-1])]           # ends
+    for i, fv in enumerate(fronts + walls):
+        f = bm.faces.new(fv)
+        f.normal_update()
+        if i < len(fronts):
+            out = -ray                                          # the face of the band looks back at the viewer
+        else:
+            k = i - len(fronts)
+            j = k % (n - 1) if k < 2 * (n - 1) else (0 if k == 2 * (n - 1) else n - 1)
+            mid = (T[j].co + B[j].co) / 2
+            out = f.calc_center_median() - mid
+        if f.normal.dot(out) < 0:
+            f.normal_flip()
+    return D.mesh(bm, name, color, mat, "box", smooth=True)
+
+
 def torso_r(z, prof=None):
     """Radius (X) of the dragon torso lathe at height z (0 outside it)."""
     prof = prof or TORSO_PROF
@@ -256,16 +295,125 @@ def boot_warp_fn(toe=0.0, curl=0.0):
     return w
 
 
+SNEAKER = dict(upper="lolly_white", panel="candy_grape", toe="lolly_white", sole="lolly_white", stripe="candy_grape",
+               lace="candy_orange", collar="candy_grape", tongue="candy_grape", heel="candy_orange", mat="vinyl")
+
+
+def paint_grid(ob, segs, fn, mat="flat"):
+    """Recolour a D.lathe mesh band by band: its first faces run ring-major (face k = band k // segs,
+    segment k % segs, segment 0 starting at +X and turning toward +Y), so picking whole bands and
+    segments paints clean edges along the grid. fn(band, seg) -> colour or None."""
+    bm = bmesh.new()
+    bm.from_mesh(ob.data)
+    groups = {}
+    for k, f in enumerate(bm.faces):
+        col = fn(k // segs, k % segs)
+        if col:
+            groups.setdefault(col, []).append(f)
+    for col, fs in groups.items():
+        K._paint_bm(bm, col, mat, fs)
+    bm.to_mesh(ob.data)
+    bm.free()
+
+
+def sneaker(name, x, colors=None):
+    """A chunky cartoon high-top (the costume reference's shoes), in world space around the foot at x:
+    a thick two-tone rubber sole (coloured outsole under a white midsole, a little toe spring), a full
+    upper with a rubber toe cap and a swoosh panel appliqued on both sides, a padded ankle collar, a
+    tall tongue, criss-cross laces over the instep and a heel pull tab. colors: SNEAKER keys (upper,
+    panel, toe, sole, stripe, lace, collar, tongue, heel, mat) overriding the defaults. Same footprint
+    as the old boot (y -0.17..0.11, height 0.18 m)."""
+    c = dict(SNEAKER, **(colors or {}))
+    mat = c["mat"]
+    SEGS = 28
+
+    def foot_k(z):          # 1 down in the foot, 0 up at the ankle (the ankle stays round around the leg)
+        return min(max((0.135 - z) / 0.075, 0.0), 1.0)
+
+    def upper_warp(p):
+        k = foot_k(p.z)
+        y = p.y * (1.0 + 0.36 * k) - 0.03 * k
+        z = p.z
+        if p.y < 0:
+            y -= 0.012 * k * (1 - min(abs(p.x) / 0.1, 1.0))
+            z -= 0.3 * k * max(p.z - 0.06, 0.0) * max(0.0, -p.y / 0.1)     # the toe box slopes down to the tip
+        return V((p.x * (1.0 + 0.04 * k), y, z))
+    up_prof = [(0.0, 0.034), (0.06, 0.034), (0.082, 0.039), (0.094, 0.05), (0.1, 0.064), (0.101, 0.078), (0.099, 0.094),
+               (0.094, 0.11), (0.089, 0.126), (0.086, 0.142), (0.084, 0.158), (0.083, 0.17), (0.0, 0.172)]
+    upper = D.lathe(name + "_upper", up_prof, SEGS, color=c["upper"], mat=mat, project="sphere", warp=upper_warp,
+                    loc=(x, 0, 0), center=(0, 0, 0.09))
+    front = 0.75 * SEGS                                     # the segment facing -Y
+
+    def toe(band, seg):                                     # rubber toe cap: the low front bands
+        da = min(abs(seg + 0.5 - front), SEGS - abs(seg + 0.5 - front))
+        return c["toe"] if 2 <= band <= 6 and da < SEGS * 0.21 else None
+    paint_grid(upper, SEGS, toe, mat="flat")
+    tree = D.bvh(upper)
+    parts = [upper]
+    # swoosh panels on both sides, swept from the toe up toward the heel
+    for side in (1, -1):
+        ray = V((-side, 0, 0))
+        rgt = ray.cross(V((0, 0, 1)))
+        flip = 1 if rgt.y > 0 else -1                      # +u runs toward the heel on both sides
+        rows = []
+        for i in range(13):
+            s = i / 12
+            v = -0.018 + 0.05 * s ** 1.4
+            w = 0.003 + 0.013 * math.sin(math.pi * min(s * 1.15, 1.0)) + 0.004 * s
+            rows.append(((-0.088 + 0.17 * s) * flip, v + w, v - w * 0.7))
+        parts.append(strip(f"{name}_swoosh{side}", tree, rows, (x + side * 0.15, -0.012, 0.086), ray, thick=0.004,
+                           color=c["panel"], mat=mat))
+    # two-tone sole: the coloured outsole under a white midsole (separate pieces: clean straight stripe)
+    def sole_warp(p):
+        y = p.y * 1.4 - 0.034
+        return V((p.x * 1.05, y, p.z + 0.016 * max(0.0, (-y - 0.1) / 0.07) ** 2))     # toe spring
+    out_prof = [(0.0, 0.0), (0.088, 0.0), (0.1, 0.006), (0.104, 0.016), (0.0, 0.017)]
+    mid_prof = [(0.0, 0.016), (0.105, 0.016), (0.106, 0.03), (0.101, 0.044), (0.092, 0.051), (0.0, 0.053)]
+    parts.append(D.lathe(name + "_outsole", out_prof, 20, color=c["stripe"], mat="flat", project="cyl", warp=sole_warp,
+                         loc=(x, 0, 0)))
+    parts.append(D.lathe(name + "_midsole", mid_prof, 20, color=c["sole"], mat="flat", project="cyl", warp=sole_warp,
+                         loc=(x, 0, 0)))
+    # padded ankle collar
+    cp = [V((x + math.cos(a) * 0.087, math.sin(a) * 0.087 + 0.004, 0.166 - 0.008 * math.sin(a)))
+          for a in (2 * math.pi * i / 18 for i in range(18))]
+    parts.append(D.sweep(name + "_collar", cp, 0.018, sides=8, color=c["collar"], mat=mat, closed=True, center=(x, 0, 0.166)))
+    # tongue: a soft flap standing up out of the front of the collar
+    tongue = blob(name + "_tongue", (0, 0, 0), (0.044, 0.016, 0.052), segs=12, rings=6, color=c["tongue"], mat=mat)
+    D.put(tongue, V((x, -0.084, 0.17)), V((0, -1, 0.35)), up=(0, 0, 1))
+    parts.append(tongue)
+    # criss-cross laces over the instep, sitting on the upper
+    for k, z in enumerate((0.096, 0.122)):
+        for s in (1, -1):
+            pts = []
+            for t in (0.0, 0.5, 1.0):
+                px = x + s * (-0.034 + 0.068 * t)
+                pz = z + 0.016 * t
+                loc, nrm = on_surface(tree, (px, -0.4, pz), (0, 1, 0))
+                if loc is None:
+                    loc, nrm = V((px, -0.1, pz)), V((0, -1, 0))
+                pts.append(loc + nrm * 0.006)
+            parts.append(D.sweep(f"{name}_lace{k}{s}", pts, 0.0062, sides=5, color=c["lace"], mat="flat", project="box"))
+    tab = blob(name + "_tab", (0, 0, 0), (0.022, 0.012, 0.03), segs=8, rings=4, color=c["heel"], mat=mat)
+    D.put(tab, V((x, 0.093, 0.177)), V((0, 1, 0.2)), up=(0, 0, 1))
+    parts.append(tab)
+    return parts
+
 def leg(name, hip, thigh_color, boot_color, sole_color, thigh_mat=FELT, boot_mat=FELT, toe=0.0, curl=0.0,
-        stripes=None, extras=None, cuff=None):
+        stripes=None, extras=None, cuff=None, shoe=None):
     """stripes: (color, period) paints alternate bands on the thigh. extras(x) -> [objects] in world space.
-    cuff: (color, mat) adds a turned-down cuff on the boot top."""
+    cuff: (color, mat) adds a turned-down cuff on the boot top. shoe: sneaker colours (dict, see
+    SNEAKER) replaces the felt boot, sole and cuff with a high-top sneaker."""
     x = hip[0] * 1.06
     thigh = D.lathe(name + "_thigh", [(0.0, 0.12), (0.074, 0.125), (0.08, 0.17), (0.084, 0.24), (0.074, 0.305), (0.0, 0.335)],
                     10, color=thigh_color, mat=thigh_mat, project="cyl", loc=(x, 0, 0))
     if stripes:
         col, per = stripes
         K.paint(thigh, col, where=lambda c, n: 0.12 < c.z < 0.31 and int((c.z - 0.12) / per) % 2 == 1)
+    if shoe is not None:
+        parts = [thigh] + sneaker(name, x, shoe)
+        if extras:
+            parts += extras(x)
+        return D.part(parts, name, hip)
     boot = D.lathe(name + "_boot", [(0.0, 0.03), (0.07, 0.03), (0.09, 0.05), (0.096, 0.083), (0.088, 0.115),
                                     (0.066, 0.142), (0.032, 0.158), (0.0, 0.162)],
                    14, color=boot_color, mat=boot_mat, project="sphere", warp=boot_warp_fn(toe, curl), loc=(x, 0, 0),
@@ -284,9 +432,11 @@ def leg(name, hip, thigh_color, boot_color, sole_color, thigh_mat=FELT, boot_mat
 
 
 # ------------------------------------------------------------------ arms (origin at shoulder)
-def arm(name, sho, hand, color, mat=FELT, r0=0.066, taper=0.016, flare=0.012, sides=10, paint=None, extras=None):
+def arm(name, sho, hand, color, mat=FELT, r0=0.066, taper=0.016, flare=0.012, sides=10, paint=None, extras=None,
+        hand_color="skin", hand_mat="flat"):
     """Sleeve swept shoulder -> elbow -> wrist, flaring into a soft cuff; the kid's own skin hand pokes
-    out. paint(i, j) recolours sleeve faces; extras(pts, rr, d) -> [objects]."""
+    out (hand_color / hand_mat make it a mitten or glove with exactly the same shape, so the wand grip
+    and the bucket grip don't move). paint(i, j) recolours sleeve faces; extras(pts, rr, d) -> [objects]."""
     s = V(sho)
     out = 1 if s.x > 0 else -1
     d = (hand - s).normalized()
@@ -295,9 +445,9 @@ def arm(name, sho, hand, color, mat=FELT, r0=0.066, taper=0.016, flare=0.012, si
     rr = [r0 - taper * t + flare * max(0.0, (t - 0.8) / 0.2) for t in par]
     sleeve = D.sweep(name + "_sleeve", pts, rr, sides=sides, color=color, mat=mat, project="cyl", paint=paint)
     mc = hand + d * 0.04
-    mitten = blob(name + "_hand", (0, 0, 0), (0.042, 0.04, 0.05), segs=10, rings=6, color="skin", mat="flat")
+    mitten = blob(name + "_hand", (0, 0, 0), (0.042, 0.04, 0.05), segs=10, rings=6, color=hand_color, mat=hand_mat)
     D.put(mitten, mc, d, up=(0, -1, 0))
-    th = blob(name + "_thumb", (0, 0, 0), (0.016, 0.016, 0.026), segs=7, rings=4, color="skin", mat="flat")
+    th = blob(name + "_thumb", (0, 0, 0), (0.016, 0.016, 0.026), segs=7, rings=4, color=hand_color, mat=hand_mat)
     D.put(th, mc + V((0.01 * out, -0.036, 0.018)), d + V((0, -0.6, 0)), up=(0, -1, 0))
     parts = [sleeve, mitten, th]
     if extras:

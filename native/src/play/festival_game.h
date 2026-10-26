@@ -174,6 +174,10 @@ private:
 		int64_t seed = 0; // a world of its own (0: the reel's seed); the world reloads when it changes
 		bool gameplay = false; // seen as the player sees it: the normal camera and HUD, no caption
 		bool trailer = true; // part of the trailer reel (false: screenshots only)
+		bool face_camera = false; // gameplay camera: look at the kid's front (lineups), not from behind
+		bool vines = true; // false: the thorn vines are hidden (shots where the kid or the car travels, so nobody passes through them)
+		bool caption_top = false; // the caption at the top of the frame (a menu fills the middle)
+		bool cutout = false; // the gameplay camera's occluder cutout: anything between the camera and the kid dithers away
 		std::function<void()> setup;
 		std::function<void(float t)> tick; // t: seconds into the shot
 		std::function<godot::Transform3D(float t, float &fov)> cam;
@@ -193,9 +197,12 @@ private:
 	void cine_reset_player();
 	void cine_home(godot::Vector3 &spawn, godot::Vector3 &street); // the current home area's spawn and street direction
 	int64_t cine_base_seed_ = 0, cine_bounce_seed_ = 0;
+	int64_t cine_seed_override_ = 0; // --cine-seed: try a single shot in another world
+	int cine_wait_ = 0; // frames left before a shot that just loaded its own world is set up
 	bool cine_aim_on_ = false; // shots that fire at a set point instead of the auto-aim's pick
 	godot::Vector3 cine_aim_;
 	float cine_cut_at_ = -1.0f; // a shot that ends early (once its action is done)
+	std::vector<godot::Node3D *> cine_props_; // extra models a shot places (the costume lineup), freed at the next shot
 	bool cine_aggro_ = false; // gameplay segments: monsters come for the kid as usual (who can't be hurt)
 	bool cine_clear(const godot::Vector3 &a, const godot::Vector3 &b); // nothing solid between a and b
 	// The first camera offset (side, back) with a clear view of every target from both ends of its move.
@@ -236,6 +243,7 @@ private:
 	bool lightning_ = true;
 	godot::Dictionary stats_;
 	int wallet_ = 0, bonus_ = 0;
+	int fill_wallet_ = -1; // the wallet the bucket's candy heap last showed
 	float invuln_ = 0.0f, since_pickup_ = 0.0f, nudge_cooldown_ = 0.0f, hud_t_ = 0.0f;
 	bool menu_open_ = false, gate_armed_ = true, shop_armed_ = true, told_shop_ = false;
 	uint64_t current_area_ = 0;
@@ -268,6 +276,7 @@ private:
 	godot::Ref<godot::Image> preview_sheet_;
 	godot::AABB preview_box_;
 	int preview_view_ = 0, preview_wait_ = 0;
+	bool preview_icon_ = false, preview_icon_white_ = false, preview_icon_studio_ = false;
 	godot::DirectionalLight3D *studio_ = nullptr;
 
 	// Autopilot review bot: chases candy (and fights), reports collection rate and stuck time.

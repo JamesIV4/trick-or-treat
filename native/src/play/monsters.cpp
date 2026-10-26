@@ -976,8 +976,19 @@ Vector3 ThornVine::target_point() const {
 	return get_global_position() + Vector3(0, 1.0f * scale_, 0);
 }
 
+void ThornVine::set_hidden(bool on) {
+	hidden_ = on;
+	set_visible(!on);
+	if (body_ && !burned_) {
+		body_->set_collision_layer(on ? 0 : 1);
+	}
+}
+
 void ThornVine::_process(double delta) {
 	const float dt = float(delta);
+	if (hidden_) {
+		return;
+	}
 	if (wither_in_ >= 0.0f && burn_t_ < 0.0f) {
 		wither_in_ -= dt;
 		if (wither_in_ < 0.0f) {
@@ -1078,7 +1089,7 @@ void ThornVine::preset_burned() {
 
 bool ThornVine::take_hit(float damage, const Vector3 &from) {
 	(void)from;
-	if (burned_) {
+	if (burned_ || hidden_) {
 		return false;
 	}
 	hp_ -= damage;
@@ -1171,6 +1182,9 @@ float VineTendril::surface_distance(const Vector3 &p) const {
 
 void VineTendril::_process(double delta) {
 	const float dt = float(delta);
+	if (hidden_) {
+		return; // no thorns to brush against
+	}
 	if (wither_in_ >= 0.0f && burn_t_ < 0.0f) {
 		wither_in_ -= dt;
 		if (wither_in_ < 0.0f) {
@@ -1238,7 +1252,7 @@ void VineTendril::preset_burned() {
 
 bool VineTendril::take_hit(float damage, const Vector3 &from) {
 	(void)from;
-	if (burned_) {
+	if (burned_ || hidden_) {
 		return false;
 	}
 	hp_ -= damage;
@@ -1426,6 +1440,7 @@ void Infestation::build(Area &area, MonsterWorld *world, Node3D *root, bool peac
 		sign->set_draw_flag(Label3D::FLAG_SHADED, false);
 		sign->set_draw_flag(Label3D::FLAG_DOUBLE_SIDED, false);
 		sign->set_transform(xf * Transform3D(Basis(), Vector3(0, 2.62f, 0.69f)));
+		fit_label(sign, 1.5f, 0.3f);
 		root->add_child(sign);
 		OmniLight3D *lamp = memnew(OmniLight3D);
 		lamp->set_color(Color(1.0f, 0.7f, 0.4f));
@@ -1822,6 +1837,68 @@ void Infestation::spawn_from(MonsterNest *nest) {
 	if (world_->event) {
 		world_->event("spawn", p);
 	}
+}
+
+void Infestation::fill_nest_near(const Vector3 &p) {
+	MonsterNest *best = nullptr;
+	float best_d = 1e9f;
+	for (MonsterNest *n : nests_) {
+		const float d = n->get_global_position().distance_to(p);
+		if (!n->destroyed() && d < best_d) {
+			best_d = d;
+			best = n;
+		}
+	}
+	if (!best) {
+		return;
+	}
+	for (int guard = 0; best->alive < tuning(best->type()).max_alive && guard < 8; ++guard) {
+		spawn_from(best);
+	}
+}
+
+float Infestation::thorn_distance(const Vector3 &p) const {
+	float best = 1e9f;
+	for (const VineTendril *t : tendrils_) {
+		if (t->target_alive()) {
+			best = Math::min(best, t->surface_distance(p));
+		}
+	}
+	for (const std::vector<ThornVine *> *list : { &vines_, &hearts_ }) {
+		for (const ThornVine *v : *list) {
+			if (v->target_alive()) {
+				const Vector3 c = v->get_global_position();
+				best = Math::min(best, Vector2(p.x - c.x, p.z - c.z).length() - v->target_radius());
+			}
+		}
+	}
+	return best;
+}
+
+int Infestation::hide_thorns_near(const Vector3 &a, const Vector3 &b, float r) {
+	const auto near = [&](const std::function<float(const Vector3 &)> &dist) {
+		for (int i = 0; i <= 8; ++i) {
+			if (dist(a.lerp(b, float(i) / 8.0f)) < r) {
+				return true;
+			}
+		}
+		return false;
+	};
+	int n = 0;
+	for (VineTendril *t : tendrils_) {
+		if (t->target_alive() && near([t](const Vector3 &p) { return t->surface_distance(p); })) {
+			t->set_hidden(true);
+			++n;
+		}
+	}
+	for (ThornVine *v : vines_) {
+		const Vector3 c = v->get_global_position();
+		if (v->target_alive() && near([&](const Vector3 &p) { return Vector2(p.x - c.x, p.z - c.z).length() - v->target_radius(); })) {
+			v->set_hidden(true);
+			++n;
+		}
+	}
+	return n;
 }
 
 int Infestation::nests_left() const {

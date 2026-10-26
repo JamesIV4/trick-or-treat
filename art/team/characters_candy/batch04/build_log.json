@@ -1,42 +1,38 @@
 {
  "kid_ghost": {
-  "tris": 8094,
+  "tris": 11482,
   "parts": {
-   "body": 1324,
-   "head": 3028,
-   "wing_l": 248,
-   "wing_r": 248,
-   "leg_l": 460,
-   "leg_r": 460,
-   "arm_l": 278,
-   "arm_r": 278,
+   "body": 2304,
+   "head": 3420,
+   "leg_l": 1688,
+   "leg_r": 1688,
+   "arm_l": 306,
+   "arm_r": 306,
    "bucket": 1102,
    "bucket_candy": 668
   }
  },
  "kid_cat": {
-  "tris": 8912,
+  "tris": 13614,
   "parts": {
-   "body": 1082,
-   "head": 3712,
-   "tail": 720,
-   "leg_l": 536,
-   "leg_r": 536,
-   "arm_l": 278,
-   "arm_r": 278,
+   "body": 1882,
+   "head": 4158,
+   "tail": 920,
+   "leg_l": 1800,
+   "leg_r": 1800,
+   "arm_l": 642,
+   "arm_r": 642,
    "bucket": 1102,
    "bucket_candy": 668
   }
  },
  "kid_witch": {
-  "tris": 8870,
+  "tris": 15240,
   "parts": {
-   "body": 1350,
-   "head": 3706,
-   "wing_l": 356,
-   "wing_r": 356,
-   "leg_l": 388,
-   "leg_r": 388,
+   "body": 2974,
+   "head": 5968,
+   "leg_l": 1986,
+   "leg_r": 1986,
    "arm_l": 278,
    "arm_r": 278,
    "bucket": 1102,
@@ -44,29 +40,27 @@
   }
  },
  "kid_skeleton": {
-  "tris": 9782,
+  "tris": 15456,
   "parts": {
-   "body": 1944,
-   "head": 3260,
-   "leg_l": 798,
-   "leg_r": 798,
-   "arm_l": 606,
-   "arm_r": 606,
+   "body": 2938,
+   "head": 4480,
+   "leg_l": 2132,
+   "leg_r": 2132,
+   "arm_l": 1002,
+   "arm_r": 1002,
    "bucket": 1102,
    "bucket_candy": 668
   }
  },
  "kid_pumpkin": {
-  "tris": 8200,
+  "tris": 15544,
   "parts": {
-   "body": 1596,
-   "head": 3250,
-   "wing_l": 170,
-   "wing_r": 170,
-   "leg_l": 344,
-   "leg_r": 344,
-   "arm_l": 278,
-   "arm_r": 278,
+   "body": 3744,
+   "head": 4722,
+   "leg_l": 2104,
+   "leg_r": 2104,
+   "arm_l": 550,
+   "arm_r": 550,
    "bucket": 1102,
    "bucket_candy": 668
   }

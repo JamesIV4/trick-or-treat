@@ -142,6 +142,9 @@ func _voice_for(name: String) -> AudioStreamPlayer:
 	return _pool[pick]
 
 func start_music() -> void:
+	# Trailer clips recorded one shot at a time get one continuous music bed laid under them later.
+	if OS.get_cmdline_user_args().has("--cine-no-music"):
+		return
 	if _music.stream and not _music.playing:
 		_music.volume_db = -9.0 + float(_mix.get("music_neighborhood", 0.0))
 		_music.play()

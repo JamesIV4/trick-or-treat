@@ -30,6 +30,9 @@ instance uniform float flash = 0.0;
 instance uniform vec3 hit_flash : source_color = vec3(0.0); // monster hit / telegraph glow
 instance uniform float wind = 0.0;
 instance uniform float keep_visible = 0.0; // 1: never dithered away by the player cutout (monsters)
+// A tail's swish (DragonController, the cat): x amplitude at the tip (m), y phase, z wavenumber (rad/m),
+// w tail length (m); 0 length = off.
+instance uniform vec4 tail_wave = vec4(0.0);
 
 global uniform vec3 cutout_from;
 global uniform vec3 cutout_to;
@@ -53,6 +56,13 @@ void vertex() {
 		float sway = sin(TIME * 1.3 + seed * 6.28 + origin.x * 0.15) * 0.5 + sin(TIME * 2.1 + seed * 3.1) * 0.25;
 		VERTEX.x += sway * wind * h * h * 0.012;
 		VERTEX.z += cos(TIME * 1.1 + seed * 4.0) * wind * h * h * 0.008;
+	}
+	// Tail swish: a sideways wave travelling from the root (the mesh origin) to the tip, growing along
+	// the tail, so the whole tail undulates in one smooth curve.
+	if (tail_wave.w > 0.0) {
+		float s = length(VERTEX);
+		float k = clamp(s / tail_wave.w, 0.0, 1.0);
+		VERTEX.x += tail_wave.x * k * k * sin(tail_wave.y - tail_wave.z * s);
 	}
 	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }

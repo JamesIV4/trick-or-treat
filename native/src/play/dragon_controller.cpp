@@ -1,5 +1,8 @@
 #include "play/dragon_controller.h"
 
+#include <godot_cpp/classes/mesh_instance3d.hpp>
+#include <godot_cpp/variant/aabb.hpp>
+#include <godot_cpp/variant/vector4.hpp>
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/capsule_shape3d.hpp>
 #include <godot_cpp/classes/collision_shape3d.hpp>
@@ -32,6 +35,9 @@ namespace tot {
 namespace {
 using namespace move;
 constexpr float ROLL_SPEED = 12.5f;
+constexpr float SPIN_TIME = 0.28f; // one full turn of the spin attack
+constexpr float ROLL_TIME = 0.38f;
+constexpr float ROLL_CENTER = 0.5f; // the curled-up kid tumbles around this height (its centre of mass)
 constexpr float GLIDE_FALL = 2.3f;
 constexpr float CAST_TIME = 0.38f; // the wand flick: arm up and pointing, then back down
 // Trampoline super bounce: jump held on contact, or pressed up to 0.25 s before landing or 0.15 s
@@ -129,6 +135,37 @@ void DragonController::puff(const Vector3 &pos, int amount, float spread, const 
 	p->set_emitting(true);
 }
 
+// Double jump without wings: a puff of glittering magic dust bursts out under the kid's feet and
+// sifts down, with a few purple twinkles.
+void DragonController::magic_dust_burst() {
+	Vfx *vfx = Vfx::get();
+	if (!vfx) {
+		puff(get_global_position() + Vector3(0, 0.2f, 0), 14, 0.3f, Color(0.85f, 0.6f, 1.0f), 2.0f);
+		return;
+	}
+	const Vector3 feet = get_global_position() + Vector3(0, 0.08f, 0);
+	vfx->candy_sparkles(feet, Color(1.0f, 0.82f, 0.45f), 22, 2.4f, 0.75f, -1.6f);
+	vfx->sparkles(feet + Vector3(0, 0.25f, 0), Color(0.8f, 0.6f, 1.0f), 12, 1.4f, 1.0f, -0.8f);
+}
+
+// The cat's tail swish: a gentle sway at the root, and a sideways wave that travels from the root to
+// the tip in the toon shader (tail_wave), so the whole tail undulates as one smooth curve. Every few
+// seconds the tip flicks a little more.
+void DragonController::swish_tail(float sf, bool air) {
+	const float rate = 2.6f + 1.2f * sf;
+	const float sway = std::sin(time_ * rate * 0.5f) * (0.08f + 0.04f * sf);
+	const float lift = 0.03f + 0.06f * sf + std::sin(time_ * rate * 0.25f) * 0.03f + (air ? 0.15f : 0.0f);
+	pose(tail_, Vector3(lift, sway, 0));
+	if (tail_len_ <= 0.0f) {
+		return;
+	}
+	const float flick = std::pow(Math::max(0.0f, std::sin(time_ * 0.7f)), 12.0f);
+	const float amp = (0.045f + 0.02f * sf) * (1.0f + 0.8f * flick);
+	const Vector4 wave(amp, time_ * rate, 1.25f * float(Math_TAU) / tail_len_ * 0.6f, tail_len_);
+	for (GeometryInstance3D *g : tail_meshes_) {
+		g->set_instance_shader_parameter("tail_wave", wave);
+	}
+}
 void DragonController::celebrate(int kind) {
 	bucket_punch_ = candy_tier(kind) >= 1 ? 1.4f : 1.0f;
 	squash_v_ -= candy_tier(kind) >= 1 ? 1.6f : 0.7f;
@@ -220,8 +257,28 @@ void DragonController::set_visual(Node3D *visual) {
 	visual_ = visual;
 	visual_root_->add_child(visual_);
 	body_ = head_ = wing_l_ = wing_r_ = tail_ = leg_l_ = leg_r_ = arm_l_ = arm_r_ = bucket_candy_ = Part();
+	tail_meshes_.clear();
+	tail_len_ = 0.0f;
 	bucket_light_ = nullptr;
 	find_parts(visual_);
+	// The tail's meshes and its length (the farthest point from its root), for the swish wave.
+	if (tail_.node) {
+		std::vector<Node *> stack = { tail_.node };
+		while (!stack.empty()) {
+			Node *n = stack.back();
+			stack.pop_back();
+			if (MeshInstance3D *mi = Object::cast_to<MeshInstance3D>(n)) {
+				tail_meshes_.push_back(mi);
+				const AABB box = mi->get_aabb();
+				for (int i = 0; i < 8; ++i) {
+					tail_len_ = Math::max(tail_len_, box.get_endpoint(i).length());
+				}
+			}
+			for (int i = 0; i < n->get_child_count(); ++i) {
+				stack.push_back(n->get_child(i));
+			}
+		}
+	}
 	if (!bucket_light_) {
 		bucket_light_ = memnew(OmniLight3D);
 		bucket_light_->set_color(Color(1.0f, 0.55f, 0.2f));
@@ -233,7 +290,7 @@ void DragonController::set_visual(Node3D *visual) {
 	// Moonlight rim keeps the green silhouette readable against the blue night.
 	set_instance_param_recursive(visual_, "rim_strength", 0.22f);
 	set_layers_recursive(visual_, LAYER_NO_DECALS);
-	set_fill(fill_);
+	set_fill(fill_ > 0.0f ? fill_ : 0.45f);
 	attach_wand();
 }
 
@@ -755,9 +812,15 @@ void DragonController::_physics_process(double delta) {
 	if (hanging_) {
 		hang_t_ += dt;
 		set_velocity(Vector3());
-		if (jump_pressed || (bot_ && hang_t_ > 0.25f)) {
+		// Pushing toward the wall climbs up, pushing away lets go (after a moment, so the push that
+		// carried the kid into the grab doesn't flip them straight over the top).
+		float push = 0.0f;
+		if (wish.length() > 0.5f && hang_t_ > 0.2f) {
+			push = wish.normalized().dot(-ledge_n_);
+		}
+		if (jump_pressed || push > 0.6f || (bot_ && hang_t_ > 0.25f)) {
 			release_ledge(true);
-		} else if (drop_pressed || roll_pressed) {
+		} else if (drop_pressed || roll_pressed || push < -0.6f) {
 			release_ledge(false);
 		}
 		return;
@@ -829,7 +892,11 @@ void DragonController::_physics_process(double delta) {
 		bounce_air_ = false; // a fresh press after a launch: the wings (and the floaty hold) are back
 		flap_anim_ = 0.4f;
 		squash_v_ -= 1.8f;
-		puff(get_global_position() + Vector3(0, 0.7f, 0), 12, 0.35f, Color(0.75f, 0.5f, 1.0f), 2.4f);
+		if (wing_l_.node || wing_r_.node) {
+			puff(get_global_position() + Vector3(0, 0.7f, 0), 12, 0.35f, Color(0.75f, 0.5f, 1.0f), 2.4f);
+		} else {
+			magic_dust_burst();
+		}
 		emit_signal("flapped");
 	}
 	bounce_grace_ = Math::max(0.0f, bounce_grace_ - dt);
@@ -855,14 +922,9 @@ void DragonController::_physics_process(double delta) {
 		}
 	}
 	// Tail spin: on the ground a sweep, in the air a little hover once per jump. Costumes without a
-	// tail do a magic wand spin instead (wand held out, a ring of sparkles).
+	// tail do a magic wand spin instead (wand held out, sparkles streaming off its tip).
 	if (spin_pressed && spin_t_ <= 0.0f) {
-		spin_t_ = 0.42f;
-		if (!tail_.node) {
-			if (Vfx *vfx = Vfx::get()) {
-				vfx->ring(get_global_position() + Vector3(0, 0.6f, 0), Color(0.8f, 0.55f, 1.0f), 1.7f, 0.4f);
-			}
-		}
+		spin_t_ = SPIN_TIME;
 		if (!on_floor && !spin_air_used_) {
 			v.y = Math::max(v.y, 2.2f);
 			spin_air_used_ = true;
@@ -872,11 +934,18 @@ void DragonController::_physics_process(double delta) {
 	// Roll on the ground; ground pound in the air.
 	if (roll_pressed) {
 		if (on_floor && roll_cd_ <= 0.0f) {
-			roll_t_ = 0.38f;
+			roll_t_ = ROLL_TIME;
 			roll_cd_ = 0.55f;
+			// A dodge roll: straight off in whichever direction the stick / keys point (or ahead with
+			// no input), the body snapping round to it at once so the tumble rolls that way.
 			if (wish.length() > 0.1f) {
 				facing_ = std::atan2(wish.x, wish.z);
 			}
+			visual_yaw_ = facing_;
+			const Vector3 dir(std::sin(facing_), 0, std::cos(facing_));
+			v.x = dir.x * ROLL_SPEED;
+			v.z = dir.z * ROLL_SPEED;
+			hv = Vector3(v.x, 0, v.z);
 		} else if (!on_floor && !pounding_) {
 			pounding_ = true;
 			pound_stall_ = 0.14f;
@@ -980,11 +1049,11 @@ void DragonController::_process(double delta) {
 	visual_yaw_ = angle_lerp(visual_yaw_, facing_, 1.0f - std::exp(-dt * 14.0f));
 	float spin_yaw = 0.0f;
 	if (spin_t_ > 0.0f) {
-		spin_yaw = (1.0f - spin_t_ / 0.42f) * Math_TAU;
+		spin_yaw = (1.0f - spin_t_ / SPIN_TIME) * Math_TAU;
 	}
 	float tumble = 0.0f;
 	if (roll_t_ > 0.0f) {
-		tumble = (1.0f - roll_t_ / 0.38f) * Math_TAU;
+		tumble = (1.0f - roll_t_ / ROLL_TIME) * Math_TAU;
 	}
 	const float bob = air ? 0.0f : std::abs(std::sin(phase_)) * 0.07f * sf;
 	Basis b = Basis(Vector3(0, 1, 0), visual_yaw_ + spin_yaw) * Basis(Vector3(1, 0, 0), tumble);
@@ -992,7 +1061,14 @@ void DragonController::_process(double delta) {
 	roar_t_ = Math::max(0.0f, roar_t_ - dt);
 	b = b.scaled(Vector3(1.0f + s * 0.6f + roar, 1.0f - s + roar, 1.0f + s * 0.6f + roar));
 	step_smooth_ = Math::lerp(step_smooth_, 0.0f, 1.0f - std::exp(-dt * 18.0f));
-	visual_root_->set_transform(Transform3D(b, Vector3(0, bob + step_smooth_ + (roll_t_ > 0.0f ? 0.35f : 0.0f), 0)));
+	// Rolling tumbles around the curled-up kid's middle (not the feet), so the body turns in place
+	// instead of swinging round in a big circle and dipping into the ground.
+	Vector3 origin(0, bob + step_smooth_, 0);
+	if (roll_t_ > 0.0f) {
+		const Vector3 c(0, ROLL_CENTER, 0);
+		origin += c - b.xform(c);
+	}
+	visual_root_->set_transform(Transform3D(b, origin));
 
 	// Limbs.
 	const float swing = air ? 0.0f : std::sin(phase_) * 0.75f * Math::min(sf, 1.0f);
@@ -1003,7 +1079,7 @@ void DragonController::_process(double delta) {
 	pose(arm_r_, Vector3(swing * 0.25f, 0, air ? -0.2f : 0.0f));
 	// Wand spin (no tail): the wand arm swings out level and sparkles stream off the tip.
 	if (spin_t_ > 0.0f && !tail_.node) {
-		const float out = Math::smoothstep(0.0f, 0.08f, 0.42f - spin_t_) * Math::smoothstep(0.0f, 0.1f, spin_t_);
+		const float out = Math::smoothstep(0.0f, 0.055f, SPIN_TIME - spin_t_) * Math::smoothstep(0.0f, 0.065f, spin_t_);
 		pose(arm_l_, Vector3(0, 0, 1.45f * out));
 		if (Vfx *vfx = Vfx::get()) {
 			if (wand_tip_ && wand_tip_->is_inside_tree() && out > 0.5f) {
@@ -1022,7 +1098,20 @@ void DragonController::_process(double delta) {
 	}
 	pose(head_, Vector3(std::sin(phase_ * 2.0f) * 0.04f * sf + (roar_t_ > 0.0f ? -0.25f : 0.0f), std::sin(time_ * 0.7f) * 0.08f * (1.0f - sf), 0));
 	pose(body_, Vector3(sf * 0.12f, 0, std::sin(phase_) * 0.04f * sf));
-	pose(tail_, Vector3(std::sin(time_ * 2.0f) * 0.05f + (air ? 0.25f : 0.0f), std::sin(time_ * 3.1f + phase_ * 0.5f) * (0.25f + 0.2f * sf), 0));
+	if (tail_style_ == 1) {
+		swish_tail(sf, air);
+	} else {
+		pose(tail_, Vector3(std::sin(time_ * 2.0f) * 0.05f + (air ? 0.25f : 0.0f), std::sin(time_ * 3.1f + phase_ * 0.5f) * (0.25f + 0.2f * sf), 0));
+	}
+	// Rolling: tucked into a ball (knees up, arms hugged in) so the tumble turns round its middle.
+	if (roll_t_ > 0.0f) {
+		const float tuck = Math::smoothstep(0.0f, 0.06f, ROLL_TIME - roll_t_) * Math::smoothstep(0.0f, 0.08f, roll_t_);
+		pose(leg_l_, Vector3(-1.3f * tuck, 0, 0));
+		pose(leg_r_, Vector3(-1.3f * tuck, 0, 0));
+		pose(arm_l_, Vector3(-1.1f * tuck, 0, -0.3f * tuck));
+		pose(arm_r_, Vector3(-1.1f * tuck, 0, 0.3f * tuck));
+		pose(head_, Vector3(0.35f * tuck, 0, 0));
+	}
 	// Hanging from a ledge: both arms up over the lip, legs dangling with a little kick.
 	if (hanging_ || climb_t_ >= 0.0f) {
 		const float kick = std::sin(time_ * 2.4f) * 0.12f;
@@ -1040,8 +1129,16 @@ void DragonController::_process(double delta) {
 	} else if (air) {
 		wing = 0.3f + std::sin(time_ * 9.0f) * 0.2f;
 	}
-	pose(wing_l_, Vector3(0, -wing * 0.5f, wing));
-	pose(wing_r_, Vector3(0, wing * 0.5f, -wing));
+	if (air && flap_used_ && glide_t_ > 0.0f && flap_anim_ <= 0.0f) {
+		// Gliding: the wings stick straight out to the sides, nearly level (the rest pose angles them
+		// about 33 degrees up; this lowers them to a slight dihedral), with a fast little flutter.
+		const float flutter = std::sin(time_ * 18.0f) * 0.05f;
+		pose(wing_l_, Vector3(0, -0.1f, -0.45f + flutter));
+		pose(wing_r_, Vector3(0, 0.1f, 0.45f - flutter));
+	} else {
+		pose(wing_l_, Vector3(0, -wing * 0.5f, wing));
+		pose(wing_r_, Vector3(0, wing * 0.5f, -wing));
+	}
 
 	// Footsteps: a blip and a little dust puff every half stride.
 	const float step_phase = std::sin(phase_);
@@ -1053,9 +1150,20 @@ void DragonController::_process(double delta) {
 		}
 	}
 	step_phase_prev_ = step_phase;
-	// Gliding leaves a faint purple sparkle trail.
-	if (air && flap_used_ && glide_t_ > 0.0f && int(time_ * 12.0f) != int((time_ - dt) * 12.0f)) {
+	// Gliding leaves a faint purple sparkle trail; costumes without wings hover on a stream of magic
+	// dust sifting down from under their feet instead.
+	const bool gliding = air && flap_used_ && glide_t_ > 0.0f;
+	if (gliding && (wing_l_.node || wing_r_.node) && int(time_ * 12.0f) != int((time_ - dt) * 12.0f)) {
 		puff(get_global_position() + Vector3(0, 0.6f, 0), 3, 0.2f, Color(0.78f, 0.55f, 1.0f), 0.6f);
+	} else if (gliding && int(time_ * 20.0f) != int((time_ - dt) * 20.0f)) {
+		if (Vfx *vfx = Vfx::get()) {
+			const float a = time_ * 9.0f;
+			const Vector3 under = get_global_position() + Vector3(std::cos(a) * 0.18f, 0.05f, std::sin(a) * 0.18f);
+			vfx->candy_sparkles(under, Color(1.0f, 0.82f, 0.45f), 5, 0.6f, 0.85f, -1.4f);
+			if (int(time_ * 5.0f) != int((time_ - dt) * 5.0f)) {
+				vfx->sparkles(get_global_position() + Vector3(0, 0.35f, 0), Color(0.8f, 0.6f, 1.0f), 2, 0.4f, 0.7f, -0.6f);
+			}
+		}
 	}
 	// Bucket bounce when candy lands in it.
 	if (bucket_ && bucket_punch_ > 0.0f) {

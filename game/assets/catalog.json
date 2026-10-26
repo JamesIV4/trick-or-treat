@@ -1197,6 +1197,13 @@
    "id": "fire_wand",
    "path": "props/fire_wand",
    "collision": "none"
+  },
+  {
+   "id": "candy_swedish_fish",
+   "path": "candy/candy_swedish_fish",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff3b4e"
   }
  ]
 }

@@ -50,6 +50,7 @@ struct SignSpec {
 	Transform3D xf; // world; text faces local +Z
 	Color color = Color(1, 0.9f, 0.6f);
 	float size = 1.0f;
+	float width = 0.0f, height = 0.0f; // the board the text has to fit inside (m; 0 = no limit)
 };
 
 struct MagicPath {

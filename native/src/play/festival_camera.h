@@ -30,6 +30,8 @@ public:
 	void set_attract(bool on) { attract_ = on; }
 	// Trailer shots: the camera is placed directly (no rig, no occluder cutout).
 	void set_cinematic(bool on) { cinematic_ = on; }
+	// A trailer shot that keeps the occluder cutout (things between the lens and the kid dither away).
+	void set_cinematic_cutout(bool on) { cine_cutout_ = on; }
 	void set_cinematic_pose(const godot::Transform3D &xf, float fov) {
 		cine_xf_ = xf;
 		cine_fov_ = fov;
@@ -60,7 +62,7 @@ private:
 	float orbit_quiet_ = 10.0f; // seconds since the player last orbited the camera
 	float follow_sign_ = 0.0f; // which way the follow turn last went
 	godot::Vector3 focus_;
-	bool overview_ = false, attract_ = false, cinematic_ = false;
+	bool overview_ = false, attract_ = false, cinematic_ = false, cine_cutout_ = false;
 	godot::Transform3D cine_xf_;
 	float cine_fov_ = 45.0f;
 	float overview_dist_ = 46.0f;

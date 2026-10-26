@@ -226,9 +226,9 @@ func rows(tab: String) -> Array:
 			]
 		"Controls":
 			return [
-				_range("controls", "camera_speed", "Camera turn speed", "How fast the right stick, the camera keys and right-drag turn the camera.", 0.25, 2.5, 0.25, "%.2fx"),
+				_range("controls", "camera_speed", "Camera turn speed", "How fast the camera turns with {camera}{kb: (or by dragging with the right mouse button)|pad:}.", 0.25, 2.5, 0.25, "%.2fx"),
 				_choice("controls", "invert_camera", "Invert camera turning", "Swap which way the camera turns.", [false, true], ["Off", "On"]),
-				_range("controls", "deadzone", "Stick dead zone", "How far a stick moves before it counts. Raise it if the kid or the camera drifts.", 0.05, 0.5, 0.05, "%.2f"),
+				_range("controls", "deadzone", "Stick dead zone", "{kb:Gamepad only: how far a stick moves before it counts.|pad:How far a stick moves before it counts. Raise it if the kid or the camera drifts.}", 0.05, 0.5, 0.05, "%.2f"),
 				_choice("controls", "prompts", "Button prompts", "Which keys or buttons the game shows. Auto follows whatever you used last.", [0, 1, 2, 3], ["Auto (last used)", "Keyboard", "Xbox", "PlayStation"]),
 			]
 		"Display":
@@ -645,12 +645,19 @@ func pad_label(action: String, style := "") -> String:
 	return "—"
 
 
-## Fills {action} tokens in a line of text with the current keys or buttons, e.g. "Press {shop}".
+## Fills {action} tokens in a line of text with the current keys or buttons, e.g. "Press {shop}", and
+## picks {kb:keyboard words|pad:gamepad words} for whichever controller the prompts show right now,
+## so hints never name both.
 func prompts(text: String) -> String:
 	if not text.contains("{"):
 		return text
-	var re := RegEx.create_from_string("\\{([a-z_]+)\\}")
 	var out := text
+	var pick := RegEx.create_from_string("\\{kb:([^|}]*)\\|pad:([^}]*)\\}")
+	var kb := prompt_style() == "kb"
+	for m in pick.search_all(text):
+		out = out.replace(m.get_string(0), m.get_string(1) if kb else m.get_string(2))
+	var re := RegEx.create_from_string("\\{([a-z_]+)\\}")
+	text = out
 	for m in re.search_all(text):
 		var action := m.get_string(1)
 		if action == "move" or action == "camera" or InputMap.has_action(action):

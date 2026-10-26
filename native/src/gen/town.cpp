@@ -288,6 +288,8 @@ void build_shop(GenContext &ctx, Lot &lot) {
 		sign.xf = lot.xf * Transform3D(Basis(), Vector3(0, 3.28f, zf + 0.18f));
 		sign.color = SIGN_TEXT[h.curtain_cell % 5];
 		sign.size = Math::min(1.3f, sign_w / (0.26f * float(sign.text.size()) + 0.4f));
+		sign.width = sign_w - 0.3f;
+		sign.height = 0.4f;
 		ctx.signs.push_back(sign);
 	}
 

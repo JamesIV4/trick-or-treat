@@ -170,6 +170,12 @@ void FestivalGame::parse_cmdline() {
 			autopilot_ = float(a.substr(12).to_float());
 		} else if (a.begins_with("--preview=")) {
 			preview_path_ = a.substr(10);
+		} else if (a == "--icon") {
+			preview_icon_ = true; // with --preview: one framed shot on a flat background (the game icon)
+		} else if (a == "--icon-white") {
+			preview_icon_ = preview_icon_white_ = true;
+		} else if (a.begins_with("--icon-light=")) {
+			preview_icon_studio_ = a.substr(13) == "studio";
 		} else if (a == "--fx-test") {
 			fx_test_ = true;
 		} else if (a.begins_with("--wallet=")) {
@@ -182,6 +188,8 @@ void FestivalGame::parse_cmdline() {
 			cine_clean_ = true;
 		} else if (a.begins_with("--cine-bounce-seed=")) {
 			cine_bounce_seed_ = a.substr(19).to_int();
+		} else if (a.begins_with("--cine-seed=")) {
+			cine_seed_override_ = a.substr(12).to_int();
 		} else if (a == "--cine-play") {
 			cine_play_ = true;
 			cine_clean_ = true;
@@ -357,6 +365,11 @@ void FestivalGame::_ready() {
 	wild_root_->set_name("WildMonsters");
 	add_child(wild_root_);
 	camera_->set_target(player_);
+	if (seed_ == 0 && !cine_mode_.is_empty()) {
+		// Trailer and screenshot runs all render the same world, so a single shot re-rendered on its
+		// own matches the reel (--seed= still picks another).
+		seed_ = 101;
+	}
 	if (seed_ == 0) {
 		seed_ = int64_t(Time::get_singleton()->get_ticks_usec() % 1000000) + 1;
 	}
@@ -1046,6 +1059,7 @@ void FestivalGame::reset_progress() {
 	if (costume_ != 0) {
 		costume_ = 0;
 		player_->set_visual(gen_->instantiate_asset(COSTUMES[0].id));
+		player_->set_tail_style(0);
 	}
 	told_shop_ = false;
 }
@@ -1171,6 +1185,7 @@ bool FestivalGame::load_state(const Dictionary &d) {
 	camera_->set_attract(false);
 	start_world(int64_t(d["seed"]));
 	player_->set_visual(gen_->instantiate_asset(COSTUMES[costume_].id));
+	player_->set_tail_style(String(COSTUMES[costume_].id) == "kid_cat" ? 1 : 0);
 
 	// The travel network as it was (Trick or Treat already re-added the areas around the spawn).
 	const Array freed = d.get("freed", Array());
@@ -1508,6 +1523,7 @@ void FestivalGame::on_purchase(String id) {
 		}
 		costume_ = k;
 		player_->set_visual(gen_->instantiate_asset(COSTUMES[k].id));
+		player_->set_tail_style(String(COSTUMES[k].id) == "kid_cat" ? 1 : 0);
 		call_audio("play_purchase");
 		open_shop();
 		return;
@@ -1999,6 +2015,11 @@ void FestivalGame::_process(double delta) {
 	} else if (!capture_path_.is_empty() && frame_ == capture_frames_) {
 		capture_and_maybe_quit();
 	}
+	// The bucket's 3D candy heap: always a little candy showing, piling up to full as the wallet grows.
+	if (wallet_ != fill_wallet_ || frame_ < 2) {
+		fill_wallet_ = wallet_;
+		player_->set_fill(0.45f + 0.55f * Math::clamp(float(wallet_) / 400.0f, 0.0f, 1.0f));
+	}
 	if (in_menu_) {
 		return; // the main menu is up: the world just turns behind it
 	}
@@ -2287,7 +2308,20 @@ void FestivalGame::setup_preview() {
 	MeshInstance3D *ground = memnew(MeshInstance3D);
 	ground->set_mesh(g.build());
 	ground->set_material_override(gen_->get_toon_material());
+	ground->set_visible(!preview_icon_);
 	preview_root_->add_child(ground);
+	if (preview_icon_) {
+		// The asset alone on a flat background (black, or white with --icon-white: the pair gives the
+		// matte, glow included), to be laid over the icon's backdrop.
+		if (env_ && env_->get_environment().is_valid()) {
+			Ref<Environment> e = env_->get_environment()->duplicate();
+			e->set_background(Environment::BG_COLOR);
+			e->set_bg_color(preview_icon_white_ ? Color(1, 1, 1) : Color(0, 0, 0));
+			e->set_fog_enabled(false);
+			e->set_volumetric_fog_enabled(false);
+			env_->set_environment(e);
+		}
+	}
 	Ref<PackedScene> scene = ResourceLoader::get_singleton()->load(preview_path_);
 	if (scene.is_null()) {
 		UtilityFunctions::push_error("Preview: cannot load ", preview_path_);
@@ -2319,6 +2353,9 @@ void FestivalGame::setup_preview() {
 	studio_->set_shadow(true);
 	studio_->set_global_transform(Transform3D(Basis::looking_at(Vector3(0.4f, -0.8f, -0.5f).normalized(), Vector3(0, 1, 0)), Vector3()));
 	preview_root_->add_child(studio_);
+	if (preview_icon_) {
+		call_ui("cine_mode", Array::make(true)); // no HUD
+	}
 	if (moon_) {
 		moon_->set_global_transform(Transform3D(Basis::looking_at(Vector3(-0.3f, -0.75f, -0.6f).normalized(), Vector3(0, 1, 0)), Vector3()));
 	}
@@ -2340,10 +2377,12 @@ void FestivalGame::step_preview() {
 	if (!cam || preview_view_ >= 4) {
 		return;
 	}
-	const View &v = views[preview_view_];
+	// The icon: one view, straight on to the face, framed tight.
+	const View icon_view = { 0.0f, 0.08f, preview_icon_studio_ };
+	const View &v = preview_icon_ ? icon_view : views[preview_view_];
 	const Vector3 c = preview_box_.get_center();
 	const float radius = Math::max(preview_box_.size.length() * 0.5f, 0.5f);
-	const float dist = radius / std::tan(Math::deg_to_rad(cam->get_fov() * 0.5f)) * 1.25f;
+	const float dist = radius / std::tan(Math::deg_to_rad(cam->get_fov() * 0.5f)) * (preview_icon_ ? 0.9f : 1.25f);
 	const Vector3 dir(std::sin(v.yaw) * std::cos(v.pitch), std::sin(v.pitch), std::cos(v.yaw) * std::cos(v.pitch));
 	cam->set_global_position(c + dir * dist);
 	cam->look_at(c, Vector3(0, 1, 0));
@@ -2356,6 +2395,13 @@ void FestivalGame::step_preview() {
 	}
 	Ref<Image> shot = get_viewport()->get_texture()->get_image();
 	shot->convert(Image::FORMAT_RGBA8);
+	if (preview_icon_) {
+		shot->save_png(capture_path_);
+		UtilityFunctions::print("CAPTURED ", capture_path_);
+		preview_view_ = 4;
+		get_tree()->quit();
+		return;
+	}
 	shot->resize(800, 450, Image::INTERPOLATE_LANCZOS);
 	preview_sheet_->blit_rect(shot, Rect2i(0, 0, 800, 450), Vector2i((preview_view_ % 2) * 800, (preview_view_ / 2) * 450));
 	++preview_view_;

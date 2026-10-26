@@ -35,7 +35,7 @@ std::vector<Kind> &kinds() {
 
 // The variety candies in play, added alongside the nine classics (a missing or unpublished one is skipped).
 // (The other published variety models stay in the catalog, unused.)
-const char *ICONIC[] = { "candy_gummy_bear_red", "candy_gummy_worm", "candy_peppermint", "candy_licorice_twist", "candy_jellybean_trio",
+const char *ICONIC[] = { "candy_gummy_bear_red", "candy_gummy_worm", "candy_peppermint", "candy_swedish_fish", "candy_jellybean_trio",
 	"candy_caramel_apple", "candy_pb_cups", "candy_cane_giant", "candy_lolly_jack", "candy_golden_twist" };
 
 std::vector<int> by_tier[4];

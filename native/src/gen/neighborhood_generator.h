@@ -56,6 +56,11 @@ public:
 	godot::String describe_lot(int lot) const;
 	void open_door(int lot);
 	void light_up_house(int lot);
+	// A house trick-or-treated (all its candy found): its porch winds down for the night (porch light,
+	// lanterns and porch jack-o'-lanterns dim, the rest of the house stays cozy) and a "Thank you!"
+	// sign with its own little lantern drops in under the porch light. animate = false when an area
+	// streams back in already done.
+	void close_house(int lot, bool animate);
 	CandyField *candy_field() const { return candy_; }
 	godot::Node *get_candy_field() const;
 	AssetLibrary &assets() {
@@ -102,11 +107,17 @@ private:
 	};
 	std::vector<DoorNode> doors_; // indexed by lot
 	struct LotGlow {
-		std::vector<godot::GeometryInstance3D *> lanterns;
+		std::vector<godot::GeometryInstance3D *> lanterns; // porch lanterns
+		std::vector<godot::GeometryInstance3D *> jacks;    // jack-o'-lanterns on and by the porch
+		std::vector<godot::Vector3> jack_pos;
+		std::vector<godot::OmniLight3D *> jack_lights;
 		godot::OmniLight3D *porch = nullptr;
-		float pulse = 0.0f;
-		bool lit = false;
+		godot::Node3D *sign = nullptr;
+		godot::Transform3D sign_rest;
+		float t = -1.0f; // seconds since it was closed (-1: open)
+		bool closed = false;
 	};
+	void build_thanks_sign(int lot);
 	std::vector<LotGlow> glow_;
 	struct MagicNode {
 		godot::MeshInstance3D *node = nullptr;

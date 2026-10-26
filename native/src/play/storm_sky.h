@@ -24,8 +24,10 @@ public:
 	bool get_lightning_enabled() const { return lightning_; }
 	void set_flash_light(godot::DirectionalLight3D *l) { flash_light_ = l; }
 	void set_sky_material(const godot::Ref<godot::ShaderMaterial> &m) { sky_mat_ = m; }
-	// Clouds and bats ring this point (the player, in the open world).
-	void set_center(const godot::Vector3 &c) { center_ = c; }
+	// Clouds and bats ring this point (the player, in the open world). Only its ground position counts:
+	// the sky keeps its own height (it doesn't bob with the kid's jumps), and the flock drifts after the
+	// player slowly, so walking still shows a little parallax.
+	void set_center(const godot::Vector3 &c) { target_ = godot::Vector3(c.x, 0.0f, c.z); }
 
 protected:
 	static void _bind_methods();
@@ -47,7 +49,8 @@ private:
 	NeighborhoodGenerator *gen_ = nullptr;
 	godot::DirectionalLight3D *flash_light_ = nullptr;
 	godot::Ref<godot::ShaderMaterial> sky_mat_;
-	godot::Vector3 center_, moon_dir_;
+	godot::Vector3 center_, moon_dir_, target_;
+	float base_y_ = 0.0f; // the sky's height reference: the ground at the start of the night
 	Rng rng_;
 	bool lightning_ = true;
 	float next_flash_ = 12.0f, flash_t_ = -1.0f, next_bats_ = 6.0f;

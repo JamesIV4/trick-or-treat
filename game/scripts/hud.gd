@@ -162,7 +162,7 @@ func _ready() -> void:
 	_hint.offset_top = -64
 	_hint.offset_bottom = -24
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_prompt(_hint, "Move {move}   Jump {jump} (again: flap, hold: glide)   Fire {attack}   Spin {spin}   Roll, pound {roll}   Ledge: {jump} up, {drop} drop   Shop {shop}   Car {summon_car}   Pause {pause}   Camera {camera}")
+	_prompt(_hint, "Move {move}   Jump {jump} (again: flap, hold: glide)   Fire {attack}   Spin {spin}   Roll, pound {roll}   Ledge: push in or {jump} to climb, pull away or {drop} to drop   Shop {shop}   Car {summon_car}   Pause {pause}   Camera {camera}")
 
 	_debug = _label(16, Color(0.8, 1.0, 0.8))
 	_root.add_child(_debug)
@@ -625,7 +625,7 @@ func cine_mode(on: bool) -> void:
 
 
 ## A caption over a trailer shot: a lower-third line, or the big title when there is a subtitle.
-func cine_caption(text: String, sub: String, duration: float) -> void:
+func cine_caption(text: String, sub: String, duration: float, top := false) -> void:
 	if _cine_title == null:
 		_cine_title = _display_label(64, CREAM)
 		_cine_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -651,8 +651,8 @@ func cine_caption(text: String, sub: String, duration: float) -> void:
 	var big := sub != ""
 	_cine_title.visible = not big
 	_cine_logo.visible = big
-	_cine_title.anchor_top = 0.8
-	_cine_title.anchor_bottom = 0.8
+	_cine_title.anchor_top = 0.09 if top else 0.8
+	_cine_title.anchor_bottom = _cine_title.anchor_top
 	_cine_title.offset_top = 0
 	_cine_title.offset_bottom = 0
 	_cine_title.grow_vertical = Control.GROW_DIRECTION_BOTH
@@ -661,6 +661,9 @@ func cine_caption(text: String, sub: String, duration: float) -> void:
 	_cine_sub.offset_top = 0
 	_cine_sub.offset_bottom = 0
 	_cine_sub.grow_vertical = Control.GROW_DIRECTION_BOTH
+	# Above any menu a shot opens (the shop in the upgrades shot).
+	for c: Control in [_cine_title, _cine_sub, _cine_logo]:
+		c.z_index = 10
 	_cine_title.text = text
 	_cine_sub.text = sub
 	_cine_title.modulate.a = 0.0
@@ -947,7 +950,8 @@ func _set_play_hud(on: bool) -> void:
 	for c in [_candy_panel, _area_panel, _hint, _toast_panel]:
 		if c:
 			c.visible = on
-	_hint.visible = on and bool(Settings.get_value("gameplay", "hint"))
+	# No controls line in trailer and screenshot runs (scripted): it clutters the gameplay clips.
+	_hint.visible = on and bool(Settings.get_value("gameplay", "hint")) and not Settings.scripted
 	if on:
 		_hint_t = 10.0
 		_hint.modulate.a = 1.0
@@ -961,6 +965,7 @@ const TAB_SECTION := {"Gameplay": "gameplay", "Controls": "controls", "Display":
 var _options_from := "" # "main" or "pause": where Back goes
 var _options_tab := 0
 var _options_desc: Label
+var _desc_src := ""
 var _row_refresh: Array[Callable] = []
 var _capture := {} # a rebind waiting for its key or button: {action, kind, button, t}
 var _capture_end_frame := -1
@@ -1061,8 +1066,8 @@ func _build_options() -> void:
 		Settings.reset_section(TAB_SECTION[tab])
 		_build_options())
 	back.pressed.connect(_options_back)
-	reset.focus_entered.connect(func(): _options_desc.text = "Puts every %s setting back the way the game starts." % tab.to_lower())
-	back.focus_entered.connect(func(): _options_desc.text = "")
+	reset.focus_entered.connect(func(): _set_desc("Puts every %s setting back the way the game starts." % tab.to_lower()))
+	back.focus_entered.connect(func(): _set_desc(""))
 	reset.focus_neighbor_right = reset.get_path_to(back)
 	back.focus_neighbor_left = back.get_path_to(reset)
 	# Explicit focus: straight down the rows (never jumping to the buttons past rows still scrolled
@@ -1177,7 +1182,7 @@ func _option_row(row: Dictionary) -> Button:
 		b.set_meta("slider", true)
 	_row_refresh.append(refresh)
 	refresh.call()
-	b.focus_entered.connect(func(): _options_desc.text = str(row["desc"]))
+	b.focus_entered.connect(func(): _set_desc(str(row["desc"])))
 	b.mouse_entered.connect(b.grab_focus)
 	b.gui_input.connect(func(ev: InputEvent):
 		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
@@ -1206,17 +1211,26 @@ func _bind_button(action: String, kind: String, enabled: bool) -> Button:
 		return b
 	b.pressed.connect(func():
 		_capture = {"action": action, "kind": kind, "button": b, "t": 5.0}
-		_options_desc.text = "Press the new key or mouse button (Esc cancels)." if kind == "kb" else "Press the new button or trigger (Esc, or wait 5 seconds, to cancel)."
+		_set_desc("Press the new key or mouse button (Esc cancels)." if kind == "kb" else "Press the new button or trigger (wait 5 seconds to cancel{kb:, or press Esc|pad:}).")
 		_refresh_option_rows())
 	b.mouse_entered.connect(b.grab_focus)
 	b.focus_entered.connect(func():
-		_options_desc.text = "Select to change. %s" % ("Keys and mouse buttons both work." if kind == "kb" else "Buttons and triggers both work."))
+		_set_desc("Select to change. %s" % ("Keys and mouse buttons both work." if kind == "kb" else "Buttons and triggers both work.")))
 	return b
 
 
 func _refresh_option_rows() -> void:
 	for r in _row_refresh:
 		r.call()
+	if _options_desc and is_instance_valid(_options_desc):
+		_options_desc.text = Settings.prompts(_desc_src)
+
+
+## The Options help line (templates with prompts and {kb:...|pad:...} choices, kept current).
+func _set_desc(src: String) -> void:
+	_desc_src = src
+	if _options_desc:
+		_options_desc.text = Settings.prompts(src)
 
 
 func _end_capture() -> void:

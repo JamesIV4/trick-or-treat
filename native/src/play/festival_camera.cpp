@@ -71,7 +71,12 @@ void FestivalCamera::_process(double delta) {
 	if (cinematic_) {
 		cam_->set_global_transform(cine_xf_);
 		cam_->set_fov(cine_fov_);
-		RenderingServer::get_singleton()->global_shader_parameter_set("cutout_radius", 0.0f);
+		RenderingServer *rs = RenderingServer::get_singleton();
+		if (cine_cutout_) {
+			rs->global_shader_parameter_set("cutout_from", cine_xf_.origin);
+			rs->global_shader_parameter_set("cutout_to", target_->get_global_position() + Vector3(0, 0.7f, 0));
+		}
+		rs->global_shader_parameter_set("cutout_radius", cine_cutout_ ? 1.6f : 0.0f);
 		return;
 	}
 	cam_->set_fov(base_fov_);

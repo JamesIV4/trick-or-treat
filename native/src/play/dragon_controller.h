@@ -23,6 +23,8 @@ public:
 	void _process(double delta) override;
 
 	void set_visual(godot::Node3D *visual);
+	// How the tail moves: 0 the dragon's heavy sway, 1 a cat's swish (quick S-curve swings and flicks).
+	void set_tail_style(int s) { tail_style_ = s; }
 	// The fire wand held in the left hand (asset fire_wand, with socket_tip); fireballs leave its tip.
 	void set_wand(godot::Node3D *wand);
 	// Raises the wand arm to the cast pose now (facing already set) and returns where the shot leaves.
@@ -76,6 +78,7 @@ private:
 	void begin_climb(const godot::Vector3 &to, float arc, float duration);
 	void release_ledge(bool climb);
 	void puff(const godot::Vector3 &pos, int amount, float spread, const godot::Color &color, float speed);
+	void magic_dust_burst(); // the double jump for costumes without wings
 	std::vector<godot::CPUParticles3D *> puffs_;
 	int next_puff_ = 0;
 	float bucket_punch_ = 0.0f;
@@ -89,6 +92,10 @@ private:
 	godot::Node3D *visual_ = nullptr; // authored model
 	godot::OmniLight3D *bucket_light_ = nullptr;
 	Part body_, head_, wing_l_, wing_r_, tail_, leg_l_, leg_r_, arm_l_, arm_r_, bucket_candy_;
+	// The cat's swish: the tail's meshes get a travelling sideways wave in the toon shader (tail_wave).
+	std::vector<godot::GeometryInstance3D *> tail_meshes_;
+	float tail_len_ = 0.0f;
+	void swish_tail(float sf, bool air);
 
 	bool input_enabled_ = true;
 	bool bot_ = false, bot_jump_ = false, bot_hold_ = false, bot_spin_ = false, bot_fire_ = false;
@@ -107,6 +114,7 @@ private:
 	bool pounding_ = false;
 	float shockwave_t_ = 0.0f;
 	float facing_ = 0.0f, visual_yaw_ = 0.0f;
+	int tail_style_ = 0;
 	float phase_ = 0.0f, squash_ = 0.0f, squash_v_ = 0.0f;
 	float roar_t_ = 0.0f, time_ = 0.0f;
 	godot::Node3D *wand_ = nullptr, *wand_tip_ = nullptr;

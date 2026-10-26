@@ -29,13 +29,11 @@
    "id": "kid_ghost",
    "path": "characters/kid_ghost",
    "lane": "characters_candy",
-   "tris": 10000,
+   "tris": 16000,
    "collision": "none",
    "parts": [
     "body",
     "head",
-    "wing_l",
-    "wing_r",
     "leg_l",
     "leg_r",
     "arm_l",
@@ -46,13 +44,13 @@
    "sockets": [
     "bucket_light"
    ],
-   "brief": "Unlockable costume: the dragon kid's same 1.1 m kid as a cute bedsheet ghost. A soft white sheet hood with a tall round dome and two big black oval eye holes; the kid's face peeks out of the ghost's round 'boo' mouth (sheet rim with lavender stitches, the kid makes an 'oh' mouth). The sheet falls to a scalloped hem with loose folds, lifted at the sides by the arms; white bell sleeves, lavender leggings and purple sneakers peek out below. wing_l / wing_r are loose sheet flaps hanging behind the arms (the game flaps and spreads them like ghost arms). No tail (a bedsheet has none; the game does a wand spin). Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
+   "brief": "Unlockable costume: the same kid as a bedsheet ghost (follows the user's 'Five Kids in Halloween Costumes' concept). A white sheet over the head down to the knees, two big black oval eyes high on the sheet, a soft rolled opening framing the kid's face and brown fringe, soft vertical folds and a wavy hem (higher in front, lifted over the bucket), white sleeves with bare hands, black leggings and purple high-top sneakers with a white toe and sole, lilac swoosh and orange laces. No wings or tail (the game adds magic dust on double jumps and hovers, and a wand spin). Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
   },
   {
    "id": "kid_cat",
    "path": "characters/kid_cat",
    "lane": "characters_candy",
-   "tris": 10000,
+   "tris": 16000,
    "collision": "none",
    "parts": [
     "body",
@@ -68,19 +66,17 @@
    "sockets": [
     "bucket_light"
    ],
-   "brief": "Unlockable costume: the same kid in a plush black-cat onesie (blue-black felt so it still reads at night). Hood with tall pointed ears with pink insides and big yellow-green cat eyes with slit pupils on the brow; cat face paint on the kid (pink nose, ink whiskers). Grey belly patch with pink stitches, an orange felt collar with a gold bell, grey sleeve cuffs, round paw boots with three toe beans. tail is a long curling cat tail (swoops low, rises into a hook) with an orange bow near the base; the game sways it. Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
+   "brief": "Unlockable costume: the same kid as a black cat (follows the user's 'Five Kids in Halloween Costumes' concept). Black plush onesie with a fluffy hood roll, big pointed ears with pink insides, a purple bow tie with a big gold jingle bell, a grey oval belly patch, black paw mitts with pink paw pads, cat face paint (pink nose, whiskers, a gold star on one cheek), black high-tops with purple collars, an orange strap and a little cat face. tail is a long curling black tail with a small purple bow (the only costume with a tail: the game swings it for the tail spin). Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
   },
   {
    "id": "kid_witch",
    "path": "characters/kid_witch",
    "lane": "characters_candy",
-   "tris": 10000,
+   "tris": 16000,
    "collision": "none",
    "parts": [
     "body",
     "head",
-    "wing_l",
-    "wing_r",
     "leg_l",
     "leg_r",
     "arm_l",
@@ -91,13 +87,13 @@
    "sockets": [
     "bucket_light"
    ],
-   "brief": "Unlockable costume: the same kid as a little witch. The kid's own brown hair with pigtails tied in green, under a big floppy pointed hat (dark plum felt, wavy brim, a crooked bent tip, green band with a gold buckle, a small yellow moon patch). Purple felt dress with a gently flared skirt and a pointy green-trimmed hem, dark belt with a gold buckle, green pointed collar, purple bell sleeves with green cuffs, orange-and-black striped stockings and pointy curled boots with gold buckles. wing_l / wing_r are the two halves of a dark plum cape with a bright orange lining, hanging from the shoulders down the back (the game spreads them on double jumps and glides). Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
+   "brief": "Unlockable costume: the same kid as a little witch (follows the user's 'Five Kids in Halloween Costumes' concept). Big purple hat with a wide wavy brim, a flopped hooked tip, an orange satin band and a big yellow star; loose wavy shoulder-length brown hair in rounded locks; purple dress with an orange ruffle hem, orange cuffs and lapels, a dark belt with a gold buckle, a lilac ribbon bow with a gold star clasp; a purple cape with an orange lining built into the body (no wings); orange-and-purple striped stockings and purple high-tops with a star. The game adds magic dust on double jumps and hovers, and a wand spin. Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
   },
   {
    "id": "kid_skeleton",
    "path": "characters/kid_skeleton",
    "lane": "characters_candy",
-   "tris": 10000,
+   "tris": 16000,
    "collision": "none",
    "parts": [
     "body",
@@ -112,19 +108,17 @@
    "sockets": [
     "bucket_light"
    ],
-   "brief": "Unlockable costume: the same kid in a black skeleton onesie with a puffy bone-white print: sternum and four pairs of ribs on the chest, pelvis on the hips, spine and three pairs of ribs on the back (the gameplay camera mostly sees the back), bones down the outside of each sleeve, a thigh bone on the front and back of each leg and toe bones on the boots. Smooth bone-white skull hood whose face opening sits lower than the dragon's: it is the skull's dark mouth rimmed with little white teeth, framing the kid's eyes, cheeks and smile, so the skull's big black eye sockets and heart nose sit on a forward-facing brow above it (sockets on the crown read as a panda). No wings or tail. Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
+   "brief": "Unlockable costume: the same kid as a skeleton (follows the user's 'Five Kids in Halloween Costumes' concept). Black hooded onesie with a big white cartoon skull forming the top of the hood (eye sockets, nose, a row of teeth just above the fringe); a puffy white bone print front and back (ribs, sternum, spine, shoulder blades, pelvis, arm and leg bones); black gloves with white finger bones; black-and-white high-tops. No optional parts (the game adds magic dust on double jumps and hovers, and a wand spin). Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
   },
   {
    "id": "kid_pumpkin",
    "path": "characters/kid_pumpkin",
    "lane": "characters_candy",
-   "tris": 10000,
+   "tris": 16000,
    "collision": "none",
    "parts": [
     "body",
     "head",
-    "wing_l",
-    "wing_r",
     "leg_l",
     "leg_r",
     "arm_l",
@@ -135,7 +129,7 @@
    "sockets": [
     "bucket_light"
    ],
-   "brief": "Unlockable costume: the same kid in a round ribbed pumpkin suit (pumpkin material, dimpled top) with a stitched black felt jack-o'-lantern face on the tummy and a leafy green collar. Green sleeves and tights, brown boots. On the kid's own brown hair, a green felt beanie with a curly brown stem, two pumpkin leaves and a curly tendril on top. wing_l / wing_r are two big pumpkin leaves on the back (the game flaps and spreads them on double jumps and glides). Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
+   "brief": "Unlockable costume: the same kid as a jack-o'-lantern (follows the user's 'Five Kids in Halloween Costumes' concept). A big deeply ribbed pumpkin suit with a carved (dark) jack-o'-lantern face, a collar of big veined leaves with curly vines, puffy orange sleeves, a pumpkin-top cap (ribbed orange, scalloped edge) with a thick curling stem, leaves and tendrils covering the hair (only the fringe shows), green-and-dark striped stockings and orange high-tops with green laces. No wings (the game adds magic dust on double jumps and hovers, and a wand spin). Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
   },
   {
    "id": "candy_wrapped_pink",
@@ -2053,6 +2047,17 @@
     "tip"
    ],
    "brief": "Chunky storybook fire wand (~0.43 m) the dragon kid holds in the LEFT hand. Points along Godot +Z; origin at the centre of the wrapped leather grip (hand point). Gold pommel ball, leather grip with tilted wraps, gold collar, twisted two-tone dark-wood shaft, scalloped gold cup holding a faceted swirling flame crystal (glow_jack_hot core, glow_jack licks) whose tip curls up. socket_tip at the crystal centre, Godot (0, 0, 0.30): spawn fireballs / muzzle flames there."
+  },
+  {
+   "id": "candy_swedish_fish",
+   "path": "candy/candy_swedish_fish",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff3b4e",
+   "brief": "Plump red gummy fish (a Swedish fish): forked tail, little fins, an embossed eye and scales. About 0.32 m across; origin at its centre (it floats and spins)."
   }
  ]
 }

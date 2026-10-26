@@ -146,7 +146,7 @@ public:
 	void _process(double delta) override;
 	godot::Vector3 target_point() const override;
 	float target_radius() const override { return 1.3f * scale_; }
-	bool target_alive() const override { return !burned_; }
+	bool target_alive() const override { return !burned_ && !hidden_; }
 	bool is_nest() const override { return heart_; }
 	bool take_hit(float damage, const godot::Vector3 &from) override;
 	bool burned() const { return burned_; }
@@ -156,6 +156,8 @@ public:
 	// Turn this cluster into a thorn nest (a beating heart, a beacon, lots of hit points).
 	void make_heart();
 	bool is_heart() const { return heart_; }
+	// Trailer shots: hidden vines are gone in every way (no mesh, no collision, no thorns, not a target).
+	void set_hidden(bool on);
 	std::function<void(ThornVine *)> on_burned;
 
 protected:
@@ -167,7 +169,7 @@ private:
 	bool heart_ = false;
 	godot::MeshInstance3D *heart_core_ = nullptr, *heart_beacon_ = nullptr;
 	godot::OmniLight3D *heart_light_ = nullptr;
-	bool burned_ = false;
+	bool burned_ = false, hidden_ = false;
 	godot::MeshInstance3D *mesh_ = nullptr;
 	godot::StaticBody3D *body_ = nullptr;
 	godot::Transform3D rest_;
@@ -185,12 +187,16 @@ public:
 	float target_radius() const override { return width_ * 0.6f; }
 	float surface_distance(const godot::Vector3 &p) const override;
 	float aim_weight() const override { return 2.5f; }
-	bool target_alive() const override { return !burned_; }
+	bool target_alive() const override { return !burned_ && !hidden_; }
 	bool take_hit(float damage, const godot::Vector3 &from) override;
 	// The nest died: burn away after `delay` seconds (no reward).
 	void wither(float delay);
 	void preset_burned();
 	bool burned() const { return burned_; }
+	void set_hidden(bool on) {
+		hidden_ = on;
+		set_visible(!on);
+	}
 	std::function<void(VineTendril *)> on_burned;
 
 protected:
@@ -202,7 +208,7 @@ private:
 	MonsterWorld *world_ = nullptr;
 	std::vector<godot::Vector3> pts_; // world
 	float width_ = 0.5f, hp_ = 3.0f, flash_t_ = 0.0f, burn_t_ = -1.0f, wither_in_ = -1.0f;
-	bool burned_ = false;
+	bool burned_ = false, hidden_ = false;
 	godot::MeshInstance3D *mesh_ = nullptr;
 	Rng rng_;
 };
@@ -230,6 +236,20 @@ public:
 	int monsters_out() const { return int(monsters_.size()); }
 	// The area is cleared: monsters poof away, the gate lights up.
 	void set_freed(bool celebrate);
+	// Trailer shots: the nest nearest p sends out its full brood right away (its monsters around it),
+	// so a nest on screen reads as a monster nest.
+	void fill_nest_near(const godot::Vector3 &p);
+	// How far p is from the nearest live thorn (vine clusters, thorn nests and creeping tendrils), in metres.
+	float thorn_distance(const godot::Vector3 &p) const;
+	// Trailer shots: hide the vine clusters and tendrils (never a thorn nest) that come within r of the
+	// segment a-b, so a camera or the kid has room. Returns how many were hidden.
+	int hide_thorns_near(const godot::Vector3 &a, const godot::Vector3 &b, float r);
+	// Trailer shots: show or hide every thorn vine, tendril and thorn nest (they stay in play).
+	void set_vines_visible(bool on) {
+		for (ThornVine *v : vines_) v->set_hidden(!on);
+		for (VineTendril *t : tendrils_) t->set_hidden(!on);
+		for (ThornVine *h : hearts_) h->set_hidden(!on);
+	}
 	std::function<void()> on_freed;
 	std::function<void(int index)> on_nest_down;
 	std::function<void(int index)> on_vine_down;
