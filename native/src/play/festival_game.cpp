@@ -2378,11 +2378,14 @@ void FestivalGame::step_preview() {
 		return;
 	}
 	// The icon: one view, straight on to the face, framed tight.
-	const View icon_view = { 0.0f, 0.08f, preview_icon_studio_ };
+	const View icon_view = { 0.0f, -0.04f, preview_icon_studio_ };
 	const View &v = preview_icon_ ? icon_view : views[preview_view_];
+	if (preview_icon_) {
+		cam->set_fov(14.0f); // a long lens from further back: flatter, less perspective bulge
+	}
 	const Vector3 c = preview_box_.get_center();
 	const float radius = Math::max(preview_box_.size.length() * 0.5f, 0.5f);
-	const float dist = radius / std::tan(Math::deg_to_rad(cam->get_fov() * 0.5f)) * (preview_icon_ ? 0.9f : 1.25f);
+	const float dist = radius / std::tan(Math::deg_to_rad(cam->get_fov() * 0.5f)) * (preview_icon_ ? 0.8f : 1.25f);
 	const Vector3 dir(std::sin(v.yaw) * std::cos(v.pitch), std::sin(v.pitch), std::cos(v.yaw) * std::cos(v.pitch));
 	cam->set_global_position(c + dir * dist);
 	cam->look_at(c, Vector3(0, 1, 0));
