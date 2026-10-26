@@ -19,10 +19,13 @@ void vertex() {
 void fragment() {
 	vec2 cell = (UV2.x != 0.0 || UV2.y != 0.0) ? vec2(fract(UV2.x), UV2.y) : UV;
 	vec3 c = texture(palette, cell).rgb;
-	ALBEDO = c;
-	EMISSION = c * self_glow + texture(palette_emit, cell).rgb * 3.0;
+	// Push the colour past the palette's pastel so candy reads as vivid sugar under night light;
+	// the rim glows in the candy's own colour (not white) so pieces stay saturated at a distance.
+	vec3 vivid = clamp(mix(vec3(dot(c, vec3(0.299, 0.587, 0.114))), c, 1.4), 0.0, 1.0);
+	ALBEDO = vivid;
+	EMISSION = vivid * self_glow + texture(palette_emit, cell).rgb * 3.0;
 	float rim = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 2.5);
-	EMISSION += vec3(1.0, 0.95, 0.85) * rim * 0.6;
+	EMISSION += mix(vivid, vec3(1.0), 0.25) * rim * 0.7;
 	ROUGHNESS = 0.22;
 	SPECULAR = 0.8;
 }

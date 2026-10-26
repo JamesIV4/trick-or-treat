@@ -87,15 +87,23 @@ void register_prop_collisions(GenContext &ctx) {
 		OBox b;
 		b.lot = pp.lot;
 		b.walkable = a->walkable;
-		b.bouncy = pp.bouncy;
+		b.bouncy = pp.bouncy || a->bounce > 0.0f;
+		if (a->bounce > 0.0f) {
+			b.bounce = a->bounce;
+		}
 		if (a->collision == "trunk") {
 			b.cylinder = true;
 			b.half = Vector3(a->radius * sc.x, a->height * 0.5f * sc.y, a->radius * sc.x);
 			b.xf = Transform3D(rot, pp.xf.xform(Vector3(0, a->height * 0.5f, 0)));
 			b.walkable = false;
 		} else {
-			const Vector3 center = a->aabb.get_center();
+			Vector3 center = a->aabb.get_center();
 			Vector3 half = a->aabb.size * 0.5f;
+			if (a->collision_top > 0.0f) {
+				const float bottom = a->aabb.position.y;
+				center.y = (bottom + a->collision_top) * 0.5f;
+				half.y = (a->collision_top - bottom) * 0.5f;
+			}
 			half = Vector3(half.x * sc.x, half.y * sc.y, half.z * sc.z);
 			if (a->collision == "cylinder") {
 				b.cylinder = true;
@@ -104,6 +112,21 @@ void register_prop_collisions(GenContext &ctx) {
 			}
 			b.half = half;
 			b.xf = Transform3D(rot, pp.xf.xform(center));
+			if (a->has_hood && !b.cylinder) {
+				// Cars: the cabin and boot stay solid; the hood ahead of the windscreen is a trampoline
+				// (its own lower box, so the kid lands on the hood rather than at roof height).
+				const AABB &bb = a->aabb;
+				const float zh = a->hood.position.z, bottom = bb.position.y;
+				OBox cabin = b;
+				cabin.half.z = (zh - bb.position.z) * 0.5f * sc.z;
+				cabin.xf.origin = pp.xf.xform(Vector3(center.x, center.y, (bb.position.z + zh) * 0.5f));
+				ctx.boxes.push_back(cabin);
+				const float top = a->hood.get_end().y;
+				b.half = Vector3(half.x, (top - bottom) * 0.5f * sc.y, (bb.get_end().z - zh) * 0.5f * sc.z);
+				b.xf.origin = pp.xf.xform(Vector3(center.x, (bottom + top) * 0.5f, (zh + bb.get_end().z) * 0.5f));
+				b.bouncy = true;
+				b.bounce = 14.0f;
+			}
 		}
 		ctx.boxes.push_back(b);
 	}
@@ -191,7 +214,7 @@ void weave_candy(GenContext &ctx) {
 	const StreetPlan &s = ctx.street;
 	std::vector<CandySpec> &out = ctx.candy;
 	out.clear();
-	const int colors[] = { CANDY_PINK, CANDY_MINT, CANDY_GRAPE, CANDY_LEMON };
+	const int colors[] = { CANDY_PINK, CANDY_MINT, CANDY_GRAPE, CANDY_LEMON, CANDY_ORANGE, CANDY_CORN };
 	// Platforms worth jumping onto: bales, crates, barrels, rails, car roofs, benches, wagons...
 	struct Plat {
 		int box;
@@ -277,7 +300,7 @@ void weave_candy(GenContext &ctx) {
 			if (best_score < -1e8f) {
 				continue;
 			}
-			const int color = colors[r.irange(0, 3)];
+			const int color = colors[r.irange(0, 5)];
 			const int count = r.irange(3, 4);
 			if (!jump_arc(out, best, p.top, count, lot, color, next_group)) {
 				arc(out, best + Vector3(0, 1.2f, 0), p.top + Vector3(0, CARRY, 0), p.top.y + 1.5f, count, lot, color, next_group);
@@ -311,7 +334,7 @@ void weave_candy(GenContext &ctx) {
 		for (const Vector3 &p : lot.roof_route) {
 			roof.push_back(lot.to_world(p));
 		}
-		const int rc = colors[lr.irange(0, 3)];
+		const int rc = colors[lr.irange(0, 5)];
 		if (lr.chance(0.6f)) {
 			const int roof_group = next_group++;
 			if (!jump_arc(out, roof[0], roof[1], 3, lot.index, rc, roof_group)) {
@@ -355,7 +378,7 @@ void weave_candy(GenContext &ctx) {
 				if (pts.size() < 3) {
 					continue;
 				}
-				const int color = colors[lr.irange(0, 3)];
+				const int color = colors[lr.irange(0, 5)];
 				for (const Vector3 &p : pts) {
 					out.push_back({ p, color, lot.index, next_group });
 				}
@@ -398,7 +421,7 @@ void weave_candy(GenContext &ctx) {
 					if (!clear) {
 						continue;
 					}
-					if (jump_arc(out, a, b, 3, lot.index, colors[lr.irange(0, 3)], next_group)) {
+					if (jump_arc(out, a, b, 3, lot.index, colors[lr.irange(0, 5)], next_group)) {
 						++next_group;
 						break;
 					}
@@ -413,12 +436,12 @@ void weave_candy(GenContext &ctx) {
 		if (!lot.summit_route.empty()) {
 			const int summit_group = next_group++;
 			for (size_t i = 1; i + 1 < lot.summit_route.size(); i += 2) {
-				out.push_back({ lot.to_world(lot.summit_route[i]) + Vector3(0, 1.2f, 0), colors[lr.irange(0, 3)], lot.index, summit_group });
+				out.push_back({ lot.to_world(lot.summit_route[i]) + Vector3(0, 1.2f, 0), colors[lr.irange(0, 5)], lot.index, summit_group });
 			}
 			out.push_back({ lot.to_world(lot.summit_route.back()) + Vector3(0, 0.95f, 0), CANDY_GOLDEN, lot.index });
 		}
 	}
-	// Street: arcs onto parked cars, hay walls of the pocket parks, and hops over the hopscotch.
+	// Street: arcs onto parked cars, hay walls of the pocket parks, and a row of hops across the road.
 	Rng sr = ctx.rng(STAGE_CANDY, 999);
 	sequences(by_lot.back(), -1, 6, sr);
 	const float hx = s.lane_x + (s.lane_x < 0 ? 7.5f : -7.5f);
@@ -434,7 +457,7 @@ void weave_candy(GenContext &ctx) {
 		}
 		const float side = sr.chance(0.5f) ? 1.0f : -1.0f;
 		const Vector3 c = s.at(x) + s.left_at(x) * side * sr.range(s.half_road + 0.6f, s.edge() - 0.6f);
-		const int color = colors[sr.irange(0, 3)];
+		const int color = colors[sr.irange(0, 5)];
 		const int n = sr.irange(3, 4);
 		for (int k = 0; k < n; ++k) {
 			const Vector3 p = c + (s.at(x + 1.0f) - s.at(x - 1.0f)).normalized() * ((k - (n - 1) * 0.5f) * 0.8f) + Vector3(0, 0.8f, 0);
@@ -616,6 +639,90 @@ void validate_traversal(GenContext &ctx) {
 }
 
 // ---------------------------------------------------------------- dressing
+namespace {
+// A patch of fallen leaves: any heading, a little size variation.
+Basis leaf_basis(Rng &rng) {
+	const float s = rng.range(0.55f, 1.0f);
+	return Basis(Vector3(0, 1, 0), rng.range(0.0f, Math_TAU)).scaled(Vector3(s, 1.0f, s));
+}
+// Grass outside the lots, over the settlement's whole footprint: the street verges, pocket-park
+// lawns and the open ground behind and between the rows. Never on asphalt, curbs, sidewalks,
+// the side lane or the country roads running on from the street ends, never inside the lots
+// (they grow their own) or under hedges and other set pieces, and not on town squares' paving.
+void scatter_open_grass(GenContext &ctx, Rng &rng) {
+	const StreetPlan &st = ctx.street;
+	const bool town = ctx.kind == SettlementKind::Town;
+	const float hr = st.half_road, hc = hr + st.curb, hv = hc + st.verge, he = st.edge();
+	constexpr float ROAD = 3.4f; // half width of the country roads (WorldPlan::ROAD_HALF)
+	std::vector<Transform3D> lot_inv;
+	for (const Lot &lot : ctx.lots) {
+		lot_inv.push_back(lot.xf.affine_inverse());
+	}
+	const unsigned c = pal::RGB[pal::LAWN];
+	const Color lawn = Color(float((c >> 16) & 255) / 255.0f, float((c >> 8) & 255) / 255.0f, float(c & 255) / 255.0f).srgb_to_linear();
+	std::vector<const OBox *> blockers;
+	for (const OBox &b : ctx.boxes) {
+		if (b.lot < 0 && b.xf.origin.y - b.half.y < 0.4f) {
+			blockers.push_back(&b);
+		}
+	}
+	const float GAP = 0.9f;
+	for (float z = ctx.bound_z0 - 4.0f; z < ctx.bound_z1 + 4.0f; z += GAP) {
+		for (float x = ctx.bound_x0 - 3.0f; x < ctx.bound_x1 + 3.0f; x += GAP) {
+			const Vector3 p(x + rng.range(-0.4f, 0.4f), 0.0f, z + rng.range(-0.4f, 0.4f));
+			const float lat = std::abs((p - st.at(p.x)).dot(st.left_at(p.x)));
+			const bool past_ends = p.x < st.center.front().x || p.x > st.center.back().x;
+			float y = -0.03f; // open ground (its visible surface sits 4 cm below the settlement level)
+			if (past_ends) {
+				if (lat < ROAD + 2.4f) {
+					continue; // the country road carrying on from the street
+				}
+			} else if (lat < hv) {
+				if (lat < hc || town) {
+					continue; // asphalt, curb, or a town's brick verge
+				}
+				y = 0.05f; // grass verge
+			} else if (lat < he) {
+				continue; // sidewalk
+			} else if (town && lat < he + 16.0f) {
+				continue; // town squares and shop forecourts are paved
+			}
+			// The side lane and the road beyond it.
+			const float along = (p.z - st.lane_origin.z) * float(st.lane_dir), llat = std::abs(p.x - st.lane_origin.x);
+			if (along > 0.0f && llat < he && (along < st.lane_len + 0.5f || (ctx.lane_open && llat < ROAD + 2.4f))) {
+				if (llat < hc || llat > hv || town || along > st.lane_len) {
+					continue;
+				}
+				y = 0.05f;
+			}
+			bool blocked = false;
+			for (const Lot &lot : ctx.lots) {
+				const Vector3 l = lot_inv[lot.index].xform(p);
+				if (std::abs(l.x) < lot.width * 0.5f + 0.1f && l.z < 0.1f && l.z > -lot.depth - 0.1f) {
+					blocked = true;
+					break;
+				}
+			}
+			for (size_t k = 0; k < blockers.size() && !blocked; ++k) {
+				const Vector3 l = blockers[k]->xf.affine_inverse().xform(p);
+				const Vector3 &h = blockers[k]->half;
+				blocked = blockers[k]->cylinder ? Vector2(l.x, l.z).length() < h.x : (std::abs(l.x) < h.x && std::abs(l.z) < h.z);
+			}
+			if (blocked) {
+				continue;
+			}
+			ScatterItem s;
+			s.kind = rng.chance(0.95f) ? 0 : 2;
+			s.lot = -1;
+			s.color = lawn * rng.range(0.8f, 1.1f);
+			const float sc = rng.range(0.75f, 1.3f);
+			s.xf = Transform3D(Basis(Vector3(0, 1, 0), rng.range(0.0f, Math_TAU)).scaled(Vector3(sc, sc * rng.range(0.8f, 1.3f), sc)), Vector3(p.x, y, p.z));
+			ctx.scatter.push_back(s);
+		}
+	}
+}
+} // namespace
+
 void scatter_dressing(GenContext &ctx) {
 	Rng rng = ctx.rng(STAGE_DRESSING);
 	ctx.scatter.clear();
@@ -627,7 +734,7 @@ void scatter_dressing(GenContext &ctx) {
 		// Dense lawn grass in clumps, thicker along fences and foundations.
 		const int lawn = (lot.index % 3 == 0) ? pal::LAWN_DARK : (lot.index % 3 == 1 ? pal::LAWN : pal::MOSS);
 		const Color lawn_col = srgb(lawn);
-		const int n = int(lot.width * lot.depth * 2.2f);
+		const int n = int(lot.width * lot.depth * 3.4f);
 		for (int i = 0; i < n; ++i) {
 			float x = rng.range(-lot.width * 0.5f + 0.3f, lot.width * 0.5f - 0.3f);
 			float z = rng.range(-lot.depth + 0.4f, -0.3f);
@@ -657,27 +764,31 @@ void scatter_dressing(GenContext &ctx) {
 		if (pp.id.rfind("tree_", 0) != 0) {
 			continue;
 		}
-		for (int i = 0; i < 22; ++i) {
-			const float a = rng.range(0.0f, Math_TAU), r = rng.range(0.4f, 3.6f);
+		for (int i = 0; i < 12; ++i) {
+			const float a = rng.range(0.0f, Math_TAU), r = 0.4f + 3.0f * std::sqrt(rng.f());
 			Vector3 p = pp.xf.origin + Vector3(std::cos(a) * r + 0.8f, 0.0f, std::sin(a) * r);
-			p.y = 0.01f;
+			p.y = 0.01f + rng.range(0.0f, 0.01f);
 			ScatterItem s;
 			s.kind = 1;
-			s.xf = Transform3D(Basis(Vector3(0, 1, 0), rng.range(0.0f, Math_TAU)), p);
+			s.xf = Transform3D(leaf_basis(rng), p);
 			ctx.scatter.push_back(s);
 		}
 	}
+	// Leaves drifted into the gutters, and a looser sprinkle across the road and sidewalks.
 	const StreetPlan &st = ctx.street;
-	for (int i = 0; i < 140; ++i) {
+	for (int i = 0; i < 180; ++i) {
 		const float x = rng.range(ctx.bound_x0, ctx.bound_x1);
 		const float side = rng.sign();
-		Vector3 p = st.at(x) + st.left_at(x) * side * (st.half_road - rng.range(0.1f, 0.6f));
-		p.y = 0.015f;
+		const float off = i < 110 ? st.half_road - 0.4f - 0.5f * rng.f() * rng.f() : rng.range(0.0f, st.edge());
+		Vector3 p = st.at(x) + st.left_at(x) * side * off;
+		// Road, curb top, verge or sidewalk surface.
+		const float hc = st.half_road + st.curb;
+		p.y = (off < st.half_road - 0.4f ? 0.015f : (off < st.half_road ? 0.035f : (off < hc ? 0.125f : (off < hc + st.verge ? 0.055f : 0.075f)))) + rng.range(0.0f, 0.01f);
 		ScatterItem s;
 		s.kind = 1;
-		s.xf = Transform3D(Basis(Vector3(0, 1, 0), rng.range(0.0f, Math_TAU)), p);
+		s.xf = Transform3D(leaf_basis(rng), p);
 		ctx.scatter.push_back(s);
 	}
+	scatter_open_grass(ctx, rng);
 }
-
 } // namespace tot

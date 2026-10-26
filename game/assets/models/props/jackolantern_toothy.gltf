@@ -6,6 +6,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"tot_build":"1792898706.640"
+			},
 			"name":"Scene",
 			"nodes":[
 				1
@@ -26,7 +29,7 @@
 				0
 			],
 			"extras":{
-				"build":"20261024-162018-0.9487"
+				"build":"20261024-232506-0.6399"
 			},
 			"mesh":0,
 			"name":"jackolantern_toothy"

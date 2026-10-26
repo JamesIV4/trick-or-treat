@@ -1,4 +1,5 @@
 #include "gen/neighborhood_generator.h"
+#include "core/fonts.h"
 
 #include <godot_cpp/classes/box_shape3d.hpp>
 #include <godot_cpp/classes/collision_shape3d.hpp>
@@ -23,7 +24,9 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <map>
 
+#include "gen/candy_kinds.h"
 #include "play/candy_field.h"
 
 using namespace godot;
@@ -237,6 +240,14 @@ Node3D *NeighborhoodGenerator::instantiate_asset(const String &id) {
 	return assets_->instantiate(std::string(id.utf8().get_data()));
 }
 
+bool NeighborhoodGenerator::asset_published(const String &id) {
+	if (!assets_loaded_) {
+		assets_->load(catalog_path_, toon_);
+		assets_loaded_ = true;
+	}
+	return assets_->get(std::string(id.utf8().get_data()))->published;
+}
+
 void NeighborhoodGenerator::open_door(int lot) {
 	if (lot >= 0 && lot < int(doors_.size())) {
 		doors_[lot].target = -1.9f;
@@ -263,10 +274,54 @@ void NeighborhoodGenerator::_process(double delta) {
 		if (s.t <= 0.0f || !s.node) {
 			continue;
 		}
+		if (s.mode == SQUISH_HOOD) {
+			// The hood flaps up on its hinge, hangs a moment, then drops shut with a little rattle.
+			s.t = Math::max(0.0f, s.t - dt * 1.4f);
+			const float u = 1.0f - s.t;
+			float lift = u < 0.18f ? Math::smoothstep(0.0f, 0.18f, u) : 1.0f - Math::smoothstep(0.45f, 0.85f, u);
+			if (u > 0.85f) {
+				lift = std::abs(std::sin((u - 0.85f) / 0.15f * Math_PI * 2.0f)) * 0.06f * (1.0f - u) / 0.15f;
+			}
+			s.node->set_transform(Transform3D(s.rest.basis * Basis(Vector3(1, 0, 0), -1.05f * lift), s.rest.origin));
+			continue;
+		}
 		s.t = Math::max(0.0f, s.t - dt * 2.2f);
-		// Damped wobble: squash down, spring up, settle.
 		const float k = std::sin((1.0f - s.t) * Math_PI * 4.0f) * s.t * s.t * 0.35f;
+		if (s.mode == SQUISH_DIP) {
+			// The awning sags under the landing and springs back about its wall hinge.
+			s.node->set_transform(Transform3D(s.rest.basis * Basis(Vector3(1, 0, 0), k * 0.5f), s.rest.origin));
+			continue;
+		}
+		// Damped wobble: squash down, spring up, settle.
 		s.node->set_transform(Transform3D(s.rest.basis.scaled(Vector3(1.0f + k * 0.6f, 1.0f - k, 1.0f + k * 0.6f)), s.rest.origin));
+	}
+	// The street spine: a piece fades once every house near it has been visited; pieces with no
+	// house near them go once every house in the area has.
+	if (!spine_.empty()) {
+		bool all = true;
+		for (const MagicNode &mn : magic_nodes_) {
+			all = all && mn.visited;
+		}
+		for (SpineChunk &c : spine_) {
+			if (c.gone || !c.node) {
+				continue;
+			}
+			bool done = !c.lots.empty() || all;
+			for (int l : c.lots) {
+				done = done && l < int(magic_nodes_.size()) && magic_nodes_[l].visited;
+			}
+			if (all) {
+				done = true;
+			}
+			if (done) {
+				c.fade = Math::max(0.0f, c.fade - dt * 0.35f);
+				c.node->set_instance_shader_parameter("fade", c.fade);
+				if (c.fade <= 0.0f) {
+					c.node->set_visible(false);
+					c.gone = true;
+				}
+			}
+		}
 	}
 	// Visited houses: their guide branch fades out so the trail always points somewhere new.
 	for (MagicNode &mn : magic_nodes_) {
@@ -350,6 +405,19 @@ void NeighborhoodGenerator::build_nodes() {
 			mi->set_transform(ctx.lots[i].xf);
 		}
 	}
+	// Springy building parts (shop awnings): their own nodes so they can dip when bounced on.
+	for (SpringSpec &sp : ctx.springs) {
+		if (MeshInstance3D *mi = add_mesh(sp.mesh, "Awning")) {
+			mi->set_transform(sp.xf);
+			Squishy s;
+			s.node = mi;
+			s.rest = sp.xf;
+			s.mode = SQUISH_DIP;
+			s.anchor = sp.anchor;
+			s.reach = sp.reach;
+			squishies_.push_back(s);
+		}
+	}
 	build_collision(world_);
 	build_props(world_);
 	build_doors(world_);
@@ -367,6 +435,7 @@ void NeighborhoodGenerator::build_nodes() {
 void NeighborhoodGenerator::build_signs(Node3D *world) {
 	for (const SignSpec &s : ctx_->signs) {
 		Label3D *l = memnew(Label3D);
+		l->set_font(display_font());
 		l->set_text(String(s.text.c_str()));
 		l->set_font_size(96);
 		l->set_outline_size(22);
@@ -383,6 +452,7 @@ void NeighborhoodGenerator::build_signs(Node3D *world) {
 // Magic guide trail meshes: the shader spirals three strands around these centrelines.
 void NeighborhoodGenerator::build_magic(Node3D *world) {
 	magic_nodes_.assign(ctx_->lots.size(), MagicNode());
+	spine_.clear();
 	if (magic_mat_.is_null()) {
 		return;
 	}
@@ -407,11 +477,13 @@ void NeighborhoodGenerator::build_magic(Node3D *world) {
 			dist[i] = dist[i - 1] + pts[i].distance_to(pts[i - 1]);
 		}
 		const float total = Math::max(dist.back(), 0.01f);
+		// Builds the trail mesh over pts[i0..i1] (distances stay global, so pieces join seamlessly).
+		auto piece = [&](size_t i0, size_t i1) -> MeshInstance3D * {
 		PackedVector3Array v, n;
 		PackedFloat32Array tan;
 		PackedVector2Array uv, uv2;
 		for (int strand = 0; strand < 3; ++strand) {
-			for (size_t i = 0; i + 1 < pts.size(); ++i) {
+			for (size_t i = i0; i + 1 <= i1 && i + 1 < pts.size(); ++i) {
 				for (int corner = 0; corner < 6; ++corner) {
 					static const int idx[6] = { 0, 1, 0, 0, 1, 1 };
 					static const float sd[6] = { 0, 0, 1, 1, 0, 1 };
@@ -445,18 +517,42 @@ void NeighborhoodGenerator::build_magic(Node3D *world) {
 		mi->set_extra_cull_margin(1.0f);
 		mi->set_instance_shader_parameter("fade", path.lot >= 0 ? 1.0f : 0.7f);
 		world->add_child(mi);
-		if (path.lot >= 0 && path.lot < int(magic_nodes_.size())) {
-			magic_nodes_[path.lot].node = mi;
+		return mi;
+		};
+		if (path.lot >= 0) {
+			MeshInstance3D *mi = piece(0, pts.size() - 1);
+			if (path.lot < int(magic_nodes_.size())) {
+				magic_nodes_[path.lot].node = mi;
+			}
+			continue;
+		}
+		// The spine: about 10 m per piece, each tagged with the houses near it.
+		for (size_t i0 = 0; i0 + 1 < pts.size();) {
+			size_t i1 = i0 + 1;
+			while (i1 + 1 < pts.size() && dist[i1] - dist[i0] < 10.0f) {
+				++i1;
+			}
+			SpineChunk c;
+			c.node = piece(i0, i1);
+			const Vector3 mid = pts[(i0 + i1) / 2];
+			for (size_t l = 0; l < ctx_->lots.size(); ++l) {
+				const Vector3 d = ctx_->lots[l].doorbell - mid;
+				if (Vector2(d.x, d.z).length() < 16.0f) {
+					c.lots.push_back(int(l));
+				}
+			}
+			spine_.push_back(c);
+			i0 = i1;
 		}
 	}
 }
 
 void NeighborhoodGenerator::squash_near(const Vector3 &pos) {
 	Squishy *best = nullptr;
-	float best_d = 2.2f;
+	float best_d = 1e9f;
 	for (Squishy &s : squishies_) {
-		const float d = Vector2(s.rest.origin.x - pos.x, s.rest.origin.z - pos.z).length();
-		if (d < best_d) {
+		const float d = Vector2(s.anchor.x - pos.x, s.anchor.z - pos.z).length();
+		if (d < s.reach && d < best_d) {
 			best_d = d;
 			best = &s;
 		}
@@ -559,9 +655,21 @@ void NeighborhoodGenerator::build_collision(Node3D *world) {
 	StaticBody3D *boundary = memnew(StaticBody3D);
 	boundary->set_name("Boundary");
 	boundary->set_collision_layer(2);
-	StaticBody3D *bouncy = memnew(StaticBody3D);
-	bouncy->set_name("Bouncy");
-	bouncy->set_meta("bounce", 13.5);
+	// Yard fences: solid like the rest of the world, but tagged so fireballs pass straight through.
+	StaticBody3D *fences = memnew(StaticBody3D);
+	fences->set_name("Fences");
+	fences->set_meta("shot_through", true);
+	// One body per launch speed (inflatables, mini and big trampolines).
+	std::map<int, StaticBody3D *> bouncy;
+	auto bouncy_body = [&](float speed) {
+		StaticBody3D *&b = bouncy[int(std::round(speed * 10.0f))];
+		if (!b) {
+			b = memnew(StaticBody3D);
+			b->set_name(String("Bouncy") + String::num(speed, 1));
+			b->set_meta("bounce", speed);
+		}
+		return b;
+	};
 	for (const OBox &b : ctx_->boxes) {
 		CollisionShape3D *cs = memnew(CollisionShape3D);
 		if (b.cylinder) {
@@ -578,13 +686,16 @@ void NeighborhoodGenerator::build_collision(Node3D *world) {
 		}
 		cs->set_transform(b.xf);
 		const float volume = b.half.x * b.half.y * b.half.z * 8.0f;
-		StaticBody3D *body = b.bouncy ? bouncy : b.boundary ? boundary : (volume > 8.0f && b.lot >= 0 && !b.cylinder) ? structures : solids;
+		StaticBody3D *body = b.bouncy ? bouncy_body(b.bounce) : b.boundary ? boundary : b.shot_through ? fences : (volume > 8.0f && b.lot >= 0 && !b.cylinder) ? structures : solids;
 		body->add_child(cs);
 	}
 	world->add_child(solids);
 	world->add_child(structures);
 	world->add_child(boundary);
-	world->add_child(bouncy);
+	world->add_child(fences);
+	for (auto &kv : bouncy) {
+		world->add_child(kv.second);
+	}
 }
 
 void NeighborhoodGenerator::build_props(Node3D *world) {
@@ -598,8 +709,24 @@ void NeighborhoodGenerator::build_props(Node3D *world) {
 		if (pp.wind > 0.0f) {
 			set_instance_param_recursive(n, "wind", pp.wind);
 		}
-		if (pp.bouncy) {
-			squishies_.push_back({ n, pp.xf, 0.0f });
+		const AssetInfo *info = assets_->get(pp.id);
+		if (info->has_hood && pp.collide) {
+			// Cars: the hood is a trampoline that flaps up on its hinge.
+			if (Node3D *hood = Object::cast_to<Node3D>(n->find_child("hood", true, false))) {
+				Squishy s;
+				s.node = hood;
+				s.rest = hood->get_transform();
+				s.mode = SQUISH_HOOD;
+				s.anchor = pp.xf.xform(info->hood.get_center());
+				s.reach = Math::max(info->hood.size.x, info->hood.size.z) * 0.5f * pp.xf.basis.get_scale().x + 0.5f;
+				squishies_.push_back(s);
+			}
+		} else if (pp.bouncy) {
+			Squishy s;
+			s.node = n;
+			s.rest = pp.xf;
+			s.anchor = pp.xf.origin;
+			squishies_.push_back(s);
 		}
 		if (pp.id == "porch_lantern" && pp.lot >= 0) {
 			// Unlit until the house is cleared: the porch lanterns are diegetic progress.
@@ -649,6 +776,12 @@ void NeighborhoodGenerator::build_doors(Node3D *world) {
 		mi->set_mesh(b.build());
 		mi->set_material_override(toon_);
 		pivot->add_child(mi);
+		if (d.lot >= 0 && ctx_->kind == SettlementKind::Neighborhood) {
+			// An autumn wreath on every front door (it swings open with the door).
+			Node3D *wreath = assets_->instantiate("door_wreath");
+			wreath->set_position(Vector3(w * 0.5f, h * 0.68f, 0.06f));
+			pivot->add_child(wreath);
+		}
 		world->add_child(hinge);
 		if (d.lot >= 0) {
 			doors_[d.lot].hinge = pivot;
@@ -713,11 +846,15 @@ void NeighborhoodGenerator::build_strings(Node3D *world) {
 	if (ctx_->strings.empty()) {
 		return;
 	}
+	// Round bulbs, mini jack-o'-lanterns, and bunting pennants in three alternating colours.
+	static const char *ids[] = { "string_bulb", "string_jack", "bunting_flag_orange", "bunting_flag_purple", "bunting_flag_cream" };
+	constexpr int KINDS = 5;
 	MeshBuilder wire;
-	std::vector<Transform3D> bulbs;
+	std::vector<Transform3D> items[KINDS];
 	for (const StringLight &s : ctx_->strings) {
 		const float len = s.a.distance_to(s.b);
-		const int n = std::max(4, int(len / 0.45f));
+		const float spacing = s.style == STRING_BULBS ? 0.45f : (s.style == STRING_JACKS ? 0.45f : 0.33f);
+		const int n = std::max(4, int(len / spacing));
 		Vector3 prev = s.a;
 		for (int i = 1; i <= n; ++i) {
 			const float t = float(i) / n;
@@ -733,7 +870,25 @@ void NeighborhoodGenerator::build_strings(Node3D *world) {
 				wire.box(Vector3(), Vector3(0.012f, 0.012f, l * 0.5f), pal::CHARCOAL);
 			}
 			if (i < n) {
-				bulbs.push_back(Transform3D(Basis(), p));
+				if (s.style == STRING_BULBS) {
+					items[0].push_back(Transform3D(Basis(), p));
+				} else {
+					// Hang straight down, front turned away from the wire toward out.
+					Vector3 x = Vector3(s.b.x - s.a.x, 0, s.b.z - s.a.z).normalized();
+					Vector3 z = x.cross(Vector3(0, 1, 0));
+					if (z.dot(s.out) < 0.0f) {
+						x = -x;
+						z = -z;
+					}
+					if (s.style == STRING_JACKS) {
+						// Chunky bulbs, every other one hanging a little lower, each turned a touch.
+						const float sway = ((i * 37) % 7 - 3) * 0.06f;
+						const Basis b = Basis(x, Vector3(0, 1, 0), z).rotated(Vector3(0, 1, 0), sway).scaled(Vector3(1.6f, 1.6f, 1.6f));
+						items[1].push_back(Transform3D(b, p - Vector3(0, (i & 1) ? 0.05f : 0.0f, 0)));
+					} else {
+						items[2 + (i % 3)].push_back(Transform3D(Basis(x, Vector3(0, 1, 0), z), p));
+					}
+				}
 			}
 			prev = p;
 		}
@@ -743,22 +898,26 @@ void NeighborhoodGenerator::build_strings(Node3D *world) {
 	mi->set_mesh(wire.build());
 	mi->set_material_override(toon_);
 	world->add_child(mi);
-	Ref<MultiMesh> mm;
-	mm.instantiate();
-	mm->set_transform_format(MultiMesh::TRANSFORM_3D);
-	mm->set_mesh(assets_->mesh("string_bulb"));
-	mm->set_instance_count(int(bulbs.size()));
-	for (int i = 0; i < int(bulbs.size()); ++i) {
-		mm->set_instance_transform(i, bulbs[i]);
+	for (int k = 0; k < KINDS; ++k) {
+		if (items[k].empty()) {
+			continue;
+		}
+		Ref<MultiMesh> mm;
+		mm.instantiate();
+		mm->set_transform_format(MultiMesh::TRANSFORM_3D);
+		mm->set_mesh(k == 0 ? assets_->mesh(ids[k]) : assets_->merged_mesh(ids[k]));
+		mm->set_instance_count(int(items[k].size()));
+		for (int i = 0; i < int(items[k].size()); ++i) {
+			mm->set_instance_transform(i, items[k][i]);
+		}
+		MultiMeshInstance3D *mmi = memnew(MultiMeshInstance3D);
+		mmi->set_name(String("Strung_") + ids[k]);
+		mmi->set_multimesh(mm);
+		mmi->set_material_override(toon_);
+		mmi->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
+		world->add_child(mmi);
 	}
-	MultiMeshInstance3D *mmi = memnew(MultiMeshInstance3D);
-	mmi->set_name("StringBulbs");
-	mmi->set_multimesh(mm);
-	mmi->set_material_override(toon_);
-	mmi->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
-	world->add_child(mmi);
 }
-
 // A clump of curved grass blades; UV.y runs 0 at the root to 1 at the tip (read by grass.gdshader).
 Ref<ArrayMesh> grass_clump_mesh() {
 	PackedVector3Array v, n;
@@ -808,18 +967,20 @@ Ref<ArrayMesh> grass_clump_mesh() {
 }
 
 void NeighborhoodGenerator::build_scatter(Node3D *world) {
-	// Grass: one MultiMesh per lot (culled by distance), coloured per lot through instance colours.
+	// Grass: one MultiMesh per lot, plus one per 24 m tile of open ground (culled by distance),
+	// coloured through instance colours.
 	Ref<ArrayMesh> clump = grass_clump_mesh();
-	for (size_t lot = 0; lot < ctx_->lots.size(); ++lot) {
-		std::vector<const ScatterItem *> items;
-		for (const ScatterItem &s : ctx_->scatter) {
-			if (s.kind == 0 && s.lot == int(lot)) {
-				items.push_back(&s);
-			}
-		}
-		if (items.empty()) {
+	std::map<int64_t, std::vector<const ScatterItem *>> groups;
+	for (const ScatterItem &s : ctx_->scatter) {
+		if (s.kind != 0) {
 			continue;
 		}
+		const int64_t key = s.lot >= 0 ? int64_t(s.lot) : 100000 + int64_t(std::floor(s.xf.origin.x / 24.0f)) * 1000 + int64_t(std::floor(s.xf.origin.z / 24.0f) + 500);
+		groups[key].push_back(&s);
+	}
+	for (const auto &kv : groups) {
+		const int64_t lot = kv.first;
+		const std::vector<const ScatterItem *> &items = kv.second;
 		Ref<MultiMesh> mm;
 		mm.instantiate();
 		mm->set_transform_format(MultiMesh::TRANSFORM_3D);
@@ -851,7 +1012,10 @@ void NeighborhoodGenerator::build_scatter(Node3D *world) {
 		leaves.quad_out(c - u, c - v, c + u, c + v, leaf_cells[i], c - Vector3(0, 1, 0));
 	}
 	clover.blob(Vector3(0, 0.03f, 0), Vector3(0.16f, 0.04f, 0.16f), pal::HEDGE, 0);
-	Ref<ArrayMesh> meshes[3] = { tuft.build(), leaves.build(), clover.build() };
+	Ref<Mesh> meshes[3] = { tuft.build(), leaves.build(), clover.build() };
+	if (assets_->get("leaf_scatter")->published) {
+		meshes[1] = assets_->merged_mesh("leaf_scatter"); // a patch of painted maple leaves per item
+	}
 	for (int kind = 1; kind < 3; ++kind) {
 		std::vector<Transform3D> xs;
 		for (const ScatterItem &s : ctx_->scatter) {
@@ -880,11 +1044,10 @@ void NeighborhoodGenerator::build_scatter(Node3D *world) {
 }
 
 void NeighborhoodGenerator::build_candy(Node3D *world) {
-	static const char *ids[CANDY_KIND_COUNT] = { "candy_wrapped_pink", "candy_wrapped_mint", "candy_wrapped_grape", "candy_wrapped_lemon",
-		"candy_chocolate_bar", "candy_lollipop", "candy_golden_bar" };
+	register_candy_kinds(*assets_);
 	std::vector<Ref<Mesh>> meshes;
-	for (const char *id : ids) {
-		meshes.push_back(assets_->mesh(id));
+	for (int k = 0; k < candy_kind_count(); ++k) {
+		meshes.push_back(assets_->merged_mesh(candy_kind_id(k)));
 	}
 	candy_ = memnew(CandyField);
 	candy_->set_name("CandyField");
@@ -896,6 +1059,8 @@ void NeighborhoodGenerator::build_candy(Node3D *world) {
 		}
 		CandySpec c = ctx_->candy[i];
 		c.id = int(i);
+		// Placement chose the tier; pick this piece's kind from everything in that tier.
+		c.kind = candy_kind_of_tier(candy_tier(c.kind), sub_seed(ctx_->seed, 0xCA4D, i));
 		candy_->add(c);
 	}
 	candy_->finalize();

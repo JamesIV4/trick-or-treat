@@ -6,6 +6,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"tot_build":"1792899288.397"
+			},
 			"name":"Scene",
 			"nodes":[
 				0
@@ -39,92 +42,92 @@
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":850,
+			"count":2823,
 			"max":[
-				0.5997954607009888,
-				0.8945227861404419,
-				0.5699899196624756
+				0.6245285868644714,
+				0.9184523224830627,
+				0.5283269286155701
 			],
 			"min":[
-				-0.6448290944099426,
+				-0.6926190853118896,
 				0,
-				-0.6210581064224243
+				-0.6031930446624756
 			],
 			"type":"VEC3"
 		},
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":850,
+			"count":2823,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":850,
+			"count":2823,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5126,
-			"count":850,
+			"count":2823,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":4,
 			"componentType":5123,
-			"count":850,
+			"count":2823,
 			"normalized":true,
 			"type":"VEC4"
 		},
 		{
 			"bufferView":5,
 			"componentType":5123,
-			"count":2532,
+			"count":5880,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":10200,
+			"byteLength":33876,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":10200,
-			"byteOffset":10200,
+			"byteLength":33876,
+			"byteOffset":33876,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":6800,
-			"byteOffset":20400,
+			"byteLength":22584,
+			"byteOffset":67752,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":6800,
-			"byteOffset":27200,
+			"byteLength":22584,
+			"byteOffset":90336,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":6800,
-			"byteOffset":34000,
+			"byteLength":22584,
+			"byteOffset":112920,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":5064,
-			"byteOffset":40800,
+			"byteLength":11760,
+			"byteOffset":135504,
 			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":45864,
+			"byteLength":147264,
 			"uri":"bush_round.bin"
 		}
 	]

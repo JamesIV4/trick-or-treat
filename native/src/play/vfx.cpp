@@ -9,6 +9,7 @@
 #include <godot_cpp/classes/json.hpp>
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/quad_mesh.hpp>
+#include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/math.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -46,8 +47,17 @@ void Vfx::_bind_methods() {
 }
 
 Ref<Texture2D> Vfx::load_texture(const char *name) {
-	// Loaded straight from the PNG (no import step needed for the particle art).
-	const String path = ProjectSettings::get_singleton()->globalize_path(String("res://assets/vfx/") + name);
+	// The imported texture when there is one: an exported game only carries the imported copy, not
+	// the PNG, so reading the file directly gave every particle a plain white square there.
+	const String res_path = String("res://assets/vfx/") + name;
+	if (ResourceLoader::get_singleton()->exists(res_path)) {
+		Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(res_path);
+		if (tex.is_valid()) {
+			return tex;
+		}
+	}
+	// Not imported yet (fresh art in a running editor session): straight from the PNG.
+	const String path = ProjectSettings::get_singleton()->globalize_path(res_path);
 	Ref<Image> img = Image::load_from_file(path);
 	if (img.is_null() || img->is_empty()) {
 		UtilityFunctions::push_warning("Vfx: missing ", path, " (run art/tools/make_vfx.py)");
@@ -109,8 +119,8 @@ void Vfx::fire(CPUParticles3D *p, const Vector3 &pos) {
 }
 
 void Vfx::load_meshes() {
-	const String path = ProjectSettings::get_singleton()->globalize_path("res://assets/vfx/particle_meshes.json");
-	const String text = FileAccess::get_file_as_string(path);
+	// Through res:// (not an OS path) so it also reads from an exported game's pack.
+	const String text = FileAccess::get_file_as_string("res://assets/vfx/particle_meshes.json");
 	Variant parsed = JSON::parse_string(text);
 	if (parsed.get_type() != Variant::DICTIONARY) {
 		return;
@@ -227,7 +237,7 @@ void Vfx::_ready() {
 		p->set_param_min(CPUParticles3D::PARAM_ANIM_SPEED, 1.0f);
 		p->set_param_max(CPUParticles3D::PARAM_ANIM_SPEED, 1.0f);
 	}
-	make_pool(flame_pool_, 8, quad(flame_mat_, 0.55f));
+	make_pool(flame_pool_, 24, quad(flame_mat_, 0.55f)); // wand puffs and fireball bursts use plenty
 	for (CPUParticles3D *p : flame_pool_.items) {
 		p->set_lifetime(0.5);
 		p->set_direction(Vector3(0, 1, 0));
@@ -293,6 +303,32 @@ void Vfx::_exit_tree() {
 }
 
 // ---------------------------------------------------------------- effects
+// Pushes a colour toward full saturation (keeps its hue and brightness).
+Color Vfx::saturated(const Color &c) {
+	return Color::from_hsv(c.get_h(), Math::min(1.0f, c.get_s() * 1.4f + 0.2f), Math::max(c.get_v(), 0.85f), c.a);
+}
+
+// Candy pickups: sparkles in the candy's own colour mixed with the other candy colours, all
+// saturated (no near-white ones).
+void Vfx::candy_sparkles(const Vector3 &pos, const Color &color, int count, float speed, float size, float rise) {
+	CPUParticles3D *p = sparkle_pool_.take();
+	p->set_amount(Math::max(1, count));
+	p->set_param_min(CPUParticles3D::PARAM_INITIAL_LINEAR_VELOCITY, speed * 0.4f);
+	p->set_param_max(CPUParticles3D::PARAM_INITIAL_LINEAR_VELOCITY, speed);
+	p->set_param_min(CPUParticles3D::PARAM_SCALE, 0.6f * size);
+	p->set_param_max(CPUParticles3D::PARAM_SCALE, 1.3f * size);
+	p->set_gravity(Vector3(0, rise, 0));
+	const Color c = saturated(color);
+	Ref<Gradient> mix;
+	mix.instantiate();
+	mix->set_offsets(PackedFloat32Array({ 0.0f, 0.4f, 0.55f, 0.7f, 0.85f, 1.0f }));
+	mix->set_colors(PackedColorArray({ c, c, Color(1.0f, 0.3f, 0.7f), Color(1.0f, 0.85f, 0.15f), Color(0.25f, 1.0f, 0.7f), Color(0.65f, 0.35f, 1.0f) }));
+	mix->set_interpolation_mode(Gradient::GRADIENT_INTERPOLATE_CONSTANT);
+	p->set_color_initial_ramp(mix);
+	p->set_color_ramp(fade(Color(1, 1, 1, 1), Color(1, 1, 1, 1), 0.7f));
+	fire(p, pos);
+}
+
 void Vfx::sparkles(const Vector3 &pos, const Color &color, int count, float speed, float size, float rise) {
 	CPUParticles3D *p = sparkle_pool_.take();
 	p->set_amount(Math::max(1, count));
@@ -385,13 +421,10 @@ void Vfx::confetti(const Vector3 &pos, bool firework) {
 // The pickup: a soft glow pops at the bucket, sparkles twinkle out in the candy's colour and
 // float up; special candy adds a magic swirl, a star ring and, for the best, a confetti fountain.
 void Vfx::candy_pickup(const Vector3 &pos, const Color &color, int tier) {
-	flash(pos, color.lightened(0.3f), 0.55f + 0.35f * float(tier));
-	sparkles(pos, color, 6 + tier * 6, 2.2f + tier * 0.8f, 0.85f + tier * 0.15f, 1.2f);
-	if (tier >= 1) {
-		swirl(pos + Vector3(0, 0.2f, 0), color, 1.0f + 0.3f * float(tier));
-	}
+	// A small coloured pop and a shower of candy-coloured sparkles (no white rings or swirls).
+	flash(pos, saturated(color), 0.4f + 0.25f * float(tier));
+	candy_sparkles(pos, color, 8 + tier * 6, 2.2f + tier * 0.8f, 0.85f + tier * 0.15f, 1.2f);
 	if (tier >= 2) {
-		ring(pos, color.lightened(0.1f), 0.6f + 0.25f * float(tier));
 		for (size_t k = 0; k < confetti_pools_.size(); k += 2) {
 			CPUParticles3D *p = confetti_pools_[k].take();
 			p->set_amount(tier >= 3 ? 16 : 8);
@@ -406,8 +439,7 @@ void Vfx::candy_pickup(const Vector3 &pos, const Color &color, int tier) {
 		}
 	}
 	if (tier >= 3) {
-		sparkles(pos + Vector3(0, 0.6f, 0), Color(1.0f, 0.9f, 0.4f), 24, 4.0f, 1.4f, 2.5f);
-		swirl(pos + Vector3(0, 0.6f, 0), Color(1.0f, 0.85f, 0.3f), 2.4f);
+		candy_sparkles(pos + Vector3(0, 0.6f, 0), Color(1.0f, 0.8f, 0.2f), 24, 4.0f, 1.4f, 2.5f);
 	}
 }
 
@@ -415,7 +447,7 @@ int Vfx::trail_begin(const Color &color) {
 	for (int i = 0; i < int(trails_.size()); ++i) {
 		if (!trails_[i].used) {
 			trails_[i].used = true;
-			trails_[i].p->set_color(color.lightened(0.2f));
+			trails_[i].p->set_color(saturated(color));
 			trails_[i].p->set_emitting(true);
 			return i;
 		}

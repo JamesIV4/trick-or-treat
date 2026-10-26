@@ -296,23 +296,33 @@ void build_shop(GenContext &ctx, Lot &lot) {
 		const float aw = h.porch_w, ad = h.porch_d;
 		const int stripes = std::max(4, int(aw / 0.55f));
 		const float slope = 0.16f;
+		// It's a trampoline: the fabric is its own node, hinged at the wall, so it can dip and spring
+		// back when the kid bounces on it.
 		const Transform3D tilt(Basis(Vector3(1, 0, 0), slope), Vector3(h.porch_x, AWNING_TOP - 0.1f, zf + ad * 0.5f));
-		m.set_transform(tilt);
+		const Vector3 hinge(h.porch_x, AWNING_TOP - 0.1f + std::sin(slope) * ad * 0.5f, zf);
+		SpringSpec &spring = ctx.springs.emplace_back();
+		spring.xf = lot.xf * Transform3D(Basis(), hinge);
+		spring.anchor = lot.xf.xform(tilt.origin);
+		spring.reach = Math::max(aw, ad) * 0.5f + 0.6f;
+		MeshBuilder &fabric = spring.mesh;
+		fabric.set_transform(Transform3D(Basis(), -hinge) * tilt);
 		for (int i = 0; i < stripes; ++i) {
 			const float a = -aw * 0.5f + aw * float(i) / stripes, b = -aw * 0.5f + aw * float(i + 1) / stripes;
 			const int cell = mat_cell((i & 1) ? h.upper_cell : h.roof_cell, mat::FABRIC);
-			m.box(Vector3((a + b) * 0.5f, 0.0f, 0.0f), Vector3((b - a) * 0.5f, 0.07f, ad * 0.5f), cell);
+			fabric.box(Vector3((a + b) * 0.5f, 0.0f, 0.0f), Vector3((b - a) * 0.5f, 0.07f, ad * 0.5f), cell);
 			const Vector3 v0(a, -0.07f, ad * 0.5f + 0.01f), v1(b, -0.07f, ad * 0.5f + 0.01f), v2((a + b) * 0.5f, -0.3f, ad * 0.5f + 0.01f);
-			m.tri_out(v0, v1, v2, cell, Vector3((a + b) * 0.5f, -0.1f, 0.0f));
-			m.tri_out(v0, v1, v2, cell, Vector3((a + b) * 0.5f, -0.1f, ad));
+			fabric.tri_out(v0, v1, v2, cell, Vector3((a + b) * 0.5f, -0.1f, 0.0f));
+			fabric.tri_out(v0, v1, v2, cell, Vector3((a + b) * 0.5f, -0.1f, ad));
 		}
-		m.set_transform(Transform3D());
+		fabric.set_transform(Transform3D());
 		for (float sx : { -1.0f, 1.0f }) {
 			const float bx = h.porch_x + sx * (aw * 0.5f - 0.2f);
 			m.beam(Vector3(bx, AWNING_TOP - 0.75f, zf + 0.05f), Vector3(bx, AWNING_TOP - 0.18f, zf + ad - 0.15f), 0.05f, 0.05f, mat_cell(pal::IRON, mat::METAL),
 					Vector3(1, 0, 0));
 		}
 		solid(Vector3(h.porch_x, AWNING_TOP - 0.1f, zf + ad * 0.5f), Vector3(aw * 0.5f, 0.1f, ad * 0.5f), true);
+		ctx.boxes.back().bouncy = true;
+		ctx.boxes.back().bounce = 14.0f; // like a mini trampoline
 		// Lamp under the awning over the door.
 		m.cylinder(Vector3(h.door_x, AWNING_TOP - 0.62f, zf + 0.7f), 0.13f, 0.26f, 8, pal::GLOW_PORCH, 0.09f);
 	}
@@ -508,13 +518,17 @@ void dress_shopfront(GenContext &ctx, Lot &lot) {
 				put("scarecrow", fx, 0.07f, zf + 0.8f, Math_PI + rng.range(-0.3f, 0.3f));
 			}
 	}
-	// String lights along the shop front, under the cornice of the ground storey.
-	if (rng.chance(0.6f)) {
+	// String lights (bulbs or mini jack-o'-lanterns) or bunting along the shop front, under the
+	// cornice of the ground storey.
+	const float pick = rng.f();
+	if (pick < 0.85f) {
 		StringLight sl;
 		sl.lot = lot.index;
 		sl.a = lot.to_world(-h.width * 0.5f + 0.4f, 3.75f, zf + 0.25f);
 		sl.b = lot.to_world(h.width * 0.5f - 0.4f, 3.75f, zf + 0.25f);
 		sl.sag = 0.3f;
+		sl.style = pick < 0.3f ? STRING_BULBS : (pick < 0.6f ? STRING_JACKS : STRING_BUNTING);
+		sl.out = lot.xf.basis.xform(Vector3(0, 0, 1));
 		ctx.strings.push_back(sl);
 	}
 	// Service yard behind: crates and barrels to climb, and a pumpkin pile.
@@ -569,7 +583,7 @@ void place_town_square(GenContext &ctx) {
 			const float depth = 15.0f;
 			m.set_transform(frame);
 			m.quad_out(Vector3(-w * 0.5f, 0.06f, 0), Vector3(w * 0.5f, 0.06f, 0), Vector3(w * 0.5f, 0.06f, -depth), Vector3(-w * 0.5f, 0.06f, -depth),
-					mat_cell(pal::STONE_LIGHT, mat::PAVERS), Vector3(0, -1, -depth * 0.5f));
+					mat_cell(pal::BONE, mat::PAVERS), Vector3(0, -1, -depth * 0.5f));
 			m.set_transform(Transform3D());
 			const float hw = w * 0.5f - 1.2f;
 			if (w < 14.0f) {
@@ -642,6 +656,16 @@ void place_town_square(GenContext &ctx) {
 			}
 			put("scarecrow", -Math::min(hw, 6.0f) * 0.6f, -13.0f, 0.0f);
 		}
+	}
+	// Festival bunting strung across the high street every so often.
+	for (float x = ctx.bound_x0 + rng.range(8.0f, 14.0f); x < ctx.bound_x1 - 8.0f; x += rng.range(16.0f, 24.0f)) {
+		StringLight sl;
+		sl.style = STRING_BUNTING;
+		sl.a = s.at(x) + s.left_at(x) * (s.edge() - 0.3f) + Vector3(0, 5.6f, 0);
+		sl.b = s.at(x) - s.left_at(x) * (s.edge() - 0.3f) + Vector3(0, 5.6f, 0);
+		sl.sag = 0.9f;
+		sl.out = Vector3(s.left_at(x).z, 0, -s.left_at(x).x);
+		ctx.strings.push_back(sl);
 	}
 }
 

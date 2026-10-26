@@ -10,6 +10,10 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#include <algorithm>
+#include <cmath>
+
+#include "core/consts.h"
 #include "mesh/mesh_builder.h"
 
 using namespace godot;
@@ -52,6 +56,18 @@ void AssetLibrary::load(const String &catalog_path, const Ref<Material> &materia
 		a.walkable = bool(d.get("walkable", false));
 		a.radius = float(d.get("radius", 0.2));
 		a.height = float(d.get("height", 2.0));
+		a.collision_top = float(d.get("collision_top", -1.0));
+		a.bounce = float(d.get("bounce", 0.0));
+		const Array hb = d.get("hood_aabb", Array());
+		if (hb.size() == 6) {
+			const Vector3 lo = Vector3(hb[0], hb[1], hb[2]), hi = Vector3(hb[3], hb[4], hb[5]);
+			a.hood = AABB(lo, hi - lo);
+			a.has_hood = true;
+		}
+		a.candy_tier = int(d.get("candy_tier", -1));
+		if (d.has("glow")) {
+			a.glow = Color::html(String(d["glow"]));
+		}
 		a.published = bool(d.get("published", true));
 		assets_[a.id] = a;
 	}
@@ -107,6 +123,15 @@ void AssetLibrary::prepare(AssetInfo &a) {
 	if (a.id.rfind("tree_", 0) == 0) {
 		a.sockets["branch"] = Transform3D(Basis(), Vector3(0.9f, 2.6f, 0));
 	}
+}
+
+std::vector<std::string> AssetLibrary::ids() const {
+	std::vector<std::string> out;
+	for (const auto &kv : assets_) {
+		out.push_back(kv.first);
+	}
+	std::sort(out.begin(), out.end());
+	return out;
 }
 
 const AssetInfo *AssetLibrary::get(const std::string &id) {
@@ -177,11 +202,63 @@ Ref<Mesh> AssetLibrary::merged_mesh(const std::string &id) {
 	return st->commit();
 }
 
+static Node3D *find_part(Node *n, const String &name) {
+	if (n->get_name() == StringName(name)) {
+		return Object::cast_to<Node3D>(n);
+	}
+	for (int i = 0; i < n->get_child_count(); ++i) {
+		if (Node3D *r = find_part(n->get_child(i), name)) {
+			return r;
+		}
+	}
+	return nullptr;
+}
+
+Ref<Mesh> AssetLibrary::part_mesh(const std::string &id, const String &part, Vector3 *origin) {
+	const AssetInfo *a = get(id);
+	if (a->scene.is_null()) {
+		return Ref<Mesh>();
+	}
+	Node *inst = a->scene->instantiate();
+	Ref<Mesh> out;
+	if (Node3D *p = find_part(inst, part)) {
+		// The parent's transform in the asset's space; the part's own origin is its pivot.
+		Transform3D parent;
+		for (Node *q = p->get_parent(); q && q != inst; q = q->get_parent()) {
+			if (Node3D *q3 = Object::cast_to<Node3D>(q)) {
+				parent = q3->get_transform() * parent;
+			}
+		}
+		const Vector3 pivot = (parent * p->get_transform()).origin;
+		Ref<SurfaceTool> st;
+		st.instantiate();
+		bool any = false;
+		merge_into(p, Transform3D(parent.basis, parent.origin - pivot), st, any);
+		if (any) {
+			out = st->commit();
+			if (origin) {
+				*origin = pivot;
+			}
+		}
+	}
+	memdelete(inst);
+	return out;
+}
+
 // Rough stand-ins so the generator runs before the art batches are published.
 Ref<Mesh> AssetLibrary::make_placeholder(const std::string &id) const {
 	MeshBuilder b;
 	auto has = [&](const char *s) { return id.find(s) != std::string::npos; };
-	if (has("jackolantern") || has("pumpkin")) {
+	if (has("string_jack")) {
+		b.blob(Vector3(0, -0.08f, 0), Vector3(0.07f, 0.06f, 0.07f), pal::GLOW_JACK, 0);
+	} else if (has("bunting")) {
+		b.box(Vector3(0, -0.15f, 0), Vector3(0.12f, 0.15f, 0.01f), has("purple") ? pal::BANNER_PURPLE : has("cream") ? pal::BUNTING_CREAM : pal::BANNER_ORANGE);
+	} else if (has("wreath")) {
+		for (int i = 0; i < 8; ++i) {
+			const float a = i * Math_TAU / 8.0f;
+			b.blob(Vector3(std::cos(a) * 0.2f, std::sin(a) * 0.2f, 0.05f), Vector3(0.08f, 0.08f, 0.05f), i % 3 ? pal::HEDGE : pal::MAPLE_ORANGE, 0);
+		}
+	} else if (has("jackolantern") || has("pumpkin")) {
 		float r = has("giant") ? 0.9f : has("small") ? 0.15f : 0.3f;
 		b.blob(Vector3(0, r * 0.8f, 0), Vector3(r, r * 0.8f, r), pal::PUMPKIN, 1);
 		b.cylinder(Vector3(0, r * 1.5f, 0), r * 0.12f, r * 0.4f, 5, pal::STEM_BROWN);
@@ -226,8 +303,8 @@ Ref<Mesh> AssetLibrary::make_placeholder(const std::string &id) const {
 		int c = has("ghost") ? pal::GHOST_WHITE : has("cat") ? pal::CAT_BLACK : has("sunflower") ? pal::SUNFLOWER_YELLOW : pal::STRAW;
 		b.cylinder(Vector3(), 0.3f, 1.8f, 8, c, 0.2f);
 	} else if (has("dragon")) {
-		b.blob(Vector3(0, 0.45f, 0), Vector3(0.3f, 0.4f, 0.28f), pal::DRAGON_TEAL, 1);
-		b.blob(Vector3(0, 0.95f, 0), Vector3(0.24f, 0.22f, 0.24f), pal::DRAGON_TEAL, 1);
+		b.blob(Vector3(0, 0.45f, 0), Vector3(0.3f, 0.4f, 0.28f), pal::DRAGON_JADE, 1);
+		b.blob(Vector3(0, 0.95f, 0), Vector3(0.24f, 0.22f, 0.24f), pal::DRAGON_JADE, 1);
 	} else {
 		b.rounded_box(Vector3(0, 0.35f, 0), Vector3(0.35f, 0.35f, 0.35f), 0.05f, pal::WOOD);
 	}

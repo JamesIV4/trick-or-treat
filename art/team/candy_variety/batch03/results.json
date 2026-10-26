@@ -1,0 +1,1178 @@
+[
+ {
+  "id": "candy_twist_berry_dots",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_twist_berry_dots.gltf",
+  "sheet": "art/review/sheets/candy_twist_berry_dots.png",
+  "tris": 498,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.17,
+   0.171
+  ],
+  "glow": "#ff2f74"
+ },
+ {
+  "id": "candy_twist_aqua_bats",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_twist_aqua_bats.gltf",
+  "sheet": "art/review/sheets/candy_twist_aqua_bats.png",
+  "tris": 488,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.173,
+   0.17
+  ],
+  "glow": "#2ffff0"
+ },
+ {
+  "id": "candy_twist_purple_pumpkins",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_twist_purple_pumpkins.gltf",
+  "sheet": "art/review/sheets/candy_twist_purple_pumpkins.png",
+  "tris": 460,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.172,
+   0.17
+  ],
+  "glow": "#b45cff"
+ },
+ {
+  "id": "candy_twist_lime_cobalt",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_twist_lime_cobalt.gltf",
+  "sheet": "art/review/sheets/candy_twist_lime_cobalt.png",
+  "tris": 450,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.169,
+   0.17
+  ],
+  "glow": "#b8ff2e"
+ },
+ {
+  "id": "candy_twist_cherry_lemon",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_twist_cherry_lemon.gltf",
+  "sheet": "art/review/sheets/candy_twist_cherry_lemon.png",
+  "tris": 450,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.169,
+   0.17
+  ],
+  "glow": "#ff3b4e"
+ },
+ {
+  "id": "candy_twist_blue_stars",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_twist_blue_stars.gltf",
+  "sheet": "art/review/sheets/candy_twist_blue_stars.png",
+  "tris": 424,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.173,
+   0.17
+  ],
+  "glow": "#45c8ff"
+ },
+ {
+  "id": "candy_twist_peach_bands",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_twist_peach_bands.gltf",
+  "sheet": "art/review/sheets/candy_twist_peach_bands.png",
+  "tris": 450,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.169,
+   0.17
+  ],
+  "glow": "#ff9a5c"
+ },
+ {
+  "id": "candy_twist_mint_check",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_twist_mint_check.gltf",
+  "sheet": "art/review/sheets/candy_twist_mint_check.png",
+  "tris": 450,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.169,
+   0.17
+  ],
+  "glow": "#4dffc3"
+ },
+ {
+  "id": "candy_twist_orange_ghosts",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_twist_orange_ghosts.gltf",
+  "sheet": "art/review/sheets/candy_twist_orange_ghosts.png",
+  "tris": 468,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.176,
+   0.17
+  ],
+  "glow": "#ff8a1f"
+ },
+ {
+  "id": "candy_taffy_pink",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_taffy_pink.gltf",
+  "sheet": "art/review/sheets/candy_taffy_pink.png",
+  "tris": 450,
+  "budget": 500,
+  "dims": [
+   0.33,
+   0.107,
+   0.155
+  ],
+  "glow": "#ff6fc8"
+ },
+ {
+  "id": "candy_taffy_lemon",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_taffy_lemon.gltf",
+  "sheet": "art/review/sheets/candy_taffy_lemon.png",
+  "tris": 450,
+  "budget": 500,
+  "dims": [
+   0.33,
+   0.107,
+   0.155
+  ],
+  "glow": "#ffe23a"
+ },
+ {
+  "id": "candy_toffee_twist",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_toffee_twist.gltf",
+  "sheet": "art/review/sheets/candy_toffee_twist.png",
+  "tris": 450,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.133,
+   0.165
+  ],
+  "glow": "#3dff6a"
+ },
+ {
+  "id": "candy_gumball_trio",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_gumball_trio.gltf",
+  "sheet": "art/review/sheets/candy_gumball_trio.png",
+  "tris": 432,
+  "budget": 500,
+  "dims": [
+   0.28,
+   0.167,
+   0.261
+  ],
+  "glow": "#ff5a5a"
+ },
+ {
+  "id": "candy_gumball_rainbow",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_gumball_rainbow.gltf",
+  "sheet": "art/review/sheets/candy_gumball_rainbow.png",
+  "tris": 224,
+  "budget": 500,
+  "dims": [
+   0.238,
+   0.231,
+   0.24
+  ],
+  "glow": "#ff4fb8"
+ },
+ {
+  "id": "candy_jellybean_cherry",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_jellybean_cherry.gltf",
+  "sheet": "art/review/sheets/candy_jellybean_cherry.png",
+  "tris": 180,
+  "budget": 500,
+  "dims": [
+   0.27,
+   0.106,
+   0.125
+  ],
+  "glow": "#ff3b4e"
+ },
+ {
+  "id": "candy_jellybean_speckled",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_jellybean_speckled.gltf",
+  "sheet": "art/review/sheets/candy_jellybean_speckled.png",
+  "tris": 234,
+  "budget": 500,
+  "dims": [
+   0.27,
+   0.112,
+   0.125
+  ],
+  "glow": "#45c8ff"
+ },
+ {
+  "id": "candy_jellybean_trio",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_jellybean_trio.gltf",
+  "sheet": "art/review/sheets/candy_jellybean_trio.png",
+  "tris": 336,
+  "budget": 500,
+  "dims": [
+   0.28,
+   0.158,
+   0.221
+  ],
+  "glow": "#ffe23a"
+ },
+ {
+  "id": "candy_gummy_bear_red",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_gummy_bear_red.gltf",
+  "sheet": "art/review/sheets/candy_gummy_bear_red.png",
+  "tris": 468,
+  "budget": 500,
+  "dims": [
+   0.193,
+   0.141,
+   0.3
+  ],
+  "glow": "#ff3b4e"
+ },
+ {
+  "id": "candy_gummy_bear_green",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_gummy_bear_green.gltf",
+  "sheet": "art/review/sheets/candy_gummy_bear_green.png",
+  "tris": 468,
+  "budget": 500,
+  "dims": [
+   0.193,
+   0.141,
+   0.3
+  ],
+  "glow": "#3dff6a"
+ },
+ {
+  "id": "candy_gummy_bear_orange",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_gummy_bear_orange.gltf",
+  "sheet": "art/review/sheets/candy_gummy_bear_orange.png",
+  "tris": 468,
+  "budget": 500,
+  "dims": [
+   0.193,
+   0.141,
+   0.3
+  ],
+  "glow": "#ff8a1f"
+ },
+ {
+  "id": "candy_gummy_worm",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_gummy_worm.gltf",
+  "sheet": "art/review/sheets/candy_gummy_worm.png",
+  "tris": 240,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.093,
+   0.174
+  ],
+  "glow": "#ff8a1f"
+ },
+ {
+  "id": "candy_gummy_worm_berry",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_gummy_worm_berry.gltf",
+  "sheet": "art/review/sheets/candy_gummy_worm_berry.png",
+  "tris": 240,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.093,
+   0.174
+  ],
+  "glow": "#ff4fb8"
+ },
+ {
+  "id": "candy_gummy_bat",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_gummy_bat.gltf",
+  "sheet": "art/review/sheets/candy_gummy_bat.png",
+  "tris": 194,
+  "budget": 500,
+  "dims": [
+   0.3,
+   0.065,
+   0.129
+  ],
+  "glow": "#b45cff"
+ },
+ {
+  "id": "candy_peach_ring",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_peach_ring.gltf",
+  "sheet": "art/review/sheets/candy_peach_ring.png",
+  "tris": 256,
+  "budget": 500,
+  "dims": [
+   0.25,
+   0.138,
+   0.232
+  ],
+  "glow": "#ff9a5c"
+ },
+ {
+  "id": "candy_apple_ring",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_apple_ring.gltf",
+  "sheet": "art/review/sheets/candy_apple_ring.png",
+  "tris": 256,
+  "budget": 500,
+  "dims": [
+   0.25,
+   0.138,
+   0.232
+  ],
+  "glow": "#b8ff2e"
+ },
+ {
+  "id": "candy_peppermint",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_peppermint.gltf",
+  "sheet": "art/review/sheets/candy_peppermint.png",
+  "tris": 352,
+  "budget": 500,
+  "dims": [
+   0.24,
+   0.066,
+   0.24
+  ],
+  "glow": "#ff3b4e"
+ },
+ {
+  "id": "candy_starlight_mint",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_starlight_mint.gltf",
+  "sheet": "art/review/sheets/candy_starlight_mint.png",
+  "tris": 492,
+  "budget": 500,
+  "dims": [
+   0.34,
+   0.072,
+   0.221
+  ],
+  "glow": "#3dff6a"
+ },
+ {
+  "id": "candy_butterscotch",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_butterscotch.gltf",
+  "sheet": "art/review/sheets/candy_butterscotch.png",
+  "tris": 244,
+  "budget": 500,
+  "dims": [
+   0.3,
+   0.067,
+   0.242
+  ],
+  "glow": "#ffb020"
+ },
+ {
+  "id": "candy_caramel_cube",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_caramel_cube.gltf",
+  "sheet": "art/review/sheets/candy_caramel_cube.png",
+  "tris": 194,
+  "budget": 500,
+  "dims": [
+   0.241,
+   0.25,
+   0.206
+  ],
+  "glow": "#ffa040"
+ },
+ {
+  "id": "candy_fudge_cube",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_fudge_cube.gltf",
+  "sheet": "art/review/sheets/candy_fudge_cube.png",
+  "tris": 194,
+  "budget": 500,
+  "dims": [
+   0.241,
+   0.25,
+   0.206
+  ],
+  "glow": "#ff8a1f"
+ },
+ {
+  "id": "candy_licorice_twist",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_licorice_twist.gltf",
+  "sheet": "art/review/sheets/candy_licorice_twist.png",
+  "tris": 356,
+  "budget": 500,
+  "dims": [
+   0.33,
+   0.086,
+   0.122
+  ],
+  "glow": "#ff2a3a"
+ },
+ {
+  "id": "candy_licorice_rainbow",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_licorice_rainbow.gltf",
+  "sheet": "art/review/sheets/candy_licorice_rainbow.png",
+  "tris": 356,
+  "budget": 500,
+  "dims": [
+   0.33,
+   0.086,
+   0.122
+  ],
+  "glow": "#ff4fb8"
+ },
+ {
+  "id": "candy_licorice_wheel",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_licorice_wheel.gltf",
+  "sheet": "art/review/sheets/candy_licorice_wheel.png",
+  "tris": 420,
+  "budget": 500,
+  "dims": [
+   0.257,
+   0.081,
+   0.27
+  ],
+  "glow": "#c070ff"
+ },
+ {
+  "id": "candy_sour_belt_rainbow",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_sour_belt_rainbow.gltf",
+  "sheet": "art/review/sheets/candy_sour_belt_rainbow.png",
+  "tris": 332,
+  "budget": 500,
+  "dims": [
+   0.33,
+   0.078,
+   0.106
+  ],
+  "glow": "#ff8a1f"
+ },
+ {
+  "id": "candy_sour_belt_berry",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_sour_belt_berry.gltf",
+  "sheet": "art/review/sheets/candy_sour_belt_berry.png",
+  "tris": 332,
+  "budget": 500,
+  "dims": [
+   0.33,
+   0.078,
+   0.106
+  ],
+  "glow": "#ff3fa4"
+ },
+ {
+  "id": "candy_buttons",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_buttons.gltf",
+  "sheet": "art/review/sheets/candy_buttons.png",
+  "tris": 476,
+  "budget": 500,
+  "dims": [
+   0.3,
+   0.083,
+   0.125
+  ],
+  "glow": "#ff6fc8"
+ },
+ {
+  "id": "candy_rock_blue",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_rock_blue.gltf",
+  "sheet": "art/review/sheets/candy_rock_blue.png",
+  "tris": 404,
+  "budget": 500,
+  "dims": [
+   0.18,
+   0.18,
+   0.33
+  ],
+  "glow": "#45c8ff"
+ },
+ {
+  "id": "candy_rock_pink",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_rock_pink.gltf",
+  "sheet": "art/review/sheets/candy_rock_pink.png",
+  "tris": 404,
+  "budget": 500,
+  "dims": [
+   0.18,
+   0.18,
+   0.33
+  ],
+  "glow": "#ff4fb8"
+ },
+ {
+  "id": "candy_marshmallow_ghost",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_marshmallow_ghost.gltf",
+  "sheet": "art/review/sheets/candy_marshmallow_ghost.png",
+  "tris": 326,
+  "budget": 500,
+  "dims": [
+   0.28,
+   0.227,
+   0.277
+  ],
+  "glow": "#d8d0ff"
+ },
+ {
+  "id": "candy_mellow_pumpkin",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_mellow_pumpkin.gltf",
+  "sheet": "art/review/sheets/candy_mellow_pumpkin.png",
+  "tris": 332,
+  "budget": 500,
+  "dims": [
+   0.251,
+   0.27,
+   0.222
+  ],
+  "glow": "#ff8a1f"
+ },
+ {
+  "id": "candy_apple_mini",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_apple_mini.gltf",
+  "sheet": "art/review/sheets/candy_apple_mini.png",
+  "tris": 330,
+  "budget": 500,
+  "dims": [
+   0.23,
+   0.224,
+   0.3
+  ],
+  "glow": "#ff3b4e"
+ },
+ {
+  "id": "candy_cakepop_sprinkle",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_cakepop_sprinkle.gltf",
+  "sheet": "art/review/sheets/candy_cakepop_sprinkle.png",
+  "tris": 320,
+  "budget": 500,
+  "dims": [
+   0.193,
+   0.193,
+   0.3
+  ],
+  "glow": "#ff6fc8"
+ },
+ {
+  "id": "candy_cakepop_drizzle",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_cakepop_drizzle.gltf",
+  "sheet": "art/review/sheets/candy_cakepop_drizzle.png",
+  "tris": 478,
+  "budget": 500,
+  "dims": [
+   0.205,
+   0.196,
+   0.3
+  ],
+  "glow": "#ff8a1f"
+ },
+ {
+  "id": "candy_bonbon_orange",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_bonbon_orange.gltf",
+  "sheet": "art/review/sheets/candy_bonbon_orange.png",
+  "tris": 496,
+  "budget": 500,
+  "dims": [
+   0.24,
+   0.22,
+   0.212
+  ],
+  "glow": "#ff8a1f"
+ },
+ {
+  "id": "candy_bonbon_pink",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_bonbon_pink.gltf",
+  "sheet": "art/review/sheets/candy_bonbon_pink.png",
+  "tris": 496,
+  "budget": 500,
+  "dims": [
+   0.24,
+   0.22,
+   0.212
+  ],
+  "glow": "#ff4fb8"
+ },
+ {
+  "id": "candy_fizz_roll",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_fizz_roll.gltf",
+  "sheet": "art/review/sheets/candy_fizz_roll.png",
+  "tris": 474,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.093,
+   0.13
+  ],
+  "glow": "#ff6fc8"
+ },
+ {
+  "id": "candy_fizz_tube",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_fizz_tube.gltf",
+  "sheet": "art/review/sheets/candy_fizz_tube.png",
+  "tris": 220,
+  "budget": 500,
+  "dims": [
+   0.32,
+   0.066,
+   0.219
+  ],
+  "glow": "#ff3fa4"
+ },
+ {
+  "id": "candy_star_lemon",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_star_lemon.gltf",
+  "sheet": "art/review/sheets/candy_star_lemon.png",
+  "tris": 92,
+  "budget": 500,
+  "dims": [
+   0.28,
+   0.119,
+   0.266
+  ],
+  "glow": "#ffe23a"
+ },
+ {
+  "id": "candy_heart_berry",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_heart_berry.gltf",
+  "sheet": "art/review/sheets/candy_heart_berry.png",
+  "tris": 212,
+  "budget": 500,
+  "dims": [
+   0.27,
+   0.115,
+   0.251
+  ],
+  "glow": "#ff2f74"
+ },
+ {
+  "id": "candy_strawberry_drop",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_strawberry_drop.gltf",
+  "sheet": "art/review/sheets/candy_strawberry_drop.png",
+  "tris": 252,
+  "budget": 500,
+  "dims": [
+   0.231,
+   0.226,
+   0.27
+  ],
+  "glow": "#ff3b4e"
+ },
+ {
+  "id": "candy_eyeball",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_eyeball.gltf",
+  "sheet": "art/review/sheets/candy_eyeball.png",
+  "tris": 256,
+  "budget": 500,
+  "dims": [
+   0.237,
+   0.24,
+   0.24
+  ],
+  "glow": "#45c8ff"
+ },
+ {
+  "id": "candy_coin_gold",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_coin_gold.gltf",
+  "sheet": "art/review/sheets/candy_coin_gold.png",
+  "tris": 276,
+  "budget": 500,
+  "dims": [
+   0.25,
+   0.038,
+   0.25
+  ],
+  "glow": "#ffd23a"
+ },
+ {
+  "id": "candy_coin_silver",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_coin_silver.gltf",
+  "sheet": "art/review/sheets/candy_coin_silver.png",
+  "tris": 280,
+  "budget": 500,
+  "dims": [
+   0.25,
+   0.038,
+   0.25
+  ],
+  "glow": "#bfe6ff"
+ },
+ {
+  "id": "candy_corn_harvest",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_corn_harvest.gltf",
+  "sheet": "art/review/sheets/candy_corn_harvest.png",
+  "tris": 288,
+  "budget": 500,
+  "dims": [
+   0.222,
+   0.131,
+   0.29
+  ],
+  "glow": "#ff8a1f"
+ },
+ {
+  "id": "candy_corn_unicorn",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_corn_unicorn.gltf",
+  "sheet": "art/review/sheets/candy_corn_unicorn.png",
+  "tris": 288,
+  "budget": 500,
+  "dims": [
+   0.222,
+   0.131,
+   0.29
+  ],
+  "glow": "#d070ff"
+ },
+ {
+  "id": "candy_gumdrop",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_gumdrop.gltf",
+  "sheet": "art/review/sheets/candy_gumdrop.png",
+  "tris": 216,
+  "budget": 500,
+  "dims": [
+   0.24,
+   0.228,
+   0.176
+  ],
+  "glow": "#b8ff2e"
+ },
+ {
+  "id": "candy_gumdrop_pile",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_gumdrop_pile.gltf",
+  "sheet": "art/review/sheets/candy_gumdrop_pile.png",
+  "tris": 360,
+  "budget": 500,
+  "dims": [
+   0.29,
+   0.187,
+   0.198
+  ],
+  "glow": "#ff6a3a"
+ },
+ {
+  "id": "candy_kiss_silver",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_kiss_silver.gltf",
+  "sheet": "art/review/sheets/candy_kiss_silver.png",
+  "tris": 260,
+  "budget": 500,
+  "dims": [
+   0.211,
+   0.211,
+   0.27
+  ],
+  "glow": "#bfe6ff"
+ },
+ {
+  "id": "candy_kiss_magenta",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_kiss_magenta.gltf",
+  "sheet": "art/review/sheets/candy_kiss_magenta.png",
+  "tris": 260,
+  "budget": 500,
+  "dims": [
+   0.211,
+   0.211,
+   0.27
+  ],
+  "glow": "#ff3fa4"
+ },
+ {
+  "id": "candy_ring_pop",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_ring_pop.gltf",
+  "sheet": "art/review/sheets/candy_ring_pop.png",
+  "tris": 356,
+  "budget": 500,
+  "dims": [
+   0.169,
+   0.15,
+   0.27
+  ],
+  "glow": "#ff3b4e"
+ },
+ {
+  "id": "candy_cotton_candy",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_cotton_candy.gltf",
+  "sheet": "art/review/sheets/candy_cotton_candy.png",
+  "tris": 442,
+  "budget": 500,
+  "dims": [
+   0.205,
+   0.167,
+   0.33
+  ],
+  "glow": "#ff6fc8"
+ },
+ {
+  "id": "candy_jawbreaker",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_jawbreaker.gltf",
+  "sheet": "art/review/sheets/candy_jawbreaker.png",
+  "tris": 288,
+  "budget": 500,
+  "dims": [
+   0.24,
+   0.158,
+   0.24
+  ],
+  "glow": "#b45cff"
+ },
+ {
+  "id": "candy_popcorn_ball",
+  "tier": 0,
+  "gltf": "game/assets/models/candy/candy_popcorn_ball.gltf",
+  "sheet": "art/review/sheets/candy_popcorn_ball.png",
+  "tris": 464,
+  "budget": 500,
+  "dims": [
+   0.254,
+   0.26,
+   0.255
+  ],
+  "glow": "#ff8a1f"
+ },
+ {
+  "id": "candy_bar_bat",
+  "tier": 1,
+  "gltf": "game/assets/models/candy/candy_bar_bat.gltf",
+  "sheet": "art/review/sheets/candy_bar_bat.png",
+  "tris": 380,
+  "budget": 500,
+  "dims": [
+   0.42,
+   0.128,
+   0.179
+  ],
+  "glow": "#b45cff"
+ },
+ {
+  "id": "candy_bar_pumpkin",
+  "tier": 1,
+  "gltf": "game/assets/models/candy/candy_bar_pumpkin.gltf",
+  "sheet": "art/review/sheets/candy_bar_pumpkin.png",
+  "tris": 312,
+  "budget": 500,
+  "dims": [
+   0.42,
+   0.128,
+   0.179
+  ],
+  "glow": "#3dff6a"
+ },
+ {
+  "id": "candy_bar_open",
+  "tier": 1,
+  "gltf": "game/assets/models/candy/candy_bar_open.gltf",
+  "sheet": "art/review/sheets/candy_bar_open.png",
+  "tris": 328,
+  "budget": 500,
+  "dims": [
+   0.42,
+   0.13,
+   0.173
+  ],
+  "glow": "#4f7dff"
+ },
+ {
+  "id": "candy_pb_cups",
+  "tier": 1,
+  "gltf": "game/assets/models/candy/candy_pb_cups.gltf",
+  "sheet": "art/review/sheets/candy_pb_cups.png",
+  "tris": 492,
+  "budget": 500,
+  "dims": [
+   0.38,
+   0.256,
+   0.193
+  ],
+  "glow": "#ff8a1f"
+ },
+ {
+  "id": "candy_caramel_apple",
+  "tier": 1,
+  "gltf": "game/assets/models/candy/candy_caramel_apple.gltf",
+  "sheet": "art/review/sheets/candy_caramel_apple.png",
+  "tris": 438,
+  "budget": 500,
+  "dims": [
+   0.299,
+   0.291,
+   0.44
+  ],
+  "glow": "#ffa040"
+ },
+ {
+  "id": "candy_choco_apple",
+  "tier": 1,
+  "gltf": "game/assets/models/candy/candy_choco_apple.gltf",
+  "sheet": "art/review/sheets/candy_choco_apple.png",
+  "tris": 466,
+  "budget": 500,
+  "dims": [
+   0.299,
+   0.291,
+   0.44
+  ],
+  "glow": "#9dff3a"
+ },
+ {
+  "id": "candy_truffle_box",
+  "tier": 1,
+  "gltf": "game/assets/models/candy/candy_truffle_box.gltf",
+  "sheet": "art/review/sheets/candy_truffle_box.png",
+  "tris": 492,
+  "budget": 500,
+  "dims": [
+   0.302,
+   0.211,
+   0.4
+  ],
+  "glow": "#ff2f74"
+ },
+ {
+  "id": "candy_choco_frog",
+  "tier": 1,
+  "gltf": "game/assets/models/candy/candy_choco_frog.gltf",
+  "sheet": "art/review/sheets/candy_choco_frog.png",
+  "tris": 480,
+  "budget": 500,
+  "dims": [
+   0.349,
+   0.333,
+   0.36
+  ],
+  "glow": "#ff9a3a"
+ },
+ {
+  "id": "candy_choco_bat",
+  "tier": 1,
+  "gltf": "game/assets/models/candy/candy_choco_bat.gltf",
+  "sheet": "art/review/sheets/candy_choco_bat.png",
+  "tris": 312,
+  "budget": 500,
+  "dims": [
+   0.44,
+   0.117,
+   0.187
+  ],
+  "glow": "#ff9a3a"
+ },
+ {
+  "id": "candy_bar_trio",
+  "tier": 1,
+  "gltf": "game/assets/models/candy/candy_bar_trio.gltf",
+  "sheet": "art/review/sheets/candy_bar_trio.png",
+  "tris": 376,
+  "budget": 500,
+  "dims": [
+   0.4,
+   0.32,
+   0.311
+  ],
+  "glow": "#ff3fa4"
+ },
+ {
+  "id": "candy_lolly_rainbow",
+  "tier": 2,
+  "gltf": "game/assets/models/candy/candy_lolly_rainbow.gltf",
+  "sheet": "art/review/sheets/candy_lolly_rainbow.png",
+  "tris": 620,
+  "budget": 700,
+  "dims": [
+   0.376,
+   0.056,
+   0.58
+  ],
+  "glow": "#ff5ad0"
+ },
+ {
+  "id": "candy_lolly_spooky",
+  "tier": 2,
+  "gltf": "game/assets/models/candy/candy_lolly_spooky.gltf",
+  "sheet": "art/review/sheets/candy_lolly_spooky.png",
+  "tris": 620,
+  "budget": 700,
+  "dims": [
+   0.376,
+   0.056,
+   0.58
+  ],
+  "glow": "#b45cff"
+ },
+ {
+  "id": "candy_lolly_coil",
+  "tier": 2,
+  "gltf": "game/assets/models/candy/candy_lolly_coil.gltf",
+  "sheet": "art/review/sheets/candy_lolly_coil.png",
+  "tris": 560,
+  "budget": 700,
+  "dims": [
+   0.325,
+   0.051,
+   0.56
+  ],
+  "glow": "#2ffff0"
+ },
+ {
+  "id": "candy_cane_giant",
+  "tier": 2,
+  "gltf": "game/assets/models/candy/candy_cane_giant.gltf",
+  "sheet": "art/review/sheets/candy_cane_giant.png",
+  "tris": 540,
+  "budget": 700,
+  "dims": [
+   0.298,
+   0.087,
+   0.6
+  ],
+  "glow": "#ff3b4e"
+ },
+ {
+  "id": "candy_lolly_jack",
+  "tier": 2,
+  "gltf": "game/assets/models/candy/candy_lolly_jack.gltf",
+  "sheet": "art/review/sheets/candy_lolly_jack.png",
+  "tris": 474,
+  "budget": 700,
+  "dims": [
+   0.382,
+   0.068,
+   0.56
+  ],
+  "glow": "#ff8a1f"
+ },
+ {
+  "id": "candy_wand",
+  "tier": 2,
+  "gltf": "game/assets/models/candy/candy_wand.gltf",
+  "sheet": "art/review/sheets/candy_wand.png",
+  "tris": 468,
+  "budget": 700,
+  "dims": [
+   0.343,
+   0.058,
+   0.6
+  ],
+  "glow": "#ffe23a"
+ },
+ {
+  "id": "candy_lolly_ghost",
+  "tier": 2,
+  "gltf": "game/assets/models/candy/candy_lolly_ghost.gltf",
+  "sheet": "art/review/sheets/candy_lolly_ghost.png",
+  "tris": 402,
+  "budget": 700,
+  "dims": [
+   0.271,
+   0.106,
+   0.52
+  ],
+  "glow": "#d8d0ff"
+ },
+ {
+  "id": "candy_golden_apple",
+  "tier": 3,
+  "gltf": "game/assets/models/candy/candy_golden_apple.gltf",
+  "sheet": "art/review/sheets/candy_golden_apple.png",
+  "tris": 574,
+  "budget": 700,
+  "dims": [
+   0.52,
+   0.338,
+   0.36
+  ],
+  "glow": "#ffd23a"
+ },
+ {
+  "id": "candy_golden_pumpkin",
+  "tier": 3,
+  "gltf": "game/assets/models/candy/candy_golden_pumpkin.gltf",
+  "sheet": "art/review/sheets/candy_golden_pumpkin.png",
+  "tris": 443,
+  "budget": 700,
+  "dims": [
+   0.516,
+   0.52,
+   0.424
+  ],
+  "glow": "#ffc83a"
+ },
+ {
+  "id": "candy_golden_twist",
+  "tier": 3,
+  "gltf": "game/assets/models/candy/candy_golden_twist.gltf",
+  "sheet": "art/review/sheets/candy_golden_twist.png",
+  "tris": 604,
+  "budget": 700,
+  "dims": [
+   0.5,
+   0.267,
+   0.286
+  ],
+  "glow": "#ffd040"
+ },
+ {
+  "id": "candy_golden_crown",
+  "tier": 3,
+  "gltf": "game/assets/models/candy/candy_golden_crown.gltf",
+  "sheet": "art/review/sheets/candy_golden_crown.png",
+  "tris": 622,
+  "budget": 700,
+  "dims": [
+   0.479,
+   0.52,
+   0.476
+  ],
+  "glow": "#ffe04a"
+ }
+]

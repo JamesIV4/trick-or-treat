@@ -26,6 +26,17 @@ enum class Facing { Street, Door, AlongFence, Random, Moon, Away };
 const char *JACKS[] = { "jackolantern_happy", "jackolantern_wink", "jackolantern_surprised", "jackolantern_toothy", "jackolantern_sleepy" };
 const char *TREES[] = { "tree_maple_red", "tree_maple_orange", "tree_maple_gold" };
 
+// A parked car: the hatchback, a station wagon or a little pickup (whichever are published).
+std::string pick_car(GenContext &ctx, Rng &rng) {
+	static const char *cars[] = { "parked_car", "parked_wagon", "parked_pickup" };
+	const char *id = cars[rng.irange(0, 2)];
+	return ctx.assets->get(id)->published ? id : "parked_car";
+}
+
+bool is_car(const std::string &id) {
+	return id.rfind("parked_", 0) == 0;
+}
+
 struct Yard {
 	GenContext &ctx;
 	Lot &lot;
@@ -284,9 +295,41 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 			}
 		}
 	}
-	// Paper lanterns hanging along the porch roof edge.
-	if (lot.persona == Persona::CraftyArtists || lot.persona == Persona::CozyGrandparents || lot.persona == Persona::Stargazers ||
-			lot.landmark == Landmark::LanternPorch || rng.chance(0.25f)) {
+	// Paper lanterns hanging along the porch roof edge, or else a scalloped string of mini
+	// jack-o'-lanterns and/or bunting along the eave.
+	const bool lanterns = lot.persona == Persona::CraftyArtists || lot.persona == Persona::CozyGrandparents || lot.persona == Persona::Stargazers ||
+			lot.landmark == Landmark::LanternPorch || rng.chance(0.25f);
+	if (!lanterns && lot.persona != Persona::Minimalists) {
+		const bool jacks = lot.persona == Persona::SpookyCute || lot.persona == Persona::PumpkinFanatics || lot.persona == Persona::YoungFamily ||
+				rng.chance(0.6f);
+		const bool bunting = !jacks || lot.persona == Persona::Bakers || lot.persona == Persona::PetLovers || rng.chance(0.35f);
+		const int spans = std::max(1, int(std::round((px1 - px0) / 1.7f)));
+		const Vector3 out = lot.xf.basis.xform(Vector3(0, 0, 1));
+		for (int k = 0; k < spans; ++k) {
+			const float xa = Math::lerp(px0 + 0.1f, px1 - 0.1f, float(k) / spans), xb = Math::lerp(px0 + 0.1f, px1 - 0.1f, float(k + 1) / spans);
+			if (jacks) {
+				StringLight s;
+				s.lot = lot.index;
+				s.style = STRING_JACKS;
+				s.a = lot.to_world(xa, y.deck + 2.06f, pz1 + 0.16f);
+				s.b = lot.to_world(xb, y.deck + 2.06f, pz1 + 0.16f);
+				s.sag = 0.16f;
+				s.out = out;
+				ctx.strings.push_back(s);
+			}
+			if (bunting) {
+				StringLight s;
+				s.lot = lot.index;
+				s.style = STRING_BUNTING;
+				s.a = lot.to_world(xa, y.deck + 2.1f, pz1 + 0.24f);
+				s.b = lot.to_world(xb, y.deck + 2.1f, pz1 + 0.24f);
+				s.sag = jacks ? 0.28f : 0.2f;
+				s.out = out;
+				ctx.strings.push_back(s);
+			}
+		}
+	}
+	if (lanterns) {
 		const int n = lot.landmark == Landmark::LanternPorch ? 7 : rng.irange(3, 5);
 		for (int i = 0; i < n; ++i) {
 			const float x = Math::lerp(px0 + 0.3f, px1 - 0.3f, n == 1 ? 0.5f : float(i) / (n - 1));
@@ -330,6 +373,63 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 		for (float sx : { -1.0f, 1.0f }) {
 			y.put("flower_pot", Vector3(h.door_x + sx * 1.15f, 0, y.steps_front + 0.35f), rng.range(0.0f, Math_TAU), rng.range(0.85f, 1.0f), true);
 			ctx.occupy(lot.index, h.door_x + sx * 1.15f, y.steps_front + 0.35f, 0.35f);
+		}
+	}
+	// Autumn mums: a bed along the front of the porch (two colours alternating, never in front of
+	// the steps) and, where there are no flower pots, a pair flanking the foot of the steps.
+	static const char *MUMS[] = { "mums_orange", "mums_purple", "mums_white" };
+	const int mum_a = rng.irange(0, 2), mum_b = (mum_a + rng.irange(1, 2)) % 3;
+	if (lot.persona != Persona::Minimalists) {
+		int k = 0;
+		for (float x = px0 + 0.35f; x < px1 - 0.25f; x += rng.range(0.55f, 0.7f)) {
+			if (std::abs(x - h.door_x) < 1.95f) { // clear of the wraparound steps
+				continue;
+			}
+			const float z = pz1 + rng.range(0.3f, 0.42f);
+			y.put(MUMS[(k++ & 1) ? mum_b : mum_a], Vector3(x, 0, z), rng.range(0.0f, Math_TAU), rng.range(0.85f, 1.15f), false);
+			ctx.occupy(lot.index, x, z, 0.3f);
+		}
+		const bool pots = lot.persona == Persona::CozyGrandparents || lot.persona == Persona::GreenThumbs || lot.persona == Persona::CraftyArtists ||
+				lot.persona == Persona::PetLovers;
+		if (!pots) {
+			for (float sx : { -1.0f, 1.0f }) {
+				const Vector3 p(h.door_x + sx * 1.15f, 0, y.steps_front + 0.3f);
+				y.put(MUMS[mum_a], p, rng.range(0.0f, Math_TAU), rng.range(1.0f, 1.2f), false);
+				ctx.occupy(lot.index, p.x, p.z, 0.35f);
+			}
+		}
+	}
+	// Brick gateposts where the front walk meets the sidewalk, sometimes with a black cat on one.
+	if (lot.persona != Persona::Minimalists && (lot.persona == Persona::CozyGrandparents || lot.persona == Persona::GreenThumbs ||
+			lot.persona == Persona::Bakers || lot.persona == Persona::SpookyCute || rng.chance(0.4f))) {
+		const float cat_side = rng.chance(0.5f) ? 1.0f : -1.0f;
+		const bool cat = lot.persona == Persona::SpookyCute || lot.persona == Persona::PetLovers || rng.chance(0.35f);
+		for (float sx : { -1.0f, 1.0f }) {
+			const Vector3 p(h.door_x + sx * 1.05f, 0, -0.5f);
+			if (std::abs(p.x - lot.drive_x) < 2.0f || std::abs(p.x) > y.fence - 0.3f) {
+				continue;
+			}
+			y.put("brick_pillar", p, 0.0f, 1.0f, true);
+			ctx.occupy(lot.index, p.x, p.z, 0.4f);
+			if (cat && sx == cat_side) {
+				const AssetInfo *a = ctx.assets->get("brick_pillar");
+				auto it = a->sockets.find("top");
+				const float top = it != a->sockets.end() ? it->second.origin.y : 1.1f;
+				y.put("black_cat_sitting", p + Vector3(0, top, 0), rng.range(-0.5f, 0.5f), 1.0f, false);
+			}
+		}
+	}
+	// A raised brick planter of mums and little pumpkins out on the lawn (it doubles as a step up).
+	if (lot.persona == Persona::GreenThumbs || lot.persona == Persona::CozyGrandparents || lot.persona == Persona::Bakers ||
+			lot.persona == Persona::CraftyArtists || lot.persona == Persona::PumpkinFanatics || rng.chance(0.35f)) {
+		y.place("brick_planter", 1.25f, y.front_yard(), Facing::Street,
+				[&](float x, float z) { return -std::abs(z + 1.6f) * 0.4f + std::abs(x - h.door_x) * 0.1f; }, nullptr, 1.0f, 1.2f, true, 0.0f, 2);
+	}
+	// A friendly sheet ghost keeping watch on the porch.
+	if (lot.persona == Persona::SpookyCute || lot.persona == Persona::YoungFamily || rng.chance(0.3f)) {
+		const float gx = h.porch_x - ps * (h.porch_w * 0.5f - 0.55f);
+		if (std::abs(gx - h.door_x) > 1.0f) {
+			y.put("ghost_figure", Vector3(gx, y.deck, y.zf + 0.6f), rng.range(-0.35f, 0.35f), 1.0f, false);
 		}
 	}
 	// Corn stalks tied to the porch posts.
@@ -412,7 +512,70 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 	}
 	// Parked car in an open driveway.
 	if (!h.garage && rng.chance(0.4f) && lot.landmark != Landmark::HayRide) {
-		y.put("parked_car", Vector3(lot.drive_x, 0, y.zf + 0.2f + 2.0f), rng.range(-0.05f, 0.05f), 1.0f, true);
+		y.put(pick_car(ctx, rng), Vector3(lot.drive_x, 0, y.zf + 0.2f + 2.0f), rng.range(-0.05f, 0.05f), 1.0f, true);
+	}
+
+	// Trampolines: now and then a big one in the backyard, and little ones parked where a kid would
+	// want to get up onto something (a porch or garage roof just out of jumping reach).
+	{
+		const float big = (lot.persona == Persona::YoungFamily || lot.persona == Persona::Sporty) ? 0.7f : (lot.persona == Persona::Minimalists ? 0.0f : 0.3f);
+		if (lot.landmark != Landmark::TreeHouse && rng.chance(big)) {
+			y.budget = std::max(y.budget, 3);
+			y.place("trampoline_large", 2.1f, back, Facing::Random, [&](float, float z) { return -z * 0.05f; }, nullptr, 1.0f, 1.2f, true, 0.0f, 3);
+		}
+		if (rng.chance(lot.persona == Persona::Minimalists ? 0.25f : 0.7f)) {
+			const Transform3D inv = lot.xf.affine_inverse();
+			Vector3 best;
+			float best_score = -1e9f;
+			for (const OBox &b : ctx.boxes) {
+				if (b.lot != lot.index || !b.walkable || b.top() < 2.2f || b.top() > 5.2f) {
+					continue;
+				}
+				const Transform3D lb = inv * b.xf;
+				for (int axis : { 0, 2 }) {
+					for (float sgn : { -1.0f, 1.0f }) {
+						Vector3 nrm = lb.basis.get_column(axis).normalized() * sgn;
+						nrm.y = 0.0f;
+						if (nrm.length() < 0.9f) {
+							continue;
+						}
+						nrm = nrm.normalized();
+						const Vector3 side = Vector3(0, 1, 0).cross(nrm);
+						const float along = b.half[axis == 0 ? 2 : 0];
+						for (int c = 0; c < 6; ++c) {
+							const float slide = (c % 3 - 1) * 0.5f, out = c < 3 ? 1.3f : 1.8f;
+							Vector3 p = lb.origin + nrm * (b.half[axis] + out) + side * (slide * along);
+							p.y = 0.0f;
+							if (std::abs(p.x) > y.fence - 0.7f || p.z > -0.9f || p.z < -lot.depth + 0.9f || ctx.occupied_at(lot.index, p.x, p.z, 0.85f) ||
+									ctx.route_distance(lot.index, p.x, p.z) < 0.8f) {
+								continue;
+							}
+							bool clear = true;
+							for (const OBox &o : ctx.boxes) {
+								if (o.lot != lot.index || o.xf.origin.y - o.half.y > 0.5f) {
+									continue;
+								}
+								const Vector3 l = (inv * o.xf).affine_inverse().xform(p);
+								if (std::abs(l.x) < o.half.x + 0.65f && std::abs(l.z) < o.half.z + 0.65f) {
+									clear = false;
+									break;
+								}
+							}
+							const float score = p.z * 0.15f + rng.range(0.0f, 0.5f); // street side first
+							if (clear && score > best_score) {
+								best_score = score;
+								best = p;
+							}
+						}
+					}
+				}
+			}
+			if (best_score > -1e8f) {
+				y.budget = std::max(y.budget, 1);
+				y.put("trampoline_mini", best, rng.range(0.0f, Math_TAU), 1.25f, true);
+				ctx.occupy(lot.index, best.x, best.z, 0.85f);
+			}
+		}
 	}
 
 	place_landmark(ctx, lot);
@@ -466,7 +629,8 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 				const Vector3 d = b - a;
 				const float L = d.length();
 				const float ang = std::atan2(roof, len);
-				const Basis tilt = Basis(Vector3(0, 0, 1), ds > 0 ? ang : -ang);
+				// Low end on the lawn, high end at the porch roof: with ds > 0 it climbs toward -x.
+				const Basis tilt = Basis(Vector3(0, 0, 1), ds > 0 ? -ang : ang);
 				const Vector3 c = (a + b) * 0.5f + Vector3(0, -0.12f, 0);
 				m.set_transform(Transform3D(tilt, c));
 				m.rounded_box(Vector3(), Vector3(L * 0.5f, 0.15f, 0.7f), 0.08f, mat_cell(pal::VINE_DARK, mat::BARK), mat_cell(pal::VINE, mat::HEDGE));
@@ -769,7 +933,7 @@ void place_street_rhythm(GenContext &ctx) {
 		const Vector3 p = s.lane_origin + Vector3(sx * (s.edge() + 0.6f), 0, float(s.lane_dir) * (s.edge() + 0.6f));
 		ctx.add_prop(-1, "lamp_post", p, sx > 0 ? -Math_PI * 0.25f : Math_PI * 0.25f);
 	}
-	// Parked cars at the curb, clear of the intersection and the hopscotch.
+	// Parked cars at the curb, clear of the intersection and the row of candy hops across the road.
 	const int cars = rng.irange(1, 3);
 	for (int i = 0; i < cars; ++i) {
 		for (int tries = 0; tries < 10; ++tries) {
@@ -779,7 +943,7 @@ void place_street_rhythm(GenContext &ctx) {
 			}
 			bool clash = false;
 			for (const PropPlacement &pp : ctx.props) {
-				if (pp.id == "parked_car" && pp.lot < 0 && std::abs(pp.xf.origin.x - x) < 7.0f) {
+				if (is_car(pp.id) && pp.lot < 0 && std::abs(pp.xf.origin.x - x) < 7.0f) {
 					clash = true;
 				}
 			}
@@ -790,7 +954,7 @@ void place_street_rhythm(GenContext &ctx) {
 			const Vector3 p = s.at(x) + s.left_at(x) * float(side) * (s.half_road - 1.15f);
 			const Vector3 tangent = (s.at(x + 1) - s.at(x - 1)).normalized();
 			const float yaw = std::atan2(tangent.x, tangent.z) + (side > 0 ? 0.0f : Math_PI);
-			ctx.add_prop(-1, "parked_car", p, yaw);
+			ctx.add_prop(-1, pick_car(ctx, rng), p, yaw);
 			break;
 		}
 	}

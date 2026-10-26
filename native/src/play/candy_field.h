@@ -28,6 +28,9 @@ public:
 			const godot::Ref<godot::Material> &halo_mat, int lot_count);
 	void add(const CandySpec &c);
 	void finalize();
+	// Quietly removes the pieces within r of a point (not collected, no effects): trailer shots clear
+	// candy that would hang right in front of the lens.
+	void hide_near(const godot::Vector3 &local, float r);
 
 	// Collects candy within radius of the player. Returns the total value collected this call.
 	int collect(const godot::Vector3 &player, float radius, float height, float dt);
@@ -65,14 +68,12 @@ private:
 		int group = -1;
 		int id = -1; // index in the settlement's candy list; -1 for doorbell treats
 		int trail = -1; // sparkle trail while flying to the bucket
-		godot::Decal *shadow = nullptr;
 	};
 	struct Group {
 		int size = 0, got = 0;
 		float last = 0.0f;
 		bool broken = false;
 	};
-	void add_shadow(Candy &c);
 	void on_picked(Candy &c);
 	int64_t cell_key(int x, int z) const { return (int64_t(x) << 32) ^ int64_t(uint32_t(z)); }
 	void index_candy(int id);
@@ -91,7 +92,6 @@ private:
 	std::vector<int> cleared_;
 	std::vector<godot::CPUParticles3D *> sparks_;
 	std::vector<Group> groups_;
-	godot::Ref<godot::Texture2D> shadow_tex_;
 	float time_ = 0.0f;
 	int next_spark_ = 0;
 	std::vector<godot::Ref<godot::Mesh>> meshes_;

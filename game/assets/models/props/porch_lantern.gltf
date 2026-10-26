@@ -6,6 +6,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"tot_build":"1792897858.387"
+			},
 			"name":"Scene",
 			"nodes":[
 				1
@@ -17,8 +20,8 @@
 			"name":"socket_light",
 			"translation":[
 				0,
-				-0.019999999552965164,
-				0.17000000178813934
+				-0.17000000178813934,
+				0.20999999344348907
 			]
 		},
 		{
@@ -50,15 +53,15 @@
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":628,
+			"count":822,
 			"max":[
-				0.10253048688173294,
-				0.26499998569488525,
-				0.2725304961204529
+				0.1274999976158142,
+				0.13500000536441803,
+				0.3374999761581421
 			],
 			"min":[
-				-0.10253048688173294,
-				-0.20499999821186066,
+				-0.1274999976158142,
+				-0.34200000762939453,
 				0
 			],
 			"type":"VEC3"
@@ -66,76 +69,76 @@
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":628,
+			"count":822,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":628,
+			"count":822,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5126,
-			"count":628,
+			"count":822,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":4,
 			"componentType":5123,
-			"count":628,
+			"count":822,
 			"normalized":true,
 			"type":"VEC4"
 		},
 		{
 			"bufferView":5,
 			"componentType":5123,
-			"count":1590,
+			"count":1770,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":7536,
+			"byteLength":9864,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":7536,
-			"byteOffset":7536,
+			"byteLength":9864,
+			"byteOffset":9864,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":5024,
-			"byteOffset":15072,
+			"byteLength":6576,
+			"byteOffset":19728,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":5024,
-			"byteOffset":20096,
+			"byteLength":6576,
+			"byteOffset":26304,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":5024,
-			"byteOffset":25120,
+			"byteLength":6576,
+			"byteOffset":32880,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":3180,
-			"byteOffset":30144,
+			"byteLength":3540,
+			"byteOffset":39456,
 			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":33324,
+			"byteLength":42996,
 			"uri":"porch_lantern.bin"
 		}
 	]

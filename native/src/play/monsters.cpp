@@ -1,4 +1,7 @@
 #include "play/monsters.h"
+#include "core/fonts.h"
+
+#include "play/vfx.h"
 
 #include <godot_cpp/classes/box_shape3d.hpp>
 #include <godot_cpp/classes/capsule_shape3d.hpp>
@@ -12,7 +15,9 @@
 #include <godot_cpp/core/math.hpp>
 
 #include <algorithm>
+#include <functional>
 #include <cmath>
+#include <queue>
 
 #include "gen/context.h"
 #include "gen/neighborhood_generator.h"
@@ -26,16 +31,17 @@ const MonsterTuning &tuning(MonsterType t) {
 	using A = MonsterTuning;
 	static const MonsterTuning table[] = {
 		// speed hp reach aggro windup cooldown attack flying phase hops hover max nest_hp colour
-		{ 3.2f, 2, 1.1f, 16, 0.45f, 1.6f, A::HOP, false, false, true, 0.0f, 3, 8, Color(1.0f, 0.55f, 0.2f) }, // pumpkin hopper
-		{ 5.5f, 1, 0.9f, 18, 0.5f, 2.0f, A::SWOOP, true, false, false, 2.6f, 3, 6, Color(0.7f, 0.45f, 1.0f) }, // bat
-		{ 2.3f, 3, 1.0f, 17, 0.6f, 2.2f, A::THROW, false, false, false, 0.0f, 2, 9, Color(0.95f, 0.93f, 0.85f) }, // skeleton
-		{ 1.9f, 2, 1.3f, 15, 0.55f, 1.8f, A::LUNGE, true, true, false, 0.35f, 2, 7, Color(0.9f, 0.95f, 1.0f) }, // ghost
-		{ 5.0f, 1, 0.9f, 16, 0.3f, 1.2f, A::LUNGE, false, false, false, 0.0f, 3, 6, Color(1.0f, 0.8f, 0.3f) }, // gremlin
-		{ 1.5f, 5, 1.8f, 14, 0.7f, 2.0f, A::GRAB, false, false, false, 0.0f, 2, 11, Color(1.0f, 0.95f, 0.8f) }, // mummy
-		{ 2.0f, 3, 1.0f, 15, 0.6f, 2.4f, A::THROW, false, false, true, 0.0f, 2, 8, Color(0.5f, 1.0f, 0.4f) }, // slime
-		{ 1.6f, 4, 1.1f, 15, 0.8f, 2.6f, A::CHARGE, false, false, false, 0.0f, 2, 9, Color(1.0f, 0.85f, 0.45f) }, // scarecrow
-		{ 3.6f, 2, 1.0f, 16, 0.4f, 1.8f, A::POUNCE, false, false, false, 0.0f, 3, 7, Color(0.75f, 0.4f, 1.0f) }, // spider
-		{ 1.8f, 3, 2.4f, 14, 0.9f, 2.6f, A::PUFF, false, false, false, 0.0f, 2, 8, Color(0.85f, 0.5f, 1.0f) }, // toadstool
+		// Tame on purpose (a kids' game): unhurried walkers, long readable wind-ups, gaps between attacks.
+		{ 3.2f, 2, 1.1f, 16, 0.45f, 1.6f, A::HOP, false, false, true, 0.0f, 3, 8, Color(1.0f, 0.55f, 0.2f) }, // pumpkin hopper (as it was)
+		{ 3.6f, 1, 0.9f, 15, 0.7f, 2.6f, A::SWOOP, true, false, false, 2.6f, 3, 6, Color(0.7f, 0.45f, 1.0f) }, // bat
+		{ 1.9f, 3, 1.0f, 15, 0.8f, 2.8f, A::THROW, false, false, false, 0.0f, 2, 9, Color(0.95f, 0.93f, 0.85f) }, // skeleton
+		{ 1.6f, 2, 1.3f, 13, 0.75f, 2.4f, A::LUNGE, true, true, false, 0.35f, 2, 7, Color(0.9f, 0.95f, 1.0f) }, // ghost
+		{ 2.8f, 1, 0.9f, 14, 0.6f, 2.0f, A::LUNGE, false, false, false, 0.0f, 3, 6, Color(1.0f, 0.8f, 0.3f) }, // gremlin
+		{ 1.3f, 5, 1.8f, 12, 0.9f, 2.6f, A::GRAB, false, false, false, 0.0f, 2, 11, Color(1.0f, 0.95f, 0.8f) }, // mummy
+		{ 1.7f, 3, 1.0f, 13, 0.8f, 3.0f, A::THROW, false, false, true, 0.0f, 2, 8, Color(0.5f, 1.0f, 0.4f) }, // slime
+		{ 1.4f, 4, 1.1f, 13, 1.0f, 3.2f, A::CHARGE, false, false, false, 0.0f, 2, 9, Color(1.0f, 0.85f, 0.45f) }, // scarecrow
+		{ 2.4f, 2, 1.0f, 14, 0.65f, 2.4f, A::POUNCE, false, false, false, 0.0f, 3, 7, Color(0.75f, 0.4f, 1.0f) }, // spider
+		{ 1.5f, 3, 2.4f, 12, 1.1f, 3.2f, A::PUFF, false, false, false, 0.0f, 2, 8, Color(0.85f, 0.5f, 1.0f) }, // toadstool
 	};
 	return table[int(t)];
 }
@@ -52,8 +58,8 @@ float wrap_angle(float a) {
 MeshInstance3D *make_beacon(const Color &color, float y) {
 	Ref<CylinderMesh> c;
 	c.instantiate();
-	c->set_top_radius(0.25f);
-	c->set_bottom_radius(0.7f);
+	c->set_top_radius(0.12f);
+	c->set_bottom_radius(0.45f);
 	c->set_height(18.0f);
 	c->set_radial_segments(10);
 	c->set_rings(1);
@@ -62,7 +68,7 @@ MeshInstance3D *make_beacon(const Color &color, float y) {
 	Ref<Gradient> g;
 	g.instantiate();
 	g->set_offsets(PackedFloat32Array({ 0.0f, 0.75f, 1.0f }));
-	g->set_colors(PackedColorArray({ Color(1, 1, 1, 0.0f), Color(1, 1, 1, 0.32f), Color(1, 1, 1, 0.6f) }));
+	g->set_colors(PackedColorArray({ Color(1, 1, 1, 0.0f), Color(1, 1, 1, 0.13f), Color(1, 1, 1, 0.3f) }));
 	Ref<GradientTexture2D> tex;
 	tex.instantiate();
 	tex->set_gradient(g);
@@ -111,7 +117,7 @@ void Monster::init(MonsterType type, MonsterWorld *world, MonsterNest *home, uin
 	cooldown_ = rng_.range(0.8f, 2.0f);
 	orbit_ = rng_.range(0.0f, Math_TAU);
 	set_collision_layer(16);
-	set_collision_mask(t.phase ? 0 : (1 | 2));
+	set_collision_mask(1 | 2); // nobody walks through houses (ghosts included)
 	set_floor_max_angle(Math::deg_to_rad(50.0f));
 	CollisionShape3D *cs = memnew(CollisionShape3D);
 	Ref<CapsuleShape3D> cap;
@@ -139,6 +145,7 @@ void Monster::init(MonsterType type, MonsterWorld *world, MonsterNest *home, uin
 		if (m) {
 			m->set_instance_shader_parameter("rim_strength", 0.35f);
 			m->set_instance_shader_parameter("rim_color", t.color);
+			m->set_instance_shader_parameter("keep_visible", 1.0f); // never dithered away by the player cutout
 		}
 	}
 	visual_->set_scale(Vector3(0.01f, 0.01f, 0.01f));
@@ -244,7 +251,7 @@ void Monster::attack_step(float dt, const Vector3 &player) {
 		case MonsterTuning::LUNGE:
 		case MonsterTuning::GRAB: {
 			const float dur = t.attack == MonsterTuning::GRAB ? 0.35f : 0.25f;
-			const float sp = t.attack == MonsterTuning::GRAB ? 4.5f : t.speed * 2.4f;
+			const float sp = t.attack == MonsterTuning::GRAB ? 3.6f : t.speed * 2.0f;
 			v.x = attack_dir_.x * sp;
 			v.z = attack_dir_.z * sp;
 			done = state_t_ > dur;
@@ -264,13 +271,13 @@ void Monster::attack_step(float dt, const Vector3 &player) {
 		case MonsterTuning::SWOOP: {
 			const Vector3 to = (player + Vector3(0, 0.7f, 0)) - pos;
 			const Vector3 dir = to.length() > 0.01f ? to.normalized() : attack_dir_;
-			v = dir * 9.0f;
+			v = dir * 6.5f;
 			done = state_t_ > 0.8f || hit_landed_;
 			break;
 		}
 		case MonsterTuning::CHARGE:
-			v.x = attack_dir_.x * 8.5f;
-			v.z = attack_dir_.z * 8.5f;
+			v.x = attack_dir_.x * 6.0f;
+			v.z = attack_dir_.z * 6.0f;
 			done = state_t_ > 1.1f || (state_t_ > 0.2f && get_real_velocity().length() < 2.0f);
 			if (state_t_ > 0.05f && int(state_t_ * 10.0f) != int((state_t_ - dt) * 10.0f)) {
 				world_->combat->puff(pos + Vector3(0, 0.1f, 0), Color(0.85f, 0.8f, 0.6f), 4, 1.0f);
@@ -371,7 +378,7 @@ void Monster::_physics_process(double delta) {
 				orbit_ += dt * 1.3f;
 				target = player + Vector3(std::cos(orbit_) * 3.8f, 0, std::sin(orbit_) * 3.8f);
 			}
-			Vector3 go = target - pos;
+			Vector3 go = steer_toward(pos, target, dt) - pos;
 			go.y = 0.0f;
 			const float speed = (state_ == State::Recover ? 0.4f : 1.0f) * t.speed * (chasing ? 1.0f : 0.5f);
 			desired = go.length() > 0.3f ? go.normalized() * speed : Vector3();
@@ -593,8 +600,13 @@ void Monster::die(bool reward) {
 	if (world_->event) {
 		world_->event(reward ? "monster_die" : "monster_vanish", p);
 	}
-	if (reward && world_->drop_candy && rng_.chance(0.7f)) {
-		world_->drop_candy(p, 1);
+	// Pinata pop: a handful of candy (3 to 5, now and then a chocolate) bursting out in a shower of the
+	// candy magic sparkles.
+	if (reward && world_->drop_candy) {
+		world_->drop_candy(p, rng_.irange(3, 5) + (rng_.chance(0.15f) ? 5 : 0));
+		if (Vfx *v = Vfx::get()) {
+			v->candy_sparkles(p, Color(1.0f, 0.75f, 0.3f), 40, 4.0f, 1.1f, 1.2f);
+		}
 	}
 }
 
@@ -720,7 +732,9 @@ bool MonsterNest::take_hit(float damage, const Vector3 &from) {
 	if (world_->event) {
 		world_->event("nest_break", p);
 	}
-	if (world_->drop_candy) {
+	if (world_->candy_fountain) {
+		world_->candy_fountain(p + Vector3(0, 0.4f, 0), 18);
+	} else if (world_->drop_candy) {
 		world_->drop_candy(p, 8);
 	}
 	if (on_destroyed) {
@@ -729,6 +743,206 @@ bool MonsterNest::take_hit(float damage, const Vector3 &from) {
 	return true;
 }
 
+// ---------------------------------------------------------------- navigation
+// A walk grid over the settlement: every solid thing standing on the ground (house bodies, fences,
+// hedges, porches, big props) is blocked, grown by a monster's radius, so routes go round them
+// instead of shoving into fences or through houses.
+void Infestation::build_nav(const Area &area) {
+	const GenContext &ctx = *area.gen->context();
+	constexpr float PAD = 14.0f, R = 0.45f;
+	nav_x0_ = area.plan.x0 - PAD;
+	nav_z0_ = area.plan.z0 - PAD;
+	nav_y_ = area.plan.origin.y;
+	nav_w_ = int((area.plan.x1 - area.plan.x0 + PAD * 2.0f) / NAV_CELL) + 1;
+	nav_h_ = int((area.plan.z1 - area.plan.z0 + PAD * 2.0f) / NAV_CELL) + 1;
+	nav_.assign(size_t(nav_w_) * nav_h_, 0);
+	for (const OBox &b : ctx.boxes) {
+		const float bottom = b.xf.origin.y - b.half.y, top = b.xf.origin.y + b.half.y;
+		if (top < 0.35f || bottom > 1.3f) {
+			continue; // paths, mats and steps; awnings and roofs overhead
+		}
+		const Transform3D world(b.xf.basis, area.to_world(b.xf.origin));
+		const Transform3D inv = world.affine_inverse();
+		const float ext = Math::max(b.half.x, b.half.z) * 1.42f + R;
+		const int cx0 = int((world.origin.x - ext - nav_x0_) / NAV_CELL), cx1 = int((world.origin.x + ext - nav_x0_) / NAV_CELL);
+		const int cz0 = int((world.origin.z - ext - nav_z0_) / NAV_CELL), cz1 = int((world.origin.z + ext - nav_z0_) / NAV_CELL);
+		for (int z = std::max(cz0, 0); z <= std::min(cz1, nav_h_ - 1); ++z) {
+			for (int x = std::max(cx0, 0); x <= std::min(cx1, nav_w_ - 1); ++x) {
+				const Vector3 p(nav_x0_ + (x + 0.5f) * NAV_CELL, world.origin.y, nav_z0_ + (z + 0.5f) * NAV_CELL);
+				const Vector3 l = inv.xform(p);
+				// The local frame may be scaled; measure in world units.
+				const Vector3 sc = b.xf.basis.get_scale();
+				const float lx = std::abs(l.x) * sc.x, lz = std::abs(l.z) * sc.z;
+				const bool inside = b.cylinder ? Vector2(l.x * sc.x, l.z * sc.z).length() < b.half.x + R
+											   : (lx < b.half.x + R && lz < b.half.z + R);
+				if (inside) {
+					nav_[z * nav_w_ + x] = 1;
+				}
+			}
+		}
+	}
+}
+
+bool Infestation::nav_line(const Vector3 &a, const Vector3 &b) const {
+	const float len = Vector2(b.x - a.x, b.z - a.z).length();
+	const int steps = std::max(1, int(len / (NAV_CELL * 0.5f)));
+	for (int i = 1; i <= steps; ++i) {
+		const Vector3 p = a.lerp(b, float(i) / steps);
+		if (nav_blocked(int((p.x - nav_x0_) / NAV_CELL), int((p.z - nav_z0_) / NAV_CELL))) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Infestation::route(const Vector3 &from, const Vector3 &to, std::vector<Vector3> &path) const {
+	if (nav_.empty()) {
+		return false;
+	}
+	auto cell = [&](const Vector3 &p, int &x, int &z) {
+		x = int(std::floor((p.x - nav_x0_) / NAV_CELL));
+		z = int(std::floor((p.z - nav_z0_) / NAV_CELL));
+		return x >= 0 && z >= 0 && x < nav_w_ && z < nav_h_;
+	};
+	int sx, sz, gx, gz;
+	if (!cell(from, sx, sz)) {
+		return false;
+	}
+	path.clear();
+	const float y = to.y;
+	auto centre = [&](int x, int z) { return Vector3(nav_x0_ + (x + 0.5f) * NAV_CELL, y, nav_z0_ + (z + 0.5f) * NAV_CELL); };
+	if (!cell(to, gx, gz) || nav_line(from, to)) {
+		path.push_back(to);
+		return true;
+	}
+	// Nearest open cell (a monster squeezed against a fence, a goal inside a hedge).
+	auto nearest_open = [&](int &x, int &z) {
+		for (int r = 0; r <= 4; ++r) {
+			for (int dz = -r; dz <= r; ++dz) {
+				for (int dx = -r; dx <= r; ++dx) {
+					if ((std::abs(dx) == r || std::abs(dz) == r) && !nav_blocked(x + dx, z + dz)) {
+						x += dx;
+						z += dz;
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	};
+	if (!nearest_open(sx, sz) || !nearest_open(gx, gz)) {
+		path.push_back(to);
+		return true;
+	}
+	// A* over 8 neighbours (no corner cutting), capped so a hopeless search can't stall a frame.
+	const int n = nav_w_ * nav_h_;
+	static thread_local std::vector<float> g;
+	static thread_local std::vector<int> parent;
+	static thread_local std::vector<uint32_t> stamp;
+	static thread_local uint32_t gen = 0;
+	if (int(g.size()) < n) {
+		g.assign(n, 0.0f);
+		parent.assign(n, -1);
+		stamp.assign(n, 0);
+	}
+	++gen;
+	struct Node {
+		float f;
+		int i;
+		bool operator<(const Node &o) const { return f > o.f; }
+	};
+	std::priority_queue<Node> open;
+	const int start = sz * nav_w_ + sx, goal = gz * nav_w_ + gx;
+	auto h = [&](int i) {
+		const float dx = float(std::abs(i % nav_w_ - gx)), dz = float(std::abs(i / nav_w_ - gz));
+		return (dx + dz) + (1.4142f - 2.0f) * std::min(dx, dz);
+	};
+	g[start] = 0.0f;
+	parent[start] = -1;
+	stamp[start] = gen;
+	open.push({ h(start), start });
+	int best = start, expanded = 0;
+	float best_h = h(start);
+	while (!open.empty() && expanded < 9000) {
+		const Node cur = open.top();
+		open.pop();
+		if (cur.i == goal) {
+			best = goal;
+			break;
+		}
+		const float gc = g[cur.i];
+		if (cur.f - h(cur.i) > gc + 1e-3f) {
+			continue; // stale entry
+		}
+		++expanded;
+		const int cx = cur.i % nav_w_, cz = cur.i / nav_w_;
+		if (h(cur.i) < best_h) {
+			best_h = h(cur.i);
+			best = cur.i;
+		}
+		for (int dz = -1; dz <= 1; ++dz) {
+			for (int dx = -1; dx <= 1; ++dx) {
+				if ((dx == 0 && dz == 0) || nav_blocked(cx + dx, cz + dz) || (dx && dz && (nav_blocked(cx + dx, cz) || nav_blocked(cx, cz + dz)))) {
+					continue;
+				}
+				const int ni = (cz + dz) * nav_w_ + cx + dx;
+				const float ng = gc + ((dx && dz) ? 1.4142f : 1.0f);
+				if (stamp[ni] != gen || ng < g[ni]) {
+					stamp[ni] = gen;
+					g[ni] = ng;
+					parent[ni] = cur.i;
+					open.push({ ng + h(ni), ni });
+				}
+			}
+		}
+	}
+	// Walk back (to the goal, or as close as the search got), then pull the string tight.
+	std::vector<Vector3> cells;
+	for (int i = best; i >= 0 && stamp[i] == gen; i = parent[i]) {
+		cells.push_back(centre(i % nav_w_, i / nav_w_));
+		if (i == start) {
+			break;
+		}
+	}
+	std::reverse(cells.begin(), cells.end());
+	if (best == goal) {
+		cells.push_back(to);
+	}
+	Vector3 at = from;
+	size_t k = 0;
+	while (k < cells.size()) {
+		size_t far = k;
+		for (size_t j = cells.size(); j-- > k;) {
+			if (nav_line(at, cells[j])) {
+				far = j;
+				break;
+			}
+		}
+		path.push_back(cells[far]);
+		at = cells[far];
+		k = far + 1;
+	}
+	if (path.empty()) {
+		path.push_back(to);
+	}
+	return true;
+}
+
+// Follow a route toward `target`, re-planning when the target moves or every so often.
+Vector3 Monster::steer_toward(const Vector3 &pos, const Vector3 &target, float dt) {
+	repath_t_ -= dt;
+	if (world_->route && (path_.empty() || repath_t_ <= 0.0f || target.distance_to(path_goal_) > 1.5f)) {
+		path_goal_ = target;
+		repath_t_ = rng_.range(0.6f, 0.9f);
+		if (!world_->route(pos, target, path_)) {
+			path_.assign(1, target);
+		}
+	}
+	while (path_.size() > 1 && Vector2(path_.front().x - pos.x, path_.front().z - pos.z).length() < 0.6f) {
+		path_.erase(path_.begin());
+	}
+	return path_.empty() ? target : path_.front();
+}
 // ================================================================ ThornVine
 void ThornVine::_bind_methods() {
 }
@@ -739,8 +953,8 @@ void ThornVine::init(MonsterWorld *world, int variant, float scale, uint64_t see
 	hp_ = 5.0f + scale * 2.0f;
 	Rng rng(seed, 9);
 	mesh_ = mesh_node(world->art->vine[variant % 3], world->toon);
-	mesh_->set_instance_shader_parameter("rim_strength", 0.3f);
-	mesh_->set_instance_shader_parameter("rim_color", Color(0.75f, 0.4f, 1.0f));
+	mesh_->set_instance_shader_parameter("rim_strength", 0.14f);
+	mesh_->set_instance_shader_parameter("rim_color", Color(0.6f, 0.32f, 0.75f));
 	rest_ = Transform3D(Basis(Vector3(0, 1, 0), rng.range(0.0f, Math_TAU)).scaled(Vector3(scale, scale * rng.range(0.9f, 1.15f), scale)), Vector3());
 	mesh_->set_transform(rest_);
 	add_child(mesh_);
@@ -800,7 +1014,7 @@ void ThornVine::_process(double delta) {
 		const float beat = 0.5f + 0.5f * std::pow(std::max(0.0f, std::sin(pulse_t_ * 3.2f)), 6.0f);
 		heart_core_->set_scale(Vector3(1, 1, 1) * (0.92f + 0.12f * beat));
 		heart_core_->set_instance_shader_parameter("glow_boost", 0.8f + 1.2f * beat);
-		heart_light_->set_param(Light3D::PARAM_ENERGY, 0.8f + 1.0f * beat);
+		heart_light_->set_param(Light3D::PARAM_ENERGY, 0.45f + 0.6f * beat);
 	}
 	if (shake_ > 0.0f) {
 		shake_ = Math::max(0.0f, shake_ - dt * 4.0f);
@@ -820,15 +1034,24 @@ void ThornVine::_process(double delta) {
 void ThornVine::make_heart() {
 	heart_ = true;
 	hp_ = 16.0f;
-	MeshBuilder m;
-	m.blob(Vector3(0, 1.1f, 0), Vector3(0.75f, 0.85f, 0.75f), pal::GLOW_PURPLE, 2);
-	m.blob(Vector3(0, 1.1f, 0), Vector3(0.95f, 0.5f, 0.95f), mat_cell(pal::VINE_DARK, mat::LEAVES), 1, 0.15f, 5);
-	heart_core_ = mesh_node(m.build(), world_->toon);
-	add_child(heart_core_);
-	heart_light_ = memnew(OmniLight3D);
+	const MonsterArtKit &kit = *world_->art;
+	if (kit.root_mass.is_valid() && kit.root_heart.is_valid()) {
+		// The authored root mass is built full size: show it unscaled (collision keeps the nest's size).
+		mesh_->set_mesh(kit.root_mass);
+		rest_ = Transform3D(rest_.basis.orthonormalized(), Vector3());
+		mesh_->set_transform(rest_);
+		heart_core_ = mesh_node(kit.root_heart, world_->toon);
+		heart_core_->set_position(kit.root_heart_origin);
+	} else {
+		MeshBuilder m;
+		m.blob(Vector3(0, 1.1f, 0), Vector3(0.75f, 0.85f, 0.75f), pal::GLOW_PURPLE, 2);
+		m.blob(Vector3(0, 1.1f, 0), Vector3(0.95f, 0.5f, 0.95f), mat_cell(pal::VINE_DARK, mat::LEAVES), 1, 0.15f, 5);
+		heart_core_ = mesh_node(m.build(), world_->toon);
+	}
+	add_child(heart_core_);	heart_light_ = memnew(OmniLight3D);
 	heart_light_->set_color(Color(0.75f, 0.35f, 1.0f));
 	heart_light_->set_param(Light3D::PARAM_RANGE, 7.0f);
-	heart_light_->set_param(Light3D::PARAM_ENERGY, 1.2f);
+	heart_light_->set_param(Light3D::PARAM_ENERGY, 0.7f);
 	heart_light_->set_position(Vector3(0, 1.4f, 0));
 	add_child(heart_light_);
 	heart_beacon_ = make_beacon(Color(0.75f, 0.35f, 1.0f), 10.0f);
@@ -878,7 +1101,9 @@ bool ThornVine::take_hit(float damage, const Vector3 &from) {
 	if (world_->event) {
 		world_->event(heart_ ? "heart_burn" : "vine_burn", target_point());
 	}
-	if (world_->drop_candy) {
+	if (heart_ && world_->candy_fountain) {
+		world_->candy_fountain(target_point() + Vector3(0, 0.6f, 0), 22);
+	} else if (world_->drop_candy) {
 		world_->drop_candy(target_point(), heart_ ? 10 : 3);
 	}
 	if (on_burned) {
@@ -907,8 +1132,8 @@ void VineTendril::init(MonsterWorld *world, const std::vector<Vector3> &pts, flo
 		local.push_back(p - pts.front());
 	}
 	mesh_ = mesh_node(build_tendril_mesh(local, width, uint32_t(seed)), world->toon);
-	mesh_->set_instance_shader_parameter("rim_strength", 0.3f);
-	mesh_->set_instance_shader_parameter("rim_color", Color(0.75f, 0.4f, 1.0f));
+	mesh_->set_instance_shader_parameter("rim_strength", 0.14f);
+	mesh_->set_instance_shader_parameter("rim_color", Color(0.6f, 0.32f, 0.75f));
 	add_child(mesh_);
 	set_process(true);
 }
@@ -1044,6 +1269,58 @@ bool clear_of_boxes(const GenContext &ctx, const Vector3 &p, float r) {
 	return true;
 }
 
+// How easy a spot is to shoot at: rays fanned out at fireball height, checked against anything
+// tall enough to stop a shot (fences, walls, hedges, houses). 1 means open all round with the
+// nearest blocker well away; a nest tucked against a fence or into a corner scores low.
+float shot_openness(const GenContext &ctx, const Vector3 &p) {
+	constexpr float REACH = 4.5f;
+	std::vector<const OBox *> near;
+	for (const OBox &b : ctx.boxes) {
+		if (b.shot_through || b.top() < 0.55f || b.xf.origin.y - b.half.y > 1.4f) {
+			continue; // shots fly through it (yard fences), it's too low to stop one, or it's overhead
+		}
+		const Vector3 d = b.xf.origin - p;
+		if (Vector2(d.x, d.z).length() < REACH + b.half.length()) {
+			near.push_back(&b);
+		}
+	}
+	if (near.empty()) {
+		return 1.0f;
+	}
+	auto inside = [&](const Vector3 &q) {
+		for (const OBox *b : near) {
+			const Vector3 l = b->xf.affine_inverse().xform(Vector3(q.x, b->xf.origin.y, q.z));
+			if (std::abs(l.x) <= b->half.x + 0.15f && std::abs(l.z) <= b->half.z + 0.15f) {
+				return true;
+			}
+		}
+		return false;
+	};
+	constexpr int DIRS = 16;
+	int open = 0;
+	float nearest = REACH;
+	for (int k = 0; k < DIRS; ++k) {
+		const float a = k * Math_TAU / DIRS;
+		const Vector3 dir(std::cos(a), 0, std::sin(a));
+		bool hit = false;
+		for (float d = 0.5f; d <= REACH; d += 0.4f) {
+			if (inside(p + dir * d)) {
+				hit = true;
+				nearest = Math::min(nearest, d);
+				break;
+			}
+		}
+		open += hit ? 0 : 1;
+	}
+	const float frac = float(open) / DIRS;
+	return frac * frac * Math::smoothstep(0.6f, 2.8f, nearest);
+}
+
+// Weighted draw: never rules a spot out, but open spots are many times likelier.
+float spot_weight(const GenContext &ctx, const Vector3 &p) {
+	return 0.05f + shot_openness(ctx, p);
+}
+
 } // namespace
 
 Infestation::~Infestation() {
@@ -1065,12 +1342,13 @@ Infestation::~Infestation() {
 	}
 }
 
-void Infestation::build(Area &area, MonsterWorld *world, Node3D *root) {
+void Infestation::build(Area &area, MonsterWorld *world, Node3D *root, bool peaceful) {
 	world_ = world;
 	root_ = root;
 	const GenContext &ctx = *area.gen->context();
 	AreaState &st = *area.state;
 	rng_ = Rng(area.plan.seed ^ 0xBADC0DEull, 11);
+	build_nav(area);
 	leash_ = Rect2(area.plan.x0 - 12.0f, area.plan.z0 - 12.0f, area.plan.x1 - area.plan.x0 + 24.0f, area.plan.z1 - area.plan.z0 + 24.0f);
 	const StreetPlan &s = ctx.street;
 	const bool town = ctx.kind == SettlementKind::Town;
@@ -1095,6 +1373,18 @@ void Infestation::build(Area &area, MonsterWorld *world, Node3D *root) {
 		gate_light_->set_param(Light3D::PARAM_ENERGY, 0.0f);
 		gate_light_->set_position(gate_pos_ + Vector3(-0.15f, 2.5f, 0));
 		root->add_child(gate_light_);
+		// The stone pillar and iron crook carrying the lantern are solid.
+		StaticBody3D *post = memnew(StaticBody3D);
+		post->set_collision_layer(1);
+		CollisionShape3D *pcs = memnew(CollisionShape3D);
+		Ref<CylinderShape3D> cyl;
+		cyl.instantiate();
+		cyl->set_radius(0.32f);
+		cyl->set_height(3.4f);
+		pcs->set_shape(cyl);
+		post->add_child(pcs);
+		post->set_position(gate_pos_ + Vector3(-1.08f, 1.7f, 0));
+		root->add_child(post);
 	}
 
 	// Candy shop cart across the side street from the gate: step onto its doormat to shop.
@@ -1126,6 +1416,7 @@ void Infestation::build(Area &area, MonsterWorld *world, Node3D *root) {
 		body->set_transform(xf);
 		root->add_child(body);
 		Label3D *sign = memnew(Label3D);
+		sign->set_font(display_font());
 		sign->set_text("CANDY SHOP");
 		sign->set_font_size(96);
 		sign->set_outline_size(22);
@@ -1140,40 +1431,49 @@ void Infestation::build(Area &area, MonsterWorld *world, Node3D *root) {
 		lamp->set_color(Color(1.0f, 0.7f, 0.4f));
 		lamp->set_param(Light3D::PARAM_RANGE, 5.0f);
 		lamp->set_param(Light3D::PARAM_ENERGY, 1.3f);
-		lamp->set_position(xf.xform(Vector3(-0.85f, 1.9f, 0.55f)));
+		lamp->set_position(xf.xform(Vector3(-0.62f, 1.98f, 0.7f))); // the cart's hanging lantern
 		root->add_child(lamp);
 		shop_pos_ = xf.xform(Vector3(0, 0, 1.25f));
 	}
 
-	// Candidate nest spots: front yards and backyards (homes), service yards and sidewalks (shops).
+	// Candidate nest spots, scattered at random: anywhere across front yards and backyards (homes),
+	// service yards and sidewalks (shops), and open ground off the street.
 	std::vector<Vector3> spots;
 	std::vector<Vector3> doors;
 	for (const Lot &lot : ctx.lots) {
 		const HouseSpec &h = lot.house;
 		const float zb = h.front_z - h.depth;
+		const float hw = lot.width * 0.42f;
 		doors.push_back(lot.doorbell);
 		if (town) {
 			if (lot.depth + zb > 3.6f) {
-				spots.push_back(lot.to_world(rng_.range(-lot.width * 0.25f, lot.width * 0.25f), 0, zb - 1.8f));
+				for (int k = 0; k < 2; ++k) {
+					spots.push_back(lot.to_world(rng_.range(-hw, hw), 0, rng_.range(-lot.depth + 1.2f, zb - 1.2f)));
+				}
 			}
-			spots.push_back(lot.to_world((rng_.chance(0.5f) ? 1.0f : -1.0f) * lot.width * 0.3f, 0, 2.2f));
+			for (int k = 0; k < 2; ++k) {
+				spots.push_back(lot.to_world(rng_.range(-hw, hw), 0, rng_.range(1.6f, 2.8f)));
+			}
 		} else {
-			const float fz = (h.front_z + h.porch_d + 1.6f - 1.4f) * 0.5f;
-			spots.push_back(lot.to_world((rng_.chance(0.5f) ? 1.0f : -1.0f) * lot.width * 0.27f, 0, fz));
+			for (int k = 0; k < 3; ++k) {
+				spots.push_back(lot.to_world(rng_.range(-hw, hw), 0, rng_.range(1.4f, h.front_z + h.porch_d + 0.6f)));
+			}
 			if (lot.depth + zb > 4.5f) {
-				spots.push_back(lot.to_world(h.house_x, 0, zb - 3.0f));
+				for (int k = 0; k < 3; ++k) {
+					spots.push_back(lot.to_world(rng_.range(-hw, hw), 0, rng_.range(-lot.depth + 1.5f, zb - 1.5f)));
+				}
 			}
 		}
 	}
-	// Open ground near the street ends and around the square or pocket parks, for every kind of
-	// settlement (towns have little yard space).
-	for (float t : { 0.12f, 0.3f, 0.7f, 0.88f }) {
-		const float x = Math::lerp(ctx.bound_x0, ctx.bound_x1, t);
-		for (int side : { 1, -1 }) {
-			spots.push_back(s.at(x) + s.left_at(x) * float(side) * (s.edge() + (town ? 6.0f : 3.0f)));
-		}
+	for (int k = 0; k < 10; ++k) {
+		const float x = Math::lerp(ctx.bound_x0, ctx.bound_x1, rng_.range(0.06f, 0.94f));
+		const float side = rng_.chance(0.5f) ? 1.0f : -1.0f;
+		spots.push_back(s.at(x) + s.left_at(x) * side * (s.edge() + (town ? rng_.range(4.5f, 7.5f) : rng_.range(2.0f, 4.5f))));
 	}
-	rng_.shuffle(spots);
+	std::vector<float> spot_w;
+	for (const Vector3 &p : spots) {
+		spot_w.push_back(spot_weight(ctx, p));
+	}
 	const Vector3 spawn_local = ctx.spawn;
 	const Vector3 gate_local = area.to_local(gate_pos_);
 	auto far_from_key_points = [&](const Vector3 &p, float r) {
@@ -1194,27 +1494,52 @@ void Infestation::build(Area &area, MonsterWorld *world, Node3D *root) {
 	}
 	rng_.shuffle(kinds);
 	kinds.resize(rng_.chance(0.5f) ? 3 : 4);
-	const int want_nests = town ? rng_.irange(5, 6) : rng_.irange(4, 5);
-	std::vector<Vector3> picked;
-	for (const Vector3 &p : spots) {
-		if (int(picked.size()) >= want_nests) {
-			break;
-		}
-		const MonsterType mt = MonsterType(kinds[picked.size() % kinds.size()]);
-		const float r = (*world->art)[mt].nest_radius + 0.6f;
-		if (!clear_of_boxes(ctx, p, r) || !far_from_key_points(p, 3.0f)) {
-			continue;
-		}
-		bool spaced = true;
-		for (const Vector3 &q : picked) {
-			if (q.distance_to(p) < 14.0f) {
-				spaced = false;
+	const int want_nests = peaceful ? 0 : (town ? rng_.irange(5, 6) : rng_.irange(4, 5));
+	// Draw spots at random, weighted toward open ground that's easy to shoot into.
+	auto draw = [&](std::vector<Vector3> &cands, std::vector<float> &w, const std::function<bool(const Vector3 &)> &ok) {
+		for (;;) {
+			float total = 0.0f;
+			for (size_t i = 0; i < cands.size(); ++i) {
+				if (w[i] > 0.0f && !ok(cands[i])) {
+					w[i] = 0.0f; // fails a hard rule (now or for good): drop it
+				}
+				total += w[i];
+			}
+			if (total <= 0.0f) {
+				return -1;
+			}
+			float roll = rng_.range(0.0f, total);
+			for (size_t i = 0; i < cands.size(); ++i) {
+				if (w[i] <= 0.0f) {
+					continue;
+				}
+				roll -= w[i];
+				if (roll <= 0.0f) {
+					w[i] = 0.0f;
+					return int(i);
+				}
 			}
 		}
-		if (!spaced) {
-			continue;
+	};
+	std::vector<Vector3> picked;
+	while (int(picked.size()) < want_nests) {
+		const MonsterType mt = MonsterType(kinds[picked.size() % kinds.size()]);
+		const float r = (*world->art)[mt].nest_radius + 0.6f;
+		const int i = draw(spots, spot_w, [&](const Vector3 &p) {
+			if (!clear_of_boxes(ctx, p, r) || !far_from_key_points(p, 3.0f)) {
+				return false;
+			}
+			for (const Vector3 &q : picked) {
+				if (q.distance_to(p) < 14.0f) {
+					return false;
+				}
+			}
+			return true;
+		});
+		if (i < 0) {
+			break;
 		}
-		picked.push_back(p);
+		picked.push_back(spots[i]);
 	}
 	if (st.spawner_down.size() != picked.size()) {
 		st.spawner_down.assign(picked.size(), 0);
@@ -1242,40 +1567,48 @@ void Infestation::build(Area &area, MonsterWorld *world, Node3D *root) {
 	// Thorn nests: two or three huge bramble masses with a glowing heart, away from the monster
 	// nests. Every thorn vine in the area grows out of one of them.
 	std::vector<Vector3> heart_spots;
-	const int want_hearts = rng_.irange(2, 3);
+	const int want_hearts = peaceful ? 0 : rng_.irange(2, 3);
 	// Candidates: open lawns, then the street itself (a bramble mass blocking the road).
 	std::vector<Vector3> heart_cands;
 	for (const Lot &lot : ctx.lots) {
 		const HouseSpec &h = lot.house;
 		if (!town) {
-			heart_cands.push_back(lot.to_world(0.0f, 0, (h.front_z + h.porch_d + 1.6f - 1.4f) * 0.5f));
-			heart_cands.push_back(lot.to_world(h.house_x, 0, h.front_z - h.depth - 3.5f));
+			const float hw = lot.width * 0.3f;
+			heart_cands.push_back(lot.to_world(rng_.range(-hw, hw), 0, rng_.range(1.8f, h.front_z + h.porch_d)));
+			heart_cands.push_back(lot.to_world(h.house_x + rng_.range(-hw, hw), 0, h.front_z - h.depth - rng_.range(2.8f, 4.5f)));
 		}
 	}
-	rng_.shuffle(heart_cands);
 	for (int k = 0; k < 12; ++k) {
 		const float x = rng_.range(ctx.bound_x0 + 10.0f, ctx.bound_x1 - 10.0f);
 		if (std::abs(x - s.lane_x) > 12.0f) {
-			heart_cands.push_back(s.at(x));
+			heart_cands.push_back(s.at(x) + s.left_at(x) * rng_.range(-1.2f, 1.2f));
 		}
 	}
+	std::vector<float> heart_w;
 	for (const Vector3 &p : heart_cands) {
-		if (int(heart_spots.size()) >= want_hearts) {
+		heart_w.push_back(spot_weight(ctx, p));
+	}
+	while (int(heart_spots.size()) < want_hearts) {
+		const int i = draw(heart_cands, heart_w, [&](const Vector3 &p) {
+			if (!clear_of_boxes(ctx, p, 1.6f) || !far_from_key_points(p, 4.0f) || p.distance_to(spawn_local) < 12.0f) {
+				return false;
+			}
+			for (const Vector3 &q : picked) {
+				if (q.distance_to(p) <= 8.0f) {
+					return false;
+				}
+			}
+			for (const Vector3 &q : heart_spots) {
+				if (q.distance_to(p) <= 15.0f) {
+					return false;
+				}
+			}
+			return true;
+		});
+		if (i < 0) {
 			break;
 		}
-		if (!clear_of_boxes(ctx, p, 1.6f) || !far_from_key_points(p, 4.0f) || p.distance_to(spawn_local) < 12.0f) {
-			continue;
-		}
-		bool spaced = true;
-		for (const Vector3 &q : picked) {
-			spaced = spaced && q.distance_to(p) > 8.0f;
-		}
-		for (const Vector3 &q : heart_spots) {
-			spaced = spaced && q.distance_to(p) > 15.0f;
-		}
-		if (spaced) {
-			heart_spots.push_back(p);
-		}
+		heart_spots.push_back(heart_cands[i]);
 	}
 	if (st.heart_down.size() != heart_spots.size()) {
 		st.heart_down.assign(heart_spots.size(), 0);
@@ -1284,6 +1617,7 @@ void Infestation::build(Area &area, MonsterWorld *world, Node3D *root) {
 		ThornVine *h = memnew(ThornVine);
 		root->add_child(h);
 		h->set_global_position(area.to_world(heart_spots[i]));
+		h->rotate_y(rng_.range(0.0f, Math_TAU)); // each root mass sprawls its own way
 		h->init(world, int(i) + 1, 1.7f, rng_.next());
 		h->make_heart();
 		hearts_.push_back(h);
@@ -1369,15 +1703,17 @@ void Infestation::build(Area &area, MonsterWorld *world, Node3D *root) {
 	for (size_t ni = 0; ni < heart_spots.size(); ++ni) {
 		const Vector3 c = heart_spots[ni];
 		const float r = 2.0f;
-		const int n = rng_.irange(5, 7);
+		// Uneven spokes: a varied count, angles knocked off the even spread, lengths from stubby to long.
+		const int n = rng_.irange(4, 8);
 		const float a0 = rng_.range(0.0f, Math_TAU);
 		for (int k = 0; k < n; ++k) {
-			const Vector3 dir = Vector3(std::cos(a0 + k * Math_TAU / n), 0, std::sin(a0 + k * Math_TAU / n));
-			std::vector<Vector3> pts = grow(c + dir * r, dir, rng_.range(8.0f, 16.0f), nullptr);
+			const float a = a0 + (k + rng_.range(-0.35f, 0.35f)) * Math_TAU / n;
+			const Vector3 dir = Vector3(std::cos(a), 0, std::sin(a));
+			std::vector<Vector3> pts = grow(c + dir * r, dir, rng_.chance(0.3f) ? rng_.range(4.0f, 8.0f) : rng_.range(8.0f, 18.0f), nullptr);
 			if (pts.size() >= 4) {
 				// A side branch partway along.
-				if (pts.size() > 8 && rng_.chance(0.6f)) {
-					const size_t at = pts.size() / 2;
+				if (pts.size() > 6 && rng_.chance(0.6f)) {
+					const size_t at = Math::clamp(size_t(pts.size() * rng_.range(0.3f, 0.7f)), size_t(1), pts.size() - 2);
 					const Vector3 bd = (pts[at] - pts[at - 1]).normalized().rotated(Vector3(0, 1, 0), rng_.chance(0.5f) ? 0.9f : -0.9f);
 					std::vector<Vector3> branch = grow(pts[at], bd, rng_.range(4.0f, 7.0f), nullptr);
 					if (branch.size() >= 4) {
@@ -1450,7 +1786,11 @@ void Infestation::build(Area &area, MonsterWorld *world, Node3D *root) {
 				on_vine_down(idx);
 			}
 		};
-	}	freed_ = false;
+	}
+	freed_ = false;
+	if (peaceful) {
+		st.freed = true;
+	}
 	if (st.freed) {
 		set_freed(false);
 	}

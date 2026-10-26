@@ -1,15 +1,25 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene format=3 uid="uid://bgxnkplkd0xxm"]
 
 [ext_resource type="Material" path="res://materials/toon.tres" id="1_toon"]
-[ext_resource type="Material" path="res://materials/candy.tres" id="2_candy"]
-[ext_resource type="Shader" path="res://shaders/sky.gdshader" id="4_sky"]
-[ext_resource type="Script" path="res://scripts/hud.gd" id="5_hud"]
-[ext_resource type="Script" path="res://scripts/audio.gd" id="6_audio"]
+[ext_resource type="Material" uid="uid://cfq6yhdckwee8" path="res://materials/candy.tres" id="2_candy"]
+[ext_resource type="Shader" uid="uid://cihq7g0rjqg3x" path="res://shaders/sky.gdshader" id="4_sky"]
+[ext_resource type="Script" uid="uid://ds2g1pibu6vkd" path="res://scripts/hud.gd" id="5_hud"]
+[ext_resource type="Script" uid="uid://ch7nt0qmuij6j" path="res://scripts/audio.gd" id="6_audio"]
 [ext_resource type="Material" path="res://materials/grass.tres" id="7_grass"]
 [ext_resource type="Material" path="res://materials/magic_trail.tres" id="8_magic"]
+[ext_resource type="Script" uid="uid://q2uygg4k1akt" path="res://scripts/post_fx.gd" id="9_post"]
 
 [sub_resource type="ShaderMaterial" id="SkyMat"]
 shader = ExtResource("4_sky")
+shader_parameter/moon_dir = Vector3(0.3, 0.4, -0.86)
+shader_parameter/zenith = Color(0.025, 0.04, 0.12, 1)
+shader_parameter/horizon = Color(0.16, 0.14, 0.33, 1)
+shader_parameter/moon_color = Color(1, 0.94, 0.76, 1)
+shader_parameter/moon_size = 0.088
+shader_parameter/cloud_cover = 0.5
+shader_parameter/cloud_dark = Color(0.07, 0.08, 0.17, 1)
+shader_parameter/cloud_light = Color(0.27, 0.27, 0.45, 1)
+shader_parameter/lightning = 0.0
 
 [sub_resource type="Sky" id="NightSky"]
 sky_material = SubResource("SkyMat")
@@ -22,22 +32,28 @@ ambient_light_source = 2
 ambient_light_color = Color(0.42, 0.48, 0.85, 1)
 ambient_light_energy = 0.55
 reflected_light_source = 2
-tonemap_mode = 3
-tonemap_exposure = 1.05
+tonemap_mode = 2
+ssr_enabled = true
+ssr_max_steps = 48
+ssr_fade_in = 0.4
+ssr_fade_out = 3.0
+ssr_depth_tolerance = 0.3
 ssao_enabled = true
-ssao_radius = 1.4
-ssao_intensity = 2.2
-ssao_power = 1.6
-ssao_light_affect = 0.15
+ssao_radius = 1.61
+ssao_intensity = 16.0
+ssao_detail = 0.42
+ssao_horizon = 0.27
+ssao_sharpness = 0.68
+ssao_light_affect = 0.35
+ssao_ao_channel_affect = 0.06
 ssil_enabled = true
-ssil_radius = 4.0
-ssil_intensity = 0.9
+ssil_radius = 10.87
+ssil_intensity = 1.6
 glow_enabled = true
-glow_intensity = 0.95
-glow_strength = 1.0
-glow_bloom = 0.06
-glow_blend_mode = 1
-glow_hdr_threshold = 0.85
+glow_intensity = 3.41
+glow_strength = 1.12
+glow_bloom = 0.02
+glow_blend_mode = 2
 fog_enabled = true
 fog_light_color = Color(0.15, 0.19, 0.38, 1)
 fog_light_energy = 0.9
@@ -51,9 +67,6 @@ volumetric_fog_anisotropy = 0.35
 volumetric_fog_length = 80.0
 volumetric_fog_ambient_inject = 0.35
 volumetric_fog_sky_affect = 0.0
-adjustment_enabled = true
-adjustment_contrast = 1.06
-adjustment_saturation = 1.3
 
 [sub_resource type="CameraAttributesPractical" id="ToyLens"]
 dof_blur_far_enabled = true
@@ -64,40 +77,43 @@ dof_blur_near_distance = 4.0
 dof_blur_near_transition = 2.5
 dof_blur_amount = 0.06
 
-[node name="Main" type="FestivalGame"]
+[node name="Main" type="FestivalGame" unique_id=1973450144]
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1421842975]
 environment = SubResource("NightEnv")
 camera_attributes = SubResource("ToyLens")
 
-[node name="Moon" type="DirectionalLight3D" parent="."]
+[node name="Moon" type="DirectionalLight3D" parent="." unique_id=1256965621]
 light_color = Color(0.6, 0.7, 1, 1)
 light_energy = 0.62
 light_volumetric_fog_energy = 0.6
 shadow_enabled = true
 shadow_bias = 0.05
+shadow_opacity = 0.78
 shadow_blur = 1.5
-directional_shadow_mode = 2
 directional_shadow_max_distance = 70.0
 
-[node name="LightningFlash" type="DirectionalLight3D" parent="."]
+[node name="LightningFlash" type="DirectionalLight3D" parent="." unique_id=167364526]
 light_color = Color(0.78, 0.68, 1, 1)
 light_energy = 0.0
 
-[node name="Generator" type="NeighborhoodGenerator" parent="."]
+[node name="Generator" type="NeighborhoodGenerator" parent="." unique_id=1525551618]
 toon_material = ExtResource("1_toon")
 candy_material = ExtResource("2_candy")
-grass_material = ExtResource("7_grass")
 magic_material = ExtResource("8_magic")
+grass_material = ExtResource("7_grass")
 
-[node name="Player" type="DragonController" parent="."]
+[node name="Player" type="DragonController" parent="." unique_id=1353562509]
 
-[node name="CameraRig" type="FestivalCamera" parent="."]
+[node name="CameraRig" type="FestivalCamera" parent="." unique_id=1554075396]
 
-[node name="StormSky" type="StormSky" parent="."]
+[node name="StormSky" type="StormSky" parent="." unique_id=786434108]
 
-[node name="HUD" type="CanvasLayer" parent="."]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1093870503]
 script = ExtResource("5_hud")
 
-[node name="Audio" type="Node" parent="."]
+[node name="PostFX" type="Node" parent="." unique_id=377341919]
+script = ExtResource("9_post")
+
+[node name="Audio" type="Node" parent="." unique_id=561325699]
 script = ExtResource("6_audio")

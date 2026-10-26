@@ -33,6 +33,11 @@ struct MonsterWorld {
 	std::function<float(float, float)> ground;
 	std::function<void(const char *event, const godot::Vector3 &pos)> event;
 	std::function<void(const godot::Vector3 &pos, int count)> drop_candy;
+	// A brief fountain of candy shooting up out of a destroyed spawner or thorn nest.
+	std::function<void(const godot::Vector3 &pos, int count)> candy_fountain;
+	// Walkable route from rom to 	o around houses, fences and hedges (waypoints, last = goal);
+	// false when no settlement grid covers rom (open country: go straight).
+	std::function<bool(const godot::Vector3 &from, const godot::Vector3 &to, std::vector<godot::Vector3> &path)> route;
 };
 
 struct MonsterTuning {
@@ -78,6 +83,7 @@ private:
 	void flash(const godot::Color &c);
 	void die(bool reward);
 	godot::Vector3 pick_goal(const godot::Vector3 &player, bool chasing);
+	godot::Vector3 steer_toward(const godot::Vector3 &pos, const godot::Vector3 &target, float dt);
 
 	MonsterType type_ = MonsterType::PumpkinHopper;
 	MonsterWorld *world_ = nullptr;
@@ -89,6 +95,9 @@ private:
 	float hp_ = 1.0f, flash_t_ = 0.0f, anim_t_ = 0.0f, orbit_ = 0.0f;
 	godot::Color flash_color_;
 	godot::Vector3 goal_, attack_dir_, knock_;
+	std::vector<godot::Vector3> path_; // waypoints toward path_goal_
+	godot::Vector3 path_goal_;
+	float repath_t_ = 0.0f;
 	bool hit_landed_ = false, dead_ = false, airborne_attack_ = false;
 	float yaw_ = 0.0f;
 	godot::Node3D *visual_ = nullptr;
@@ -201,7 +210,10 @@ private:
 // One settlement's infestation: nests, vines, the monsters out roaming, and the travel gate.
 class Infestation {
 public:
-	void build(Area &area, MonsterWorld *world, godot::Node3D *root);
+	// peaceful (Trick or Treat mode): just the travel gate and the shop cart, awake from the start;
+	// no nests, thorn nests, vines or monsters.
+	void build(Area &area, MonsterWorld *world, godot::Node3D *root, bool peaceful = false);
+	bool route(const godot::Vector3 &from, const godot::Vector3 &to, std::vector<godot::Vector3> &path) const;
 	void update(float dt);
 	void gather(std::vector<Damageable *> &out);
 	int nests_total() const { return int(nests_.size()); }
@@ -226,6 +238,14 @@ public:
 
 private:
 	void spawn_from(MonsterNest *nest);
+	void build_nav(const Area &area);
+	bool nav_blocked(int x, int z) const { return x < 0 || z < 0 || x >= nav_w_ || z >= nav_h_ || nav_[z * nav_w_ + x]; }
+	bool nav_line(const godot::Vector3 &a, const godot::Vector3 &b) const;
+	// Walk grid over the settlement: 1 = blocked (houses, fences, hedges, big props).
+	std::vector<uint8_t> nav_;
+	int nav_w_ = 0, nav_h_ = 0;
+	float nav_x0_ = 0.0f, nav_z0_ = 0.0f, nav_y_ = 0.0f;
+	static constexpr float NAV_CELL = 0.6f;
 	void check_freed();
 
 	MonsterWorld *world_ = nullptr;

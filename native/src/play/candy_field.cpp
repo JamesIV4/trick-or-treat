@@ -1,6 +1,11 @@
 #include "play/candy_field.h"
 
+#include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/multi_mesh.hpp>
+#include <godot_cpp/classes/resource_loader.hpp>
+#include <godot_cpp/classes/shader.hpp>
+#include <godot_cpp/classes/shader_material.hpp>
+#include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/classes/quad_mesh.hpp>
 #include <godot_cpp/classes/standard_material3d.hpp>
 #include <godot_cpp/core/class_db.hpp>
@@ -8,6 +13,7 @@
 
 #include <cmath>
 
+#include "gen/candy_kinds.h"
 #include "play/drop_shadow.h"
 #include "play/vfx.h"
 
@@ -21,24 +27,10 @@ constexpr float SEQUENCE_GAP = 1.6f; // longest pause between pickups that still
 constexpr int SEQUENCE_MIN = 3;
 
 Color halo_color(int kind) {
-	switch (kind) {
-		case CANDY_PINK:
-			return Color(1.0f, 0.45f, 0.75f);
-		case CANDY_MINT:
-			return Color(0.4f, 1.0f, 0.8f);
-		case CANDY_GRAPE:
-			return Color(0.7f, 0.5f, 1.0f);
-		case CANDY_LEMON:
-			return Color(1.0f, 0.9f, 0.35f);
-		case CANDY_CHOCOLATE:
-			return Color(1.0f, 0.55f, 0.35f);
-		case CANDY_LOLLIPOP:
-			return Color(1.0f, 0.4f, 0.45f);
-		default:
-			return Color(1.0f, 0.82f, 0.3f);
-	}
+	return candy_glow(kind);
 }
 
+// The classic pieces scale up with their tier; variety candies are authored at their size.
 float candy_scale(int kind) {
 	return kind == CANDY_GOLDEN ? 1.25f : (kind == CANDY_LOLLIPOP ? 1.1f : 1.0f);
 }
@@ -62,11 +54,18 @@ void CandyField::setup(const std::vector<Ref<Mesh>> &meshes, const Ref<Material>
 	candy_mat_ = candy_mat;
 	halo_mat_ = halo_mat;
 	per_lot_.assign(std::max(lot_count, 0), 0);
-	slots_.assign(CANDY_KIND_COUNT, {});
+	slots_.assign(meshes_.size(), {});
 	candy_.clear();
 	grid_.clear();
 	groups_.clear();
-	shadow_tex_ = make_glow_texture();
+	if (halo_mat_.is_null()) {
+		// A soft column of light under every candy (candy_beam.gdshader).
+		Ref<ShaderMaterial> beam;
+		beam.instantiate();
+		beam->set_shader(ResourceLoader::get_singleton()->load("res://shaders/candy_beam.gdshader"));
+		beam->set_render_priority(1);
+		halo_mat_ = beam;
+	}
 }
 
 void CandyField::add(const CandySpec &c) {
@@ -93,14 +92,14 @@ void CandyField::add(const CandySpec &c) {
 }
 
 void CandyField::finalize() {
-	for (int kind = 0; kind < CANDY_KIND_COUNT; ++kind) {
+	for (int kind = 0; kind < int(meshes_.size()); ++kind) {
 		MultiMeshInstance3D *mmi = memnew(MultiMeshInstance3D);
 		Ref<MultiMesh> mm;
 		mm.instantiate();
 		mm->set_transform_format(MultiMesh::TRANSFORM_3D);
 		mm->set_use_custom_data(true);
 		mm->set_mesh(meshes_[kind]);
-		const int extra = kind <= CANDY_LEMON ? capacity_extra_ / 4 : 0;
+		const int extra = kind < CANDY_BASIC_COUNT ? capacity_extra_ / CANDY_BASIC_COUNT : 0;
 		mm->set_instance_count(int(slots_[kind].size()) + extra);
 		for (int i = 0; i < mm->get_instance_count(); ++i) {
 			mm->set_instance_transform(i, Transform3D(Basis().scaled(Vector3(0, 0, 0)), Vector3()));
@@ -131,13 +130,12 @@ void CandyField::finalize() {
 	halo_->set_multimesh(hm);
 	halo_->set_material_override(halo_mat_);
 	halo_->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
-	halo_->set_name("Halos");
+	halo_->set_name("Beams");
 	add_child(halo_);
 	}
 	for (int i = 0; i < int(candy_.size()); ++i) {
 		write_instance(candy_[i], 1.0f);
 		index_candy(i);
-		add_shadow(candy_[i]);
 	}
 	// Pickup sparkles.
 	Ref<StandardMaterial3D> spark_mat;
@@ -181,7 +179,8 @@ void CandyField::write_instance(const Candy &c, float scale) {
 	Ref<MultiMesh> mm = mm_[c.kind]->get_multimesh();
 	if (c.slot < mm->get_instance_count()) {
 		mm->set_instance_transform(c.slot, Transform3D(Basis().scaled(Vector3(s, s, s)), c.pos));
-		mm->set_instance_custom_data(c.slot, Color(phase, float(c.kind), 0, 0));
+		const Color glow = candy_glow(c.kind); // the outline shader's tint
+	mm->set_instance_custom_data(c.slot, Color(phase, glow.r, glow.g, glow.b));
 	}
 	if (!halo_) {
 		return;
@@ -189,26 +188,28 @@ void CandyField::write_instance(const Candy &c, float scale) {
 	Ref<MultiMesh> hm = halo_->get_multimesh();
 	const int id = int(&c - candy_.data());
 	if (id >= 0 && id < hm->get_instance_count()) {
-		const float hs = s * (c.kind >= CANDY_CHOCOLATE ? 1.5f : 1.05f);
-		hm->set_instance_transform(id, Transform3D(Basis().scaled(Vector3(hs, hs, hs)), c.pos));
-		hm->set_instance_color(id, halo_color(c.kind));
+		// The column stands from about 1.5 m below the candy (the ground fades it in) up to just under
+		// it, never overlapping it. Once the candy starts flying to the bucket it fades out over 150 ms.
+		const float fade = (c.homing || !c.alive) ? Math::clamp(1.0f - c.home_t / 0.15f, 0.0f, 1.0f) : 1.0f;
+		const float w = (candy_tier(c.kind) >= 2 ? 1.0f : 0.75f) * (scale > 0.0f && fade > 0.0f ? 1.0f : 0.0f);
+		hm->set_instance_transform(id, Transform3D(Basis().scaled(Vector3(w, w > 0.0f ? 1.3f : 0.0f, w)), c.pos - Vector3(0, 0.76f, 0)));
+		hm->set_instance_color(id, halo_color(c.kind) * fade);
 		hm->set_instance_custom_data(id, Color(phase, 0, 0, 0));
 	}
 }
 
-void CandyField::add_shadow(Candy &c) {
-	c.shadow = make_drop_shadow(shadow_tex_, c.kind >= CANDY_LOLLIPOP ? 0.8f : 0.6f, 8.0f, Color(halo_color(c.kind), 0.35f), 0.9f);
-	add_child(c.shadow);
-	c.shadow->set_position(c.pos - Vector3(0, 4.0f - 0.2f, 0));
+// Pickup bookkeeping: the rhythm group checks whether this piece completes
+// a clean run (every piece, no long pause in between).
+void CandyField::hide_near(const Vector3 &local, float r) {
+	for (Candy &c : candy_) {
+		if (c.alive && c.pos.distance_to(local) < r) {
+			c.alive = false;
+			write_instance(c, 0.0f);
+		}
+	}
 }
 
-// Pickup bookkeeping: the shadow goes, and the rhythm group checks whether this piece completes
-// a clean run (every piece, no long pause in between).
 void CandyField::on_picked(Candy &c) {
-	if (c.shadow) {
-		c.shadow->queue_free();
-		c.shadow = nullptr;
-	}
 	if (c.group < 0 || c.group >= int(groups_.size())) {
 		return;
 	}
@@ -230,7 +231,7 @@ void CandyField::index_candy(int id) {
 
 void CandyField::spark(const Vector3 &p, int kind) {
 	if (Vfx *vfx = Vfx::get()) {
-		const int tier = kind == CANDY_GOLDEN ? 3 : (kind == CANDY_LOLLIPOP ? 2 : (kind == CANDY_CHOCOLATE ? 1 : 0));
+		const int tier = candy_tier(kind);
 		vfx->candy_pickup(to_global(p), halo_color(kind), tier);
 		return;
 	}
@@ -332,7 +333,7 @@ void CandyField::burst(const Vector3 &from, const Vector3 &toward, int lot, int 
 	Rng rng(seed);
 	const Vector3 fwd = Vector3(toward.x, 0, toward.z).normalized();
 	for (int i = 0; i < count; ++i) {
-		const int kind = rng.irange(CANDY_PINK, CANDY_LEMON);
+		const int kind = rng.irange(CANDY_PINK, CANDY_BASIC_COUNT - 1);
 		Ref<MultiMesh> mm = mm_[kind]->get_multimesh();
 		if (int(slots_[kind].size()) >= mm->get_instance_count() || (halo_ && int(candy_.size()) >= halo_->get_multimesh()->get_instance_count())) {
 			continue;
@@ -444,7 +445,6 @@ void CandyField::_process(double delta) {
 			c.fly_t = 1.0f;
 			write_instance(c, 1.0f);
 			index_candy(id);
-			add_shadow(c);
 			flying_[i] = flying_.back();
 			flying_.pop_back();
 		} else {
@@ -454,6 +454,7 @@ void CandyField::_process(double delta) {
 	for (size_t i = 0; i < popping_.size();) {
 		Candy &c = candy_[popping_[i]];
 		c.pop += dt / 0.22f;
+		c.home_t += dt; // keeps the glow column's fade running
 		const float t = Math::min(c.pop, 1.0f);
 		const float s = t < 0.35f ? 1.0f + t * 1.6f : (1.0f - t) / 0.65f * 1.56f;
 		write_instance(c, Math::max(s, 0.0f));

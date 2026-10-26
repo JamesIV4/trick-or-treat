@@ -66,6 +66,7 @@ public:
 		return *assets_;
 	}
 	godot::Node3D *instantiate_asset(const godot::String &id);
+	bool asset_published(const godot::String &id);
 
 	void _process(double delta) override;
 
@@ -113,13 +114,26 @@ private:
 		bool visited = false;
 	};
 	std::vector<MagicNode> magic_nodes_;
+	// The street spine in ~10 m pieces, each fading once every house near it has been visited (and
+	// the pieces with no house near them once the whole area has).
+	struct SpineChunk {
+		godot::MeshInstance3D *node = nullptr;
+		std::vector<int> lots;
+		float fade = 0.7f;
+		bool gone = false;
+	};
+	std::vector<SpineChunk> spine_;
 	godot::Ref<godot::Material> magic_mat_;
 	void build_magic(godot::Node3D *world);
 
+	enum SquishMode { SQUISH_WOBBLE, SQUISH_HOOD, SQUISH_DIP };
 	struct Squishy {
 		godot::Node3D *node = nullptr;
-		godot::Transform3D rest;
+		godot::Transform3D rest; // the node's own (parent-relative) rest transform
 		float t = 0.0f; // > 0 while wobbling
+		SquishMode mode = SQUISH_WOBBLE;
+		godot::Vector3 anchor; // where landings set it off (generator space)
+		float reach = 2.2f;
 	};
 	std::vector<Squishy> squishies_;
 

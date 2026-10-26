@@ -151,7 +151,9 @@ def check(asset):
     warnings = ["untextured legacy export (no Tint UV); rebuild with lowpoly_kit v2"] if "legacy" in untextured_flags else []
     if degenerate:
         fails.append(f"{degenerate} degenerate triangles")
-    floating = asset["path"].startswith(FLOATING_PREFIXES) or asset["id"] in FLOATING_IDS
+    # Hanging/wall assets (origin at the hang point) opt out of the ground gate with "floating": true.
+    floating = (asset["path"].startswith(FLOATING_PREFIXES) or asset["id"] in FLOATING_IDS
+                or asset.get("floating", False))
     if not floating and abs(min_y) > 0.03:
         fails.append(f"origin not at ground: min height {min_y:.3f} m")
     for part in asset.get("parts", []):

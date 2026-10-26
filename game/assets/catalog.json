@@ -6,6 +6,31 @@
    "collision": "none"
   },
   {
+   "id": "kid_ghost",
+   "path": "characters/kid_ghost",
+   "collision": "none"
+  },
+  {
+   "id": "kid_cat",
+   "path": "characters/kid_cat",
+   "collision": "none"
+  },
+  {
+   "id": "kid_witch",
+   "path": "characters/kid_witch",
+   "collision": "none"
+  },
+  {
+   "id": "kid_skeleton",
+   "path": "characters/kid_skeleton",
+   "collision": "none"
+  },
+  {
+   "id": "kid_pumpkin",
+   "path": "characters/kid_pumpkin",
+   "collision": "none"
+  },
+  {
    "id": "candy_wrapped_pink",
    "path": "candy/candy_wrapped_pink",
    "collision": "none"
@@ -38,6 +63,16 @@
   {
    "id": "candy_golden_bar",
    "path": "candy/candy_golden_bar",
+   "collision": "none"
+  },
+  {
+   "id": "candy_wrapped_orange",
+   "path": "candy/candy_wrapped_orange",
+   "collision": "none"
+  },
+  {
+   "id": "candy_corn",
+   "path": "candy/candy_corn",
    "collision": "none"
   },
   {
@@ -256,7 +291,20 @@
    "id": "parked_car",
    "path": "props/parked_car",
    "collision": "box",
-   "walkable": true
+   "walkable": true,
+   "hood_aabb": [
+    -0.752,
+    0.749,
+    0.895,
+    0.752,
+    0.919,
+    1.574
+   ],
+   "hood_hinge": [
+    0.0,
+    0.919,
+    0.9
+   ]
   },
   {
    "id": "cloud_a",
@@ -276,6 +324,878 @@
   {
    "id": "bat",
    "path": "sky/bat",
+   "collision": "none"
+  },
+  {
+   "id": "mums_orange",
+   "path": "props/mums_orange",
+   "collision": "none"
+  },
+  {
+   "id": "mums_purple",
+   "path": "props/mums_purple",
+   "collision": "none"
+  },
+  {
+   "id": "mums_white",
+   "path": "props/mums_white",
+   "collision": "none"
+  },
+  {
+   "id": "brick_planter",
+   "path": "props/brick_planter",
+   "collision": "box",
+   "walkable": true,
+   "collision_top": 0.55
+  },
+  {
+   "id": "brick_pillar",
+   "path": "props/brick_pillar",
+   "collision": "box",
+   "walkable": true
+  },
+  {
+   "id": "ghost_figure",
+   "path": "props/ghost_figure",
+   "collision": "cylinder"
+  },
+  {
+   "id": "black_cat_sitting",
+   "path": "props/black_cat_sitting",
+   "collision": "none"
+  },
+  {
+   "id": "tree_pine_a",
+   "path": "props/tree_pine_a",
+   "collision": "trunk",
+   "radius": 0.3,
+   "height": 3.0
+  },
+  {
+   "id": "tree_pine_b",
+   "path": "props/tree_pine_b",
+   "collision": "trunk",
+   "radius": 0.32,
+   "height": 3.0
+  },
+  {
+   "id": "leaf_scatter",
+   "path": "props/leaf_scatter",
+   "collision": "none"
+  },
+  {
+   "id": "leaf_single",
+   "path": "props/leaf_single",
+   "collision": "none"
+  },
+  {
+   "id": "string_jack",
+   "path": "props/string_jack",
+   "collision": "none"
+  },
+  {
+   "id": "bunting_flag_orange",
+   "path": "props/bunting_flag_orange",
+   "collision": "none"
+  },
+  {
+   "id": "bunting_flag_purple",
+   "path": "props/bunting_flag_purple",
+   "collision": "none"
+  },
+  {
+   "id": "bunting_flag_cream",
+   "path": "props/bunting_flag_cream",
+   "collision": "none"
+  },
+  {
+   "id": "door_wreath",
+   "path": "props/door_wreath",
+   "collision": "none"
+  },
+  {
+   "id": "monster_pumpkin",
+   "path": "monsters/monster_pumpkin",
+   "collision": "none"
+  },
+  {
+   "id": "monster_bat",
+   "path": "monsters/monster_bat",
+   "collision": "none"
+  },
+  {
+   "id": "monster_skeleton",
+   "path": "monsters/monster_skeleton",
+   "collision": "none"
+  },
+  {
+   "id": "monster_ghost",
+   "path": "monsters/monster_ghost",
+   "collision": "none"
+  },
+  {
+   "id": "monster_gremlin",
+   "path": "monsters/monster_gremlin",
+   "collision": "none"
+  },
+  {
+   "id": "monster_mummy",
+   "path": "monsters/monster_mummy",
+   "collision": "none"
+  },
+  {
+   "id": "monster_slime",
+   "path": "monsters/monster_slime",
+   "collision": "none"
+  },
+  {
+   "id": "monster_scarecrow",
+   "path": "monsters/monster_scarecrow",
+   "collision": "none"
+  },
+  {
+   "id": "monster_spider",
+   "path": "monsters/monster_spider",
+   "collision": "none"
+  },
+  {
+   "id": "monster_toadstool",
+   "path": "monsters/monster_toadstool",
+   "collision": "none"
+  },
+  {
+   "id": "nest_pumpkin",
+   "path": "monsters/nest_pumpkin",
+   "collision": "none"
+  },
+  {
+   "id": "nest_bat",
+   "path": "monsters/nest_bat",
+   "collision": "none"
+  },
+  {
+   "id": "nest_skeleton",
+   "path": "monsters/nest_skeleton",
+   "collision": "none"
+  },
+  {
+   "id": "nest_ghost",
+   "path": "monsters/nest_ghost",
+   "collision": "none"
+  },
+  {
+   "id": "nest_gremlin",
+   "path": "monsters/nest_gremlin",
+   "collision": "none"
+  },
+  {
+   "id": "nest_mummy",
+   "path": "monsters/nest_mummy",
+   "collision": "none"
+  },
+  {
+   "id": "nest_slime",
+   "path": "monsters/nest_slime",
+   "collision": "none"
+  },
+  {
+   "id": "nest_scarecrow",
+   "path": "monsters/nest_scarecrow",
+   "collision": "none"
+  },
+  {
+   "id": "nest_spider",
+   "path": "monsters/nest_spider",
+   "collision": "none"
+  },
+  {
+   "id": "nest_toadstool",
+   "path": "monsters/nest_toadstool",
+   "collision": "none"
+  },
+  {
+   "id": "travel_gate_base",
+   "path": "props/travel_gate_base",
+   "collision": "cylinder",
+   "walkable": true,
+   "radius": 1.4,
+   "height": 0.22
+  },
+  {
+   "id": "travel_gate_lantern",
+   "path": "props/travel_gate_lantern",
+   "collision": "none"
+  },
+  {
+   "id": "shop_cart",
+   "path": "props/shop_cart",
+   "collision": "box"
+  },
+  {
+   "id": "trampoline_large",
+   "path": "props/trampoline_large",
+   "collision": "box",
+   "walkable": true,
+   "collision_top": 0.85,
+   "bounce": 17.0
+  },
+  {
+   "id": "trampoline_mini",
+   "path": "props/trampoline_mini",
+   "collision": "box",
+   "walkable": true,
+   "collision_top": 0.28,
+   "bounce": 14.0
+  },
+  {
+   "id": "parked_wagon",
+   "path": "props/parked_wagon",
+   "collision": "box",
+   "walkable": true,
+   "hood_aabb": [
+    -0.785,
+    0.814,
+    1.097,
+    0.785,
+    0.956,
+    1.861
+   ],
+   "hood_hinge": [
+    0.0,
+    0.956,
+    1.1
+   ]
+  },
+  {
+   "id": "parked_pickup",
+   "path": "props/parked_pickup",
+   "collision": "box",
+   "walkable": true,
+   "hood_aabb": [
+    -0.796,
+    0.868,
+    0.748,
+    0.796,
+    1.013,
+    1.794
+   ],
+   "hood_hinge": [
+    0.0,
+    1.013,
+    0.75
+   ]
+  },
+  {
+   "id": "thorn_knot_a",
+   "path": "monsters/thorn_knot_a",
+   "collision": "none"
+  },
+  {
+   "id": "thorn_knot_b",
+   "path": "monsters/thorn_knot_b",
+   "collision": "none"
+  },
+  {
+   "id": "thorn_knot_c",
+   "path": "monsters/thorn_knot_c",
+   "collision": "none"
+  },
+  {
+   "id": "thorn_root_mass",
+   "path": "monsters/thorn_root_mass",
+   "collision": "none"
+  },
+  {
+   "id": "candy_twist_berry_dots",
+   "path": "candy/candy_twist_berry_dots",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff2f74"
+  },
+  {
+   "id": "candy_twist_aqua_bats",
+   "path": "candy/candy_twist_aqua_bats",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#2ffff0"
+  },
+  {
+   "id": "candy_twist_purple_pumpkins",
+   "path": "candy/candy_twist_purple_pumpkins",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#b45cff"
+  },
+  {
+   "id": "candy_twist_lime_cobalt",
+   "path": "candy/candy_twist_lime_cobalt",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#b8ff2e"
+  },
+  {
+   "id": "candy_twist_cherry_lemon",
+   "path": "candy/candy_twist_cherry_lemon",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff3b4e"
+  },
+  {
+   "id": "candy_twist_blue_stars",
+   "path": "candy/candy_twist_blue_stars",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#45c8ff"
+  },
+  {
+   "id": "candy_twist_peach_bands",
+   "path": "candy/candy_twist_peach_bands",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff9a5c"
+  },
+  {
+   "id": "candy_twist_mint_check",
+   "path": "candy/candy_twist_mint_check",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#4dffc3"
+  },
+  {
+   "id": "candy_twist_orange_ghosts",
+   "path": "candy/candy_twist_orange_ghosts",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff8a1f"
+  },
+  {
+   "id": "candy_taffy_pink",
+   "path": "candy/candy_taffy_pink",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff6fc8"
+  },
+  {
+   "id": "candy_taffy_lemon",
+   "path": "candy/candy_taffy_lemon",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ffe23a"
+  },
+  {
+   "id": "candy_toffee_twist",
+   "path": "candy/candy_toffee_twist",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#3dff6a"
+  },
+  {
+   "id": "candy_gumball_trio",
+   "path": "candy/candy_gumball_trio",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff5a5a"
+  },
+  {
+   "id": "candy_gumball_rainbow",
+   "path": "candy/candy_gumball_rainbow",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff4fb8"
+  },
+  {
+   "id": "candy_jellybean_cherry",
+   "path": "candy/candy_jellybean_cherry",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff3b4e"
+  },
+  {
+   "id": "candy_jellybean_speckled",
+   "path": "candy/candy_jellybean_speckled",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#45c8ff"
+  },
+  {
+   "id": "candy_jellybean_trio",
+   "path": "candy/candy_jellybean_trio",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ffe23a"
+  },
+  {
+   "id": "candy_gummy_bear_red",
+   "path": "candy/candy_gummy_bear_red",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff3b4e"
+  },
+  {
+   "id": "candy_gummy_bear_green",
+   "path": "candy/candy_gummy_bear_green",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#3dff6a"
+  },
+  {
+   "id": "candy_gummy_bear_orange",
+   "path": "candy/candy_gummy_bear_orange",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff8a1f"
+  },
+  {
+   "id": "candy_gummy_worm",
+   "path": "candy/candy_gummy_worm",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff8a1f"
+  },
+  {
+   "id": "candy_gummy_worm_berry",
+   "path": "candy/candy_gummy_worm_berry",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff4fb8"
+  },
+  {
+   "id": "candy_gummy_bat",
+   "path": "candy/candy_gummy_bat",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#b45cff"
+  },
+  {
+   "id": "candy_peach_ring",
+   "path": "candy/candy_peach_ring",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff9a5c"
+  },
+  {
+   "id": "candy_apple_ring",
+   "path": "candy/candy_apple_ring",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#b8ff2e"
+  },
+  {
+   "id": "candy_peppermint",
+   "path": "candy/candy_peppermint",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff3b4e"
+  },
+  {
+   "id": "candy_starlight_mint",
+   "path": "candy/candy_starlight_mint",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#3dff6a"
+  },
+  {
+   "id": "candy_butterscotch",
+   "path": "candy/candy_butterscotch",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ffb020"
+  },
+  {
+   "id": "candy_caramel_cube",
+   "path": "candy/candy_caramel_cube",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ffa040"
+  },
+  {
+   "id": "candy_fudge_cube",
+   "path": "candy/candy_fudge_cube",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff8a1f"
+  },
+  {
+   "id": "candy_licorice_twist",
+   "path": "candy/candy_licorice_twist",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff2a3a"
+  },
+  {
+   "id": "candy_licorice_rainbow",
+   "path": "candy/candy_licorice_rainbow",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff4fb8"
+  },
+  {
+   "id": "candy_licorice_wheel",
+   "path": "candy/candy_licorice_wheel",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#c070ff"
+  },
+  {
+   "id": "candy_sour_belt_rainbow",
+   "path": "candy/candy_sour_belt_rainbow",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff8a1f"
+  },
+  {
+   "id": "candy_sour_belt_berry",
+   "path": "candy/candy_sour_belt_berry",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff3fa4"
+  },
+  {
+   "id": "candy_buttons",
+   "path": "candy/candy_buttons",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff6fc8"
+  },
+  {
+   "id": "candy_rock_blue",
+   "path": "candy/candy_rock_blue",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#45c8ff"
+  },
+  {
+   "id": "candy_rock_pink",
+   "path": "candy/candy_rock_pink",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff4fb8"
+  },
+  {
+   "id": "candy_marshmallow_ghost",
+   "path": "candy/candy_marshmallow_ghost",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#d8d0ff"
+  },
+  {
+   "id": "candy_mellow_pumpkin",
+   "path": "candy/candy_mellow_pumpkin",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff8a1f"
+  },
+  {
+   "id": "candy_apple_mini",
+   "path": "candy/candy_apple_mini",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff3b4e"
+  },
+  {
+   "id": "candy_cakepop_sprinkle",
+   "path": "candy/candy_cakepop_sprinkle",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff6fc8"
+  },
+  {
+   "id": "candy_cakepop_drizzle",
+   "path": "candy/candy_cakepop_drizzle",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff8a1f"
+  },
+  {
+   "id": "candy_bonbon_orange",
+   "path": "candy/candy_bonbon_orange",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff8a1f"
+  },
+  {
+   "id": "candy_bonbon_pink",
+   "path": "candy/candy_bonbon_pink",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff4fb8"
+  },
+  {
+   "id": "candy_fizz_roll",
+   "path": "candy/candy_fizz_roll",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff6fc8"
+  },
+  {
+   "id": "candy_fizz_tube",
+   "path": "candy/candy_fizz_tube",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff3fa4"
+  },
+  {
+   "id": "candy_star_lemon",
+   "path": "candy/candy_star_lemon",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ffe23a"
+  },
+  {
+   "id": "candy_heart_berry",
+   "path": "candy/candy_heart_berry",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff2f74"
+  },
+  {
+   "id": "candy_strawberry_drop",
+   "path": "candy/candy_strawberry_drop",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff3b4e"
+  },
+  {
+   "id": "candy_eyeball",
+   "path": "candy/candy_eyeball",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#45c8ff"
+  },
+  {
+   "id": "candy_coin_gold",
+   "path": "candy/candy_coin_gold",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ffd23a"
+  },
+  {
+   "id": "candy_coin_silver",
+   "path": "candy/candy_coin_silver",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#bfe6ff"
+  },
+  {
+   "id": "candy_corn_harvest",
+   "path": "candy/candy_corn_harvest",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff8a1f"
+  },
+  {
+   "id": "candy_corn_unicorn",
+   "path": "candy/candy_corn_unicorn",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#d070ff"
+  },
+  {
+   "id": "candy_gumdrop",
+   "path": "candy/candy_gumdrop",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#b8ff2e"
+  },
+  {
+   "id": "candy_gumdrop_pile",
+   "path": "candy/candy_gumdrop_pile",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff6a3a"
+  },
+  {
+   "id": "candy_kiss_silver",
+   "path": "candy/candy_kiss_silver",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#bfe6ff"
+  },
+  {
+   "id": "candy_kiss_magenta",
+   "path": "candy/candy_kiss_magenta",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff3fa4"
+  },
+  {
+   "id": "candy_ring_pop",
+   "path": "candy/candy_ring_pop",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff3b4e"
+  },
+  {
+   "id": "candy_cotton_candy",
+   "path": "candy/candy_cotton_candy",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff6fc8"
+  },
+  {
+   "id": "candy_jawbreaker",
+   "path": "candy/candy_jawbreaker",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#b45cff"
+  },
+  {
+   "id": "candy_popcorn_ball",
+   "path": "candy/candy_popcorn_ball",
+   "collision": "none",
+   "candy_tier": 0,
+   "glow": "#ff8a1f"
+  },
+  {
+   "id": "candy_bar_bat",
+   "path": "candy/candy_bar_bat",
+   "collision": "none",
+   "candy_tier": 1,
+   "glow": "#b45cff"
+  },
+  {
+   "id": "candy_bar_pumpkin",
+   "path": "candy/candy_bar_pumpkin",
+   "collision": "none",
+   "candy_tier": 1,
+   "glow": "#3dff6a"
+  },
+  {
+   "id": "candy_bar_open",
+   "path": "candy/candy_bar_open",
+   "collision": "none",
+   "candy_tier": 1,
+   "glow": "#4f7dff"
+  },
+  {
+   "id": "candy_pb_cups",
+   "path": "candy/candy_pb_cups",
+   "collision": "none",
+   "candy_tier": 1,
+   "glow": "#ff8a1f"
+  },
+  {
+   "id": "candy_caramel_apple",
+   "path": "candy/candy_caramel_apple",
+   "collision": "none",
+   "candy_tier": 1,
+   "glow": "#ffa040"
+  },
+  {
+   "id": "candy_choco_apple",
+   "path": "candy/candy_choco_apple",
+   "collision": "none",
+   "candy_tier": 1,
+   "glow": "#9dff3a"
+  },
+  {
+   "id": "candy_truffle_box",
+   "path": "candy/candy_truffle_box",
+   "collision": "none",
+   "candy_tier": 1,
+   "glow": "#ff2f74"
+  },
+  {
+   "id": "candy_choco_frog",
+   "path": "candy/candy_choco_frog",
+   "collision": "none",
+   "candy_tier": 1,
+   "glow": "#ff9a3a"
+  },
+  {
+   "id": "candy_choco_bat",
+   "path": "candy/candy_choco_bat",
+   "collision": "none",
+   "candy_tier": 1,
+   "glow": "#ff9a3a"
+  },
+  {
+   "id": "candy_bar_trio",
+   "path": "candy/candy_bar_trio",
+   "collision": "none",
+   "candy_tier": 1,
+   "glow": "#ff3fa4"
+  },
+  {
+   "id": "candy_lolly_rainbow",
+   "path": "candy/candy_lolly_rainbow",
+   "collision": "none",
+   "candy_tier": 2,
+   "glow": "#ff5ad0"
+  },
+  {
+   "id": "candy_lolly_spooky",
+   "path": "candy/candy_lolly_spooky",
+   "collision": "none",
+   "candy_tier": 2,
+   "glow": "#b45cff"
+  },
+  {
+   "id": "candy_lolly_coil",
+   "path": "candy/candy_lolly_coil",
+   "collision": "none",
+   "candy_tier": 2,
+   "glow": "#2ffff0"
+  },
+  {
+   "id": "candy_cane_giant",
+   "path": "candy/candy_cane_giant",
+   "collision": "none",
+   "candy_tier": 2,
+   "glow": "#ff3b4e"
+  },
+  {
+   "id": "candy_lolly_jack",
+   "path": "candy/candy_lolly_jack",
+   "collision": "none",
+   "candy_tier": 2,
+   "glow": "#ff8a1f"
+  },
+  {
+   "id": "candy_wand",
+   "path": "candy/candy_wand",
+   "collision": "none",
+   "candy_tier": 2,
+   "glow": "#ffe23a"
+  },
+  {
+   "id": "candy_lolly_ghost",
+   "path": "candy/candy_lolly_ghost",
+   "collision": "none",
+   "candy_tier": 2,
+   "glow": "#d8d0ff"
+  },
+  {
+   "id": "candy_golden_apple",
+   "path": "candy/candy_golden_apple",
+   "collision": "none",
+   "candy_tier": 3,
+   "glow": "#ffd23a"
+  },
+  {
+   "id": "candy_golden_pumpkin",
+   "path": "candy/candy_golden_pumpkin",
+   "collision": "none",
+   "candy_tier": 3,
+   "glow": "#ffc83a"
+  },
+  {
+   "id": "candy_golden_crown",
+   "path": "candy/candy_golden_crown",
+   "collision": "none",
+   "candy_tier": 3,
+   "glow": "#ffe04a"
+  },
+  {
+   "id": "candy_golden_twist",
+   "path": "candy/candy_golden_twist",
+   "collision": "none",
+   "candy_tier": 3,
+   "glow": "#ffd040"
+  },
+  {
+   "id": "fire_wand",
+   "path": "props/fire_wand",
    "collision": "none"
   }
  ]

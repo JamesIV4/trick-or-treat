@@ -6,6 +6,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"tot_build":"1792922317.330"
+			},
 			"name":"Scene",
 			"nodes":[
 				1
@@ -50,92 +53,92 @@
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":3183,
+			"count":11234,
 			"max":[
-				2.4979772567749023,
-				5.656932830810547,
-				2.2678937911987305
+				2.482165813446045,
+				5.710049152374268,
+				2.1497395038604736
 			],
 			"min":[
-				-2.4056217670440674,
+				-2.3692619800567627,
 				0,
-				-2.197194814682007
+				-2.1608080863952637
 			],
 			"type":"VEC3"
 		},
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":3183,
+			"count":11234,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":3183,
+			"count":11234,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5126,
-			"count":3183,
+			"count":11234,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":4,
 			"componentType":5123,
-			"count":3183,
+			"count":11234,
 			"normalized":true,
 			"type":"VEC4"
 		},
 		{
 			"bufferView":5,
 			"componentType":5123,
-			"count":11121,
+			"count":28599,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":38196,
+			"byteLength":134808,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":38196,
-			"byteOffset":38196,
+			"byteLength":134808,
+			"byteOffset":134808,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":25464,
-			"byteOffset":76392,
+			"byteLength":89872,
+			"byteOffset":269616,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":25464,
-			"byteOffset":101856,
+			"byteLength":89872,
+			"byteOffset":359488,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":25464,
-			"byteOffset":127320,
+			"byteLength":89872,
+			"byteOffset":449360,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":22242,
-			"byteOffset":152784,
+			"byteLength":57198,
+			"byteOffset":539232,
 			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":175028,
+			"byteLength":596432,
 			"uri":"tree_maple_red.bin"
 		}
 	]

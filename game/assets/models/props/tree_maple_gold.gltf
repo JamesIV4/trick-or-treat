@@ -6,6 +6,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"tot_build":"1792922319.130"
+			},
 			"name":"Scene",
 			"nodes":[
 				1
@@ -50,92 +53,92 @@
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":3251,
+			"count":11387,
 			"max":[
-				2.3956503868103027,
-				6.296875953674316,
-				2.0203981399536133
+				2.424755573272705,
+				6.080067157745361,
+				1.9220521450042725
 			],
 			"min":[
-				-2.0558815002441406,
+				-2.057188034057617,
 				0,
-				-2.1245312690734863
+				-2.1785080432891846
 			],
 			"type":"VEC3"
 		},
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":3251,
+			"count":11387,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":3251,
+			"count":11387,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5126,
-			"count":3251,
+			"count":11387,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":4,
 			"componentType":5123,
-			"count":3251,
+			"count":11387,
 			"normalized":true,
 			"type":"VEC4"
 		},
 		{
 			"bufferView":5,
 			"componentType":5123,
-			"count":11460,
+			"count":29097,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":39012,
+			"byteLength":136644,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":39012,
-			"byteOffset":39012,
+			"byteLength":136644,
+			"byteOffset":136644,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":26008,
-			"byteOffset":78024,
+			"byteLength":91096,
+			"byteOffset":273288,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":26008,
-			"byteOffset":104032,
+			"byteLength":91096,
+			"byteOffset":364384,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":26008,
-			"byteOffset":130040,
+			"byteLength":91096,
+			"byteOffset":455480,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":22920,
-			"byteOffset":156048,
+			"byteLength":58194,
+			"byteOffset":546576,
 			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":178968,
+			"byteLength":604772,
 			"uri":"tree_maple_gold.bin"
 		}
 	]

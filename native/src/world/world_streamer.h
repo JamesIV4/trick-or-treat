@@ -17,6 +17,7 @@
 
 namespace tot {
 
+class MeshBuilder;
 class NeighborhoodGenerator;
 
 // Progress in one settlement, kept while it is unloaded.
@@ -60,6 +61,10 @@ public:
 	// The loaded settlement whose footprint (grown by `margin`) contains p.
 	Area *area_at(const godot::Vector3 &p, float margin = 0.0f);
 	AreaState &state(int i, int j);
+	// Saved games: every settlement's progress, keyed by area key (as a decimal string). Import after
+	// setup() and before the first update() so the areas load with it.
+	godot::Dictionary export_states() const;
+	void import_states(const godot::Dictionary &d);
 	static uint64_t area_key(int i, int j) { return (uint64_t(uint32_t(i)) << 32) | uint64_t(uint32_t(j)); }
 	godot::Vector3 moon_direction() const { return moon_dir_; }
 	int chunk_count() const { return int(chunks_.size()); }
@@ -76,6 +81,7 @@ private:
 	};
 	void build_chunk(int cx, int cz);
 	void build_horizon(const godot::Vector3 &center);
+	void build_signpost(MeshBuilder &m, godot::Node3D *root, const RegionPlan &r);
 	void load_area(const RegionPlan &r);
 	void unload_area(uint64_t key);
 	static uint64_t ckey(int x, int z) { return (uint64_t(uint32_t(x)) << 32) | uint64_t(uint32_t(z)); }
@@ -86,6 +92,7 @@ private:
 	ForestKit kit_;
 	godot::Ref<godot::Mesh> maples_[3];
 	godot::Ref<godot::Mesh> grass_mesh_;
+	godot::Ref<godot::Mesh> leaf_patch_; // fallen leaves under trees and along the road edges
 	std::unordered_map<uint64_t, Chunk> chunks_;
 	std::unordered_map<uint64_t, Area> areas_;
 	std::unordered_map<uint64_t, AreaState> states_;

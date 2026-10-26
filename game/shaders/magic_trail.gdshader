@@ -13,6 +13,7 @@ uniform float glow = 1.4;
 uniform vec3 deep_purple : source_color = vec3(0.36, 0.14, 0.72);
 uniform vec3 lilac : source_color = vec3(0.78, 0.55, 1.0);
 instance uniform float fade = 1.0;
+uniform sampler2D depth_tex : hint_depth_texture, filter_linear;
 
 varying float side;
 varying float u;
@@ -20,8 +21,12 @@ varying float sheet;
 varying float frac;
 varying float near_fade;
 
+// Sine-free hash (Hoskins): stays smooth for the large inputs a long path and a long session give
+// (sin-based hashes lose precision there and show up as blocky cells).
 float hash2(vec2 p) {
-	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+	vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+	p3 += dot(p3, p3.yzx + 33.33);
+	return fract((p3.x + p3.y) * p3.z);
 }
 
 float vnoise(vec2 p) {
@@ -64,14 +69,21 @@ void vertex() {
 
 void fragment() {
 	float x = side;
+	float time = mod(TIME, 600.0);
 	// Big slow billows plus finer curls, both flowing toward the destination.
-	float billow = fbm(vec2(u * 0.4 - TIME * 0.32, x * 1.4 + sheet * 4.3 + TIME * 0.04));
-	float curl = fbm(vec2(u * 0.9 - TIME * 0.6, x * 2.2 - TIME * 0.12 + sheet * 1.9));
-	float across = exp(-x * x * 2.8);
+	float billow = fbm(vec2(u * 0.4 - time * 0.32, x * 1.4 + sheet * 4.3 + time * 0.04));
+	float curl = fbm(vec2(u * 0.9 - time * 0.6, x * 2.2 - time * 0.12 + sheet * 1.9));
+	// Falls all the way to zero at the sheet's edges (no hard border).
+	float edge = 1.0 - x * x;
+	float across = exp(-x * x * 2.8) * edge * edge;
 	float dens = smoothstep(0.28, 0.98, billow * 0.75 + curl * 0.4) * across;
 	dens *= dens * (3.0 - 2.0 * dens); // extra-soft falloff into the night
 	float ends = smoothstep(0.0, 0.08, frac) * smoothstep(1.0, 0.88, frac);
-	float a = dens * opacity * (1.0 - sheet * 0.18) * ends * fade * near_fade;
+	// Soft intersection: fade out where a sheet dips into the ground or a wall, instead of a hard line.
+	float scene_depth = texture(depth_tex, SCREEN_UV).r;
+	vec4 sv = INV_PROJECTION_MATRIX * vec4(SCREEN_UV * 2.0 - 1.0, scene_depth, 1.0);
+	float soft = smoothstep(0.0, 0.7, (-sv.z / sv.w) - (-VERTEX.z));
+	float a = dens * opacity * (1.0 - sheet * 0.18) * ends * fade * near_fade * soft;
 	ALBEDO = mix(deep_purple, lilac, clamp(curl * 1.2 * across, 0.0, 1.0)) * glow * (0.8 + 0.6 * dens);
 	ALPHA = clamp(a, 0.0, 1.0);
 }

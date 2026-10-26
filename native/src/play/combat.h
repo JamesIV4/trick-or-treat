@@ -67,8 +67,11 @@ private:
 		godot::MeshInstance3D *node = nullptr;
 		godot::OmniLight3D *light = nullptr;
 		godot::CPUParticles3D *trail = nullptr;
-		godot::Vector3 pos, vel;
-		float life = 0.0f, damage = 1.0f;
+		godot::MeshInstance3D *ribbon = nullptr; // the flame trail
+		godot::Ref<godot::ArrayMesh> ribbon_mesh;
+		std::vector<godot::Vector3> hist; // recent positions, newest first
+		godot::Vector3 pos, vel, origin;
+		float life = 0.0f, damage = 1.0f, tail_t = 0.0f; // tail_t: the trail still burning out after impact
 		bool active = false;
 	};
 	struct Ring {
@@ -85,6 +88,8 @@ private:
 		bool active = false;
 	};
 	Shot &free_shot();
+	void update_ribbon(Shot &s);
+	godot::Ref<godot::Material> ribbon_mat_;
 	void explode(Shot &s, bool hit);
 	bool ray_blocked(const godot::Vector3 &a, const godot::Vector3 &b, godot::Vector3 &hit);
 

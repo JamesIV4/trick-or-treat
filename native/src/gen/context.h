@@ -35,10 +35,14 @@ struct DoorSpec {
 	int trim_cell = 0;
 };
 
+enum StringStyle { STRING_BULBS, STRING_JACKS, STRING_BUNTING };
+
 struct StringLight {
 	int lot = -1;
 	Vector3 a, b; // world anchor points
 	float sag = 0.6f;
+	StringStyle style = STRING_BULBS;
+	Vector3 out; // horizontal direction jacks and pennants face (zero: either way)
 };
 
 struct SignSpec {
@@ -51,6 +55,14 @@ struct SignSpec {
 struct MagicPath {
 	int lot = -1; // -1: street spine (always on); otherwise the branch to that house's door
 	std::vector<Vector3> points; // world, at glow height
+};
+
+// A springy piece of a building (a shop awning) built as its own node so it can dip when bounced on.
+struct SpringSpec {
+	MeshBuilder mesh; // relative to xf
+	Transform3D xf; // world; the hinge it dips about is local X through the origin
+	Vector3 anchor; // world centre of the bouncy surface
+	float reach = 2.0f; // landings within this distance of the anchor set it off
 };
 
 struct ScatterItem {
@@ -91,6 +103,7 @@ struct GenContext {
 	std::vector<ScatterItem> scatter;
 	std::vector<MagicPath> magic;
 	std::vector<SignSpec> signs;
+	std::vector<SpringSpec> springs;
 	std::vector<std::vector<Circle>> occupied; // per lot, lot-local xz circles
 	std::vector<MeshBuilder> lot_mesh; // houses, fences, paths per lot
 	MeshBuilder street_mesh;

@@ -5,7 +5,7 @@
    "id": "dragon_kid",
    "path": "characters/dragon_kid",
    "lane": "characters_candy",
-   "tris": 9000,
+   "tris": 10000,
    "collision": "none",
    "parts": [
     "body",
@@ -24,6 +24,118 @@
     "bucket_light"
    ],
    "brief": "1.1 m child in a plush teal dragon onesie: hood with two tiny cream horns, round face showing (skin, big ink eyes with white highlights, pink cheeks), cream belly, stubby felt wings on the back, a fat bouncy tail, mitten hands, round boots. Holds an orange jack-o'-lantern bucket (glowing face cut, rope handle) in the right hand. Every part is its own object parented to an empty root 'dragon_kid' at the feet; each part's origin sits at its joint (hips for legs, shoulders for arms, neck for head, wing roots, tail base) so the game can animate it procedurally. bucket is a child of arm_r; bucket_candy is a child of bucket (a heap of candy inside it that the game scales from 0 to 1 as it fills)."
+  },
+  {
+   "id": "kid_ghost",
+   "path": "characters/kid_ghost",
+   "lane": "characters_candy",
+   "tris": 10000,
+   "collision": "none",
+   "parts": [
+    "body",
+    "head",
+    "wing_l",
+    "wing_r",
+    "leg_l",
+    "leg_r",
+    "arm_l",
+    "arm_r",
+    "bucket",
+    "bucket_candy"
+   ],
+   "sockets": [
+    "bucket_light"
+   ],
+   "brief": "Unlockable costume: the dragon kid's same 1.1 m kid as a cute bedsheet ghost. A soft white sheet hood with a tall round dome and two big black oval eye holes; the kid's face peeks out of the ghost's round 'boo' mouth (sheet rim with lavender stitches, the kid makes an 'oh' mouth). The sheet falls to a scalloped hem with loose folds, lifted at the sides by the arms; white bell sleeves, lavender leggings and purple sneakers peek out below. wing_l / wing_r are loose sheet flaps hanging behind the arms (the game flaps and spreads them like ghost arms). No tail (a bedsheet has none; the game does a wand spin). Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
+  },
+  {
+   "id": "kid_cat",
+   "path": "characters/kid_cat",
+   "lane": "characters_candy",
+   "tris": 10000,
+   "collision": "none",
+   "parts": [
+    "body",
+    "head",
+    "tail",
+    "leg_l",
+    "leg_r",
+    "arm_l",
+    "arm_r",
+    "bucket",
+    "bucket_candy"
+   ],
+   "sockets": [
+    "bucket_light"
+   ],
+   "brief": "Unlockable costume: the same kid in a plush black-cat onesie (blue-black felt so it still reads at night). Hood with tall pointed ears with pink insides and big yellow-green cat eyes with slit pupils on the brow; cat face paint on the kid (pink nose, ink whiskers). Grey belly patch with pink stitches, an orange felt collar with a gold bell, grey sleeve cuffs, round paw boots with three toe beans. tail is a long curling cat tail (swoops low, rises into a hook) with an orange bow near the base; the game sways it. Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
+  },
+  {
+   "id": "kid_witch",
+   "path": "characters/kid_witch",
+   "lane": "characters_candy",
+   "tris": 10000,
+   "collision": "none",
+   "parts": [
+    "body",
+    "head",
+    "wing_l",
+    "wing_r",
+    "leg_l",
+    "leg_r",
+    "arm_l",
+    "arm_r",
+    "bucket",
+    "bucket_candy"
+   ],
+   "sockets": [
+    "bucket_light"
+   ],
+   "brief": "Unlockable costume: the same kid as a little witch. The kid's own brown hair with pigtails tied in green, under a big floppy pointed hat (dark plum felt, wavy brim, a crooked bent tip, green band with a gold buckle, a small yellow moon patch). Purple felt dress with a gently flared skirt and a pointy green-trimmed hem, dark belt with a gold buckle, green pointed collar, purple bell sleeves with green cuffs, orange-and-black striped stockings and pointy curled boots with gold buckles. wing_l / wing_r are the two halves of a dark plum cape with a bright orange lining, hanging from the shoulders down the back (the game spreads them on double jumps and glides). Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
+  },
+  {
+   "id": "kid_skeleton",
+   "path": "characters/kid_skeleton",
+   "lane": "characters_candy",
+   "tris": 10000,
+   "collision": "none",
+   "parts": [
+    "body",
+    "head",
+    "leg_l",
+    "leg_r",
+    "arm_l",
+    "arm_r",
+    "bucket",
+    "bucket_candy"
+   ],
+   "sockets": [
+    "bucket_light"
+   ],
+   "brief": "Unlockable costume: the same kid in a black skeleton onesie with a puffy bone-white print: sternum and four pairs of ribs on the chest, pelvis on the hips, spine and three pairs of ribs on the back (the gameplay camera mostly sees the back), bones down the outside of each sleeve, a thigh bone on the front and back of each leg and toe bones on the boots. Smooth bone-white skull hood whose face opening sits lower than the dragon's: it is the skull's dark mouth rimmed with little white teeth, framing the kid's eyes, cheeks and smile, so the skull's big black eye sockets and heart nose sit on a forward-facing brow above it (sockets on the crown read as a panda). No wings or tail. Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
+  },
+  {
+   "id": "kid_pumpkin",
+   "path": "characters/kid_pumpkin",
+   "lane": "characters_candy",
+   "tris": 10000,
+   "collision": "none",
+   "parts": [
+    "body",
+    "head",
+    "wing_l",
+    "wing_r",
+    "leg_l",
+    "leg_r",
+    "arm_l",
+    "arm_r",
+    "bucket",
+    "bucket_candy"
+   ],
+   "sockets": [
+    "bucket_light"
+   ],
+   "brief": "Unlockable costume: the same kid in a round ribbed pumpkin suit (pumpkin material, dimpled top) with a stitched black felt jack-o'-lantern face on the tummy and a leafy green collar. Green sleeves and tights, brown boots. On the kid's own brown hair, a green felt beanie with a curly brown stem, two pumpkin leaves and a curly tendril on top. wing_l / wing_r are two big pumpkin leaves on the back (the game flaps and spreads them on double jumps and glides). Rig contract identical to dragon_kid (the game animates every costume with the same code): every part is its own object with its origin at its joint (hips for legs, shoulders for arms, neck for head, pelvis for body) at exactly dragon_kid's joint positions, parented with identity rotation/scale to an empty root at the feet; front = glTF +Z. bucket (the same glowing jack-o'-lantern candy bucket as dragon_kid, rope handle, origin at the grip) is a child of arm_r; bucket_candy (candy heap, origin on the bucket floor, scaled 0..1 in Y by the game) and socket_bucket_light are children of bucket. The kid's own face (big ink eyes, pink cheeks, smile) and bare skin hands show in every costume."
   },
   {
    "id": "candy_wrapped_pink",
@@ -80,6 +192,22 @@
    "tris": 500,
    "collision": "none",
    "brief": "Full-size prize bar 0.6 m long in foil_gold wrapper with glow_candy_gold band so it glows. Origin at centre."
+  },
+  {
+   "id": "candy_wrapped_orange",
+   "path": "candy/candy_wrapped_orange",
+   "lane": "characters_candy",
+   "tris": 400,
+   "collision": "none",
+   "brief": "Same shape as candy_wrapped_pink (v3 round ball, bow-tie fans) in candy_orange with candy_orange_light fans. The concept's most common wrapped candy. Origin at its centre (it floats)."
+  },
+  {
+   "id": "candy_corn",
+   "path": "candy/candy_corn",
+   "lane": "characters_candy",
+   "tris": 300,
+   "collision": "none",
+   "brief": "Chunky classic candy corn about 0.3 m tall standing tip up: candy_corn_yellow base, candy_orange middle, candy_corn_white tip, lighter highlight column. Origin at its centre (it floats)."
   },
   {
    "id": "pumpkin_round",
@@ -283,48 +411,48 @@
    "id": "tree_maple_red",
    "path": "props/tree_maple_red",
    "lane": "yard_street",
-   "tris": 4000,
+   "tris": 10000,
    "collision": "trunk",
    "radius": 0.25,
    "height": 2.5,
    "sockets": [
     "branch"
    ],
-   "brief": "Storybook maple 5 m tall: chunky slightly curved bark trunk, canopy of 4-6 faceted icosphere blobs in maple_red with some maple_orange. socket_branch on a low strong branch (about 2.6 m up, offset 1 m) for swings and lantern strings."
+   "brief": "Autumn maple about 5.6 m tall: dark curvy bark trunk with root flare forking into limbs hidden in a full, rounded crown (batch02 v2 crown form: ~20 lobes bulging out and down to ~3 m) skinned with ~725 small serrated maple leaf cards over a dark inner shell of larger cards and a shadow filler core; maroon / crimson / red with scarlet tips. socket_branch on a low strong branch (about 2.6 m up, offset 1 m) for swings and lantern strings."
   },
   {
    "id": "tree_maple_orange",
    "path": "props/tree_maple_orange",
    "lane": "yard_street",
-   "tris": 4000,
+   "tris": 10000,
    "collision": "trunk",
    "radius": 0.25,
    "height": 2.5,
    "sockets": [
     "branch"
    ],
-   "brief": "Variant: 4.5 m, rounder canopy in maple_orange and golden_leaf."
+   "brief": "Variant: about 5.2 m, wide full round crown of maple leaf cards in umber / rust / burnt amber / orange with tangerine tips."
   },
   {
    "id": "tree_maple_gold",
    "path": "props/tree_maple_gold",
    "lane": "yard_street",
-   "tris": 4000,
+   "tris": 10000,
    "collision": "trunk",
    "radius": 0.22,
    "height": 2.5,
    "sockets": [
     "branch"
    ],
-   "brief": "Variant: 5.5 m, taller oval canopy in golden_leaf with rust_leaf accents."
+   "brief": "Variant: about 6 m, taller oval full crown of maple leaf cards in ochre / burnt amber / amber with golden tips and a few orange and rust accents."
   },
   {
    "id": "bush_round",
    "path": "props/bush_round",
    "lane": "yard_street",
-   "tris": 900,
+   "tris": 2000,
    "collision": "cylinder",
-   "brief": "Round hedge bush 1 m wide in hedge with hedge_dark underside."
+   "brief": "Round leafy shrub about 1.1 m wide, 0.85 m tall: dark core lumps covered by ~380 small pointed leaf cards (14 cm) in hedge_dark / hedge / vine with moss tips on top, a sprinkle of tiny cream flowers."
   },
   {
    "id": "mailbox",
@@ -368,7 +496,7 @@
    "sockets": [
     "light"
    ],
-   "brief": "Wall-mounted porch lantern 0.4 m tall with glow_porch glass, origin at the wall mount, it sticks out toward -Y."
+   "brief": "Wall-mounted porch lantern 0.5 m tall: wall plate, scroll arm, four-sided hanging lantern with two-tone glowing panes (glow_lantern rim, glow_lamp core) and wide flared roof. Origin at the wall mount, it sticks out toward -Y; socket_light at the glass centre."
   },
   {
    "id": "string_bulb",
@@ -442,10 +570,26 @@
    "id": "parked_car",
    "path": "props/parked_car",
    "lane": "yard_street",
-   "tris": 4000,
+   "tris": 4500,
    "collision": "box",
    "walkable": true,
-   "brief": "Rounded toy-like hatchback 3.6 x 1.7 x 1.5 m in a soft colour (house_sky), chunky wheels, front faces -Y. Roof is a platform. Headlights off (silver)."
+   "brief": "Decorative parked car: rounded retro bubble hatchback ~3.6 x 1.7 x 1.5 m, teal body (house_teal) with a cream roof, recessed dark glass with chrome window reveals and highlight streaks, chunky whitewall wheels in crisp arches with dark wells, bug-eye headlights, smiling oval grille, wrap-around chrome bumpers, door seams/handles/mirrors, 'BOO' plates and a jack-o'-lantern antenna topper. Front faces -Y (Godot +Z), origin at the ground centre, flat roof is a platform. Lamps unlit.",
+   "parts": [
+    "hood"
+   ],
+   "hood_aabb": [
+    -0.752,
+    0.749,
+    0.895,
+    0.752,
+    0.919,
+    1.574
+   ],
+   "hood_hinge": [
+    0.0,
+    0.919,
+    0.9
+   ]
   },
   {
    "id": "cloud_a",
@@ -482,6 +626,1433 @@
     "wing_r"
    ],
    "brief": "Cute round bat 0.5 m wingspan, charcoal, with wing_l / wing_r child objects (origin at the shoulder) so the game can flap them."
+  },
+  {
+   "id": "mums_orange",
+   "path": "props/mums_orange",
+   "lane": "decor_ground",
+   "tris": 900,
+   "collision": "none",
+   "brief": "Mounded orange chrysanthemum bush ~0.5 x 0.4 m: dense small star-petalled heads (mum_orange, amber centres) over a leafy hedge mound, pointed leaves round the base. Flower beds along fences, planters, porch steps."
+  },
+  {
+   "id": "mums_purple",
+   "path": "props/mums_purple",
+   "lane": "decor_ground",
+   "tris": 900,
+   "collision": "none",
+   "brief": "Purple mum bush ~0.5 x 0.4 m (wrapper_purple heads, yellow centres), same build as mums_orange."
+  },
+  {
+   "id": "mums_white",
+   "path": "props/mums_white",
+   "lane": "decor_ground",
+   "tris": 900,
+   "collision": "none",
+   "brief": "White mum bush ~0.5 x 0.4 m (ghost_white heads, yellow centres), same build as mums_orange."
+  },
+  {
+   "id": "brick_planter",
+   "path": "props/brick_planter",
+   "lane": "decor_ground",
+   "tris": 3600,
+   "collision": "box",
+   "walkable": true,
+   "collision_top": 0.55,
+   "brief": "Raised brick planter 2.0 x 0.9 x 0.55 m (X long): brick walls, stone cap course, soil, planted with mums and two small pumpkins. Cap/soil top is flat at 0.55 m; plants rise above it (collision_top caps the box collision at the cap)."
+  },
+  {
+   "id": "brick_pillar",
+   "path": "props/brick_pillar",
+   "lane": "decor_ground",
+   "tris": 700,
+   "collision": "box",
+   "walkable": true,
+   "sockets": [
+    "top"
+   ],
+   "brief": "Square brick fence pillar 0.45 x 0.45 x 1.1 m with a stepped stone cap; flat walkable top, socket_top at the cap centre for a cat, lantern or pumpkin."
+  },
+  {
+   "id": "ghost_figure",
+   "path": "props/ghost_figure",
+   "lane": "decor_ground",
+   "tris": 1200,
+   "collision": "cylinder",
+   "brief": "Friendly white sheet-ghost porch decoration ~0.9 m tall on a little wooden stand: soft cloth folds, wavy hem, stubby arms, black oval eyes, small open smile, pink cheeks. Faces -Y."
+  },
+  {
+   "id": "black_cat_sitting",
+   "path": "props/black_cat_sitting",
+   "lane": "decor_ground",
+   "tris": 800,
+   "collision": "none",
+   "brief": "Cute black cat sitting, ~0.35 m tall, big glowing yellow-green eyes (glow_firefly), pink inner ears, tail curled up. Faces -Y. Sits on pillars, porch steps, fences."
+  },
+  {
+   "id": "tree_pine_a",
+   "path": "props/tree_pine_a",
+   "lane": "foliage",
+   "tris": 3000,
+   "collision": "trunk",
+   "radius": 0.3,
+   "height": 3.0,
+   "brief": "Woods conifer about 7.5 m tall: short visible dark trunk, soft drooping layered tiers with jagged needle-clump fringes, deep pine greens with lighter tips."
+  },
+  {
+   "id": "tree_pine_b",
+   "path": "props/tree_pine_b",
+   "lane": "foliage",
+   "tris": 3000,
+   "collision": "trunk",
+   "radius": 0.32,
+   "height": 3.0,
+   "brief": "Variant: taller (about 9.5 m), slimmer conifer with more tiers, slightly leaning tip."
+  },
+  {
+   "id": "leaf_scatter",
+   "path": "props/leaf_scatter",
+   "lane": "foliage",
+   "tris": 400,
+   "collision": "none",
+   "brief": "About 1.25 x 1.25 m patch of 6 big flat maple leaves (22-32 cm) spread loosely on the ground with slight curl, mixed crimson / orange / gold / rust. Scatter at random yaw over streets, sidewalks and lawns."
+  },
+  {
+   "id": "leaf_single",
+   "path": "props/leaf_single",
+   "lane": "foliage",
+   "tris": 40,
+   "collision": "none",
+   "brief": "One 14 cm maple leaf with a slight curl, origin at its centre, for scattering with random rotation."
+  },
+  {
+   "id": "string_jack",
+   "path": "props/string_jack",
+   "lane": "decor",
+   "tris": 150,
+   "collision": "none",
+   "floating": true,
+   "sockets": [
+    "light"
+   ],
+   "brief": "Tiny glowing jack-o'-lantern bulb 0.14 m for porch string lights: ribbed glow_jack_shell globe with a glow_jack_hot carved face toward -Y, green stem and black lamp socket. Origin at the top of the socket (the wire hang point); socket_light at the globe centre. Instanced along sagging wires."
+  },
+  {
+   "id": "bunting_flag_orange",
+   "path": "props/bunting_flag_orange",
+   "lane": "decor",
+   "tris": 60,
+   "collision": "none",
+   "floating": true,
+   "brief": "Felt bunting pennant 0.28 m wide x 0.34 m tall, banner_orange, slight cloth wave, double-sided geometry (no alpha). Origin at the top-centre hang point where the cord runs through the rolled hem; the cord runs along X."
+  },
+  {
+   "id": "bunting_flag_purple",
+   "path": "props/bunting_flag_purple",
+   "lane": "decor",
+   "tris": 60,
+   "collision": "none",
+   "floating": true,
+   "brief": "As bunting_flag_orange in banner_purple."
+  },
+  {
+   "id": "bunting_flag_cream",
+   "path": "props/bunting_flag_cream",
+   "lane": "decor",
+   "tris": 60,
+   "collision": "none",
+   "floating": true,
+   "brief": "As bunting_flag_orange in bunting_cream with a small black bat silhouette on both faces."
+  },
+  {
+   "id": "door_wreath",
+   "path": "props/door_wreath",
+   "lane": "decor",
+   "tris": 900,
+   "collision": "none",
+   "floating": true,
+   "brief": "Autumn door wreath 0.6 m across: dark twig ring covered in orange/gold/rust leaves, red and purple berries and a puffy banner_purple bow at the bottom. Origin at the back centre (touches the door), front faces -Y; centre of the ring is at the origin height."
+  },
+  {
+   "id": "monster_pumpkin",
+   "path": "monsters/monster_pumpkin",
+   "lane": "monsters",
+   "tris": 2500,
+   "collision": "none",
+   "parts": [
+    "body",
+    "part_a",
+    "part_b"
+   ],
+   "brief": "Pumpkin Hopper: plump 0.9 m jack-o'-lantern imp with a carved glowing grin, curly stem and leaf, stubby root feet; part_a/part_b are vine arms with leaf hands (pivots at its sides, swing around X). Empty root 'monster_pumpkin' at the ground under the monster's centre, children 'body' (origin = root), 'part_a', 'part_b' (origin at the joint). Faces glTF +Z. Parts have identity rotation; the game swings them around their origin."
+  },
+  {
+   "id": "monster_bat",
+   "path": "monsters/monster_bat",
+   "lane": "monsters",
+   "tris": 2500,
+   "collision": "none",
+   "parts": [
+    "body",
+    "part_a",
+    "part_b"
+   ],
+   "brief": "Bat: round violet felt body (centre at the origin: it flies, so it floats), big ears, glowing amber eyes, tiny fangs; part_a/part_b are scalloped membrane wings (pivots at the shoulders, flap around Z). Empty root 'monster_bat' at the ground under the monster's centre, children 'body' (origin = root), 'part_a', 'part_b' (origin at the joint). Faces glTF +Z. Parts have identity rotation; the game swings them around their origin.",
+   "floating": true
+  },
+  {
+   "id": "monster_skeleton",
+   "path": "monsters/monster_skeleton",
+   "lane": "monsters",
+   "tris": 2500,
+   "collision": "none",
+   "parts": [
+    "body",
+    "part_a",
+    "part_b"
+   ],
+   "brief": "Rattlebones: 1.2 m chibi skeleton, big round skull with teal-glowing eye sockets, ribcage, pelvis and bony legs; part_a/part_b are arms (shoulder pivots, swing around X), the right one holding a bone to throw. Empty root 'monster_skeleton' at the ground under the monster's centre, children 'body' (origin = root), 'part_a', 'part_b' (origin at the joint). Faces glTF +Z. Parts have identity rotation; the game swings them around their origin."
+  },
+  {
+   "id": "monster_ghost",
+   "path": "monsters/monster_ghost",
+   "lane": "monsters",
+   "tris": 2500,
+   "collision": "none",
+   "parts": [
+    "body",
+    "part_a",
+    "part_b"
+   ],
+   "brief": "Ghost: 1.3 m sheet ghost with a wavy hem, big glossy eyes, pink cheeks, little O mouth; part_a/part_b are nub arms (pivots at the sides, swing around X). Empty root 'monster_ghost' at the ground under the monster's centre, children 'body' (origin = root), 'part_a', 'part_b' (origin at the joint). Faces glTF +Z. Parts have identity rotation; the game swings them around their origin."
+  },
+  {
+   "id": "monster_gremlin",
+   "path": "monsters/monster_gremlin",
+   "lane": "monsters",
+   "tris": 2500,
+   "collision": "none",
+   "parts": [
+    "body",
+    "part_a",
+    "part_b"
+   ],
+   "brief": "Candy-Corn Gremlin: 0.8 m rounded candy-corn body (yellow/orange/white), big eyes, toothy grin, little horns and ears; part_a/part_b are stubby legs with shoes (hip pivots, swing around X). Empty root 'monster_gremlin' at the ground under the monster's centre, children 'body' (origin = root), 'part_a', 'part_b' (origin at the joint). Faces glTF +Z. Parts have identity rotation; the game swings them around their origin."
+  },
+  {
+   "id": "monster_mummy",
+   "path": "monsters/monster_mummy",
+   "lane": "monsters",
+   "tris": 2500,
+   "collision": "none",
+   "parts": [
+    "body",
+    "part_a",
+    "part_b"
+   ],
+   "brief": "Mummy: 1.4 m chunky bandaged mummy, one glowing eye peeking out, loose bandage ends; part_a/part_b are arms stretched forward (shoulder pivots, swing around X). Empty root 'monster_mummy' at the ground under the monster's centre, children 'body' (origin = root), 'part_a', 'part_b' (origin at the joint). Faces glTF +Z. Parts have identity rotation; the game swings them around their origin."
+  },
+  {
+   "id": "monster_slime",
+   "path": "monsters/monster_slime",
+   "lane": "monsters",
+   "tris": 2500,
+   "collision": "none",
+   "parts": [
+    "body"
+   ],
+   "brief": "Goo Slime: 0.7 m glossy green gumdrop blob with drips, a puddle skirt, big eyes and a smile. Body only. Empty root 'monster_slime' at the ground under the monster's centre, children 'body' (origin = root). Faces glTF +Z. Parts have identity rotation; the game swings them around their origin."
+  },
+  {
+   "id": "monster_scarecrow",
+   "path": "monsters/monster_scarecrow",
+   "lane": "monsters",
+   "tris": 2500,
+   "collision": "none",
+   "parts": [
+    "body",
+    "part_a",
+    "part_b"
+   ],
+   "brief": "Scarecrow: 1.6 m sack-headed scarecrow on a post, glowing button eyes, stitched grin, crooked purple witch hat, flannel shirt, straw tufts; part_a/part_b are outstretched arms with straw hands (shoulder pivots, swing around X). Empty root 'monster_scarecrow' at the ground under the monster's centre, children 'body' (origin = root), 'part_a', 'part_b' (origin at the joint). Faces glTF +Z. Parts have identity rotation; the game swings them around their origin."
+  },
+  {
+   "id": "monster_spider",
+   "path": "monsters/monster_spider",
+   "lane": "monsters",
+   "tris": 2500,
+   "collision": "none",
+   "parts": [
+    "body",
+    "part_a",
+    "part_b"
+   ],
+   "brief": "Spider: plump plum-black spider with a glowing jack-o'-lantern marking on its abdomen, big glowing eyes and fangs; part_a/part_b are the left/right four striped legs (pivots at the body sides, swing around Y). Empty root 'monster_spider' at the ground under the monster's centre, children 'body' (origin = root), 'part_a', 'part_b' (origin at the joint). Faces glTF +Z. Parts have identity rotation; the game swings them around their origin."
+  },
+  {
+   "id": "monster_toadstool",
+   "path": "monsters/monster_toadstool",
+   "lane": "monsters",
+   "tris": 2500,
+   "collision": "none",
+   "parts": [
+    "body",
+    "part_a",
+    "part_b"
+   ],
+   "brief": "Toadstool Imp: 1.0 m red-capped toadstool with white spots, cream stem body with a cute face; part_a/part_b are stubby arms (pivots at the sides, swing around X). Empty root 'monster_toadstool' at the ground under the monster's centre, children 'body' (origin = root), 'part_a', 'part_b' (origin at the joint). Faces glTF +Z. Parts have identity rotation; the game swings them around their origin."
+  },
+  {
+   "id": "nest_pumpkin",
+   "path": "monsters/nest_pumpkin",
+   "lane": "monsters",
+   "tris": 3000,
+   "collision": "none",
+   "brief": "Cracked Pumpkin: giant dark pumpkin split by a glowing crack, vines and baby pumpkins sprawling out. ~2.4 m wide, 1.7 m tall. Monster spawner (destructible target). Origin at the ground centre."
+  },
+  {
+   "id": "nest_bat",
+   "path": "monsters/nest_bat",
+   "lane": "monsters",
+   "tris": 3000,
+   "collision": "none",
+   "brief": "Bat Belfry: crooked little bell tower on a post, plum shingled roof, purple-glowing windows, sleeping bats under the eaves. ~3.3 m tall. Monster spawner (destructible target). Origin at the ground centre."
+  },
+  {
+   "id": "nest_skeleton",
+   "path": "monsters/nest_skeleton",
+   "lane": "monsters",
+   "tris": 3000,
+   "collision": "none",
+   "brief": "Crooked Graves: fresh dirt mound with three crooked mossy headstones carrying teal-glowing runes, a bony hand and bones. ~2 m wide, 1.4 m tall. Monster spawner (destructible target). Origin at the ground centre."
+  },
+  {
+   "id": "nest_ghost",
+   "path": "monsters/nest_ghost",
+   "lane": "monsters",
+   "tris": 3000,
+   "collision": "none",
+   "brief": "Haunted Lantern: tall curly iron lantern post burning ghost-purple with a little ghost face in the flame. ~3.3 m tall. Monster spawner (destructible target). Origin at the ground centre."
+  },
+  {
+   "id": "nest_gremlin",
+   "path": "monsters/nest_gremlin",
+   "lane": "monsters",
+   "tris": 3000,
+   "collision": "none",
+   "brief": "Candy-Corn Hive: giant squat glossy candy corn in the gremlin's bands (yellow base, orange middle, white tip with its curl), cracked open at the front (+Z) into a dark burrow where glowing eyes and fangs peek out, sitting in heaps of normal candy-corn kernels. ~2 m wide, 1.6 m tall; main body 0.8 m ground radius. Monster spawner (destructible target). Origin at the ground centre."
+  },
+  {
+   "id": "nest_mummy",
+   "path": "monsters/nest_mummy",
+   "lane": "monsters",
+   "tris": 3000,
+   "collision": "none",
+   "brief": "Sarcophagus: upright painted sarcophagus with its gold lid ajar, warm glow inside, bandages trailing out. ~2.2 m tall. Monster spawner (destructible target). Origin at the ground centre."
+  },
+  {
+   "id": "nest_slime",
+   "path": "monsters/nest_slime",
+   "lane": "monsters",
+   "tris": 3000,
+   "collision": "none",
+   "brief": "Bubbling Cauldron: fat black cauldron on embers, glowing green goo bubbling over and dripping down. ~1.9 m wide, 1.2 m tall. Monster spawner (destructible target). Origin at the ground centre."
+  },
+  {
+   "id": "nest_scarecrow",
+   "path": "monsters/nest_scarecrow",
+   "lane": "monsters",
+   "tris": 3000,
+   "collision": "none",
+   "brief": "Crow Post: tall crooked crossbar post with three plump glowing-eyed crows, a tattered flag and a hanging jack-o'-lantern. ~3.4 m tall. Monster spawner (destructible target). Origin at the ground centre."
+  },
+  {
+   "id": "nest_spider",
+   "path": "monsters/nest_spider",
+   "lane": "monsters",
+   "tris": 3000,
+   "collision": "none",
+   "brief": "Web Nest: dome of web strands over a dark hole with glowing purple egg sacs and a dangling spiderling. ~2.2 m wide, 1.5 m tall. Monster spawner (destructible target). Origin at the ground centre."
+  },
+  {
+   "id": "nest_toadstool",
+   "path": "monsters/nest_toadstool",
+   "lane": "monsters",
+   "tris": 3000,
+   "collision": "none",
+   "brief": "Fairy Ring: a toadstool cottage with a glowing door and window inside a ring of purple glowing toadstools. ~2.6 m wide, 1.2 m tall. Monster spawner (destructible target). Origin at the ground centre."
+  },
+  {
+   "id": "travel_gate_base",
+   "path": "props/travel_gate_base",
+   "lane": "landmarks",
+   "tris": 7000,
+   "collision": "cylinder",
+   "radius": 1.4,
+   "height": 0.22,
+   "walkable": true,
+   "brief": "Travel gate pad + post (teleport point). Round runed flagstone pad 2.9 m across, 0.22 m tall, walkable top, mossy fieldstone skirt, carved (unlit) rune grooves; stone pillar with a wrought-iron crook post (~3.4 m) whose hook sits over (-0.15, 0, 0) at about 3.1 m. No glow cells: every glowing part lives in travel_gate_lantern. Origin at the pad centre on the ground."
+  },
+  {
+   "id": "travel_gate_lantern",
+   "path": "props/travel_gate_lantern",
+   "lane": "landmarks",
+   "tris": 2500,
+   "collision": "none",
+   "floating": true,
+   "brief": "Glowing half of the travel gate, in the same space as travel_gate_base (drop both at the same transform): big hexagonal hanging lantern centred at Godot (-0.15, 2.55, 0) with glow_magic_teal panes, plus the teal rune inlays on the pad top (channel ring, 8 runes, centre star) and on the footing stones. The game dims it while the area is locked (glow_boost)."
+  },
+  {
+   "id": "shop_cart",
+   "path": "props/shop_cart",
+   "lane": "landmarks",
+   "tris": 9500,
+   "collision": "box",
+   "brief": "Candy shop cart, front faces -Y (Godot +Z): painted wooden cart ~2.3 m wide with wagon wheels, candy-cane posts, pink/white striped awning with scalloped valance (top ~2.6 m), a blank sign board for the game's Label3D, candy jars, lollipops, pumpkins, a hanging lantern, and a flat round doormat centred at Godot (0, 0, 1.25). Origin at the ground centre under the cart body."
+  },
+  {
+   "id": "trampoline_large",
+   "path": "props/trampoline_large",
+   "lane": "play_props",
+   "tris": 6000,
+   "collision": "box",
+   "walkable": true,
+   "collision_top": 0.85,
+   "bounce": 17.0,
+   "brief": "Round backyard trampoline ~3.75 m across (pad outer radius 1.87 m), origin at ground centre. Dark plum woven mat, top exactly 0.85 m, printed with a big jack-o'-lantern inside an orange target ring and faint bats; bone-stitched purple border; ring of 40 steel springs; puffy orange safety pad (alternating pumpkin panels, purple skirt) rising ~6 cm above the mat; 6 curved steel W-legs; small purple-step ladder on the front-right (-62 deg, reaches r 2.2 m). No enclosure net. bounce = launch speed for gameplay."
+  },
+  {
+   "id": "trampoline_mini",
+   "path": "props/trampoline_mini",
+   "lane": "play_props",
+   "tris": 1500,
+   "collision": "box",
+   "walkable": true,
+   "collision_top": 0.28,
+   "bounce": 14.0,
+   "brief": "Mini fitness rebounder ~1.18 m across, origin at ground centre. Black woven mat, top exactly 0.28 m, with a bold lemon star inside a lemon ring; painted steel spring band; bright violet padded rim (darker purple skirt) rising ~3 cm above the mat; six stubby splayed steel legs with rubber feet. bounce = launch speed for gameplay."
+  },
+  {
+   "id": "parked_wagon",
+   "path": "props/parked_wagon",
+   "lane": "yard_street",
+   "tris": 4700,
+   "collision": "box",
+   "walkable": true,
+   "brief": "Decorative parked car: retro station wagon ~4.2 x 1.8 x 1.6 m, cherry-red body (metal_red) with faux-wood side panels in cream frames, cream roof with a low roof rack carrying a suitcase and two pumpkins (one a glowing jack; cargo tops out ~0.22 m above the roof), recessed dark glass with chrome reveals, whitewall wheels, round lamps, chrome bumpers. Front faces -Y (Godot +Z), origin at the ground centre, roof is a platform. Lamps unlit.",
+   "parts": [
+    "hood"
+   ],
+   "hood_aabb": [
+    -0.785,
+    0.814,
+    1.097,
+    0.785,
+    0.956,
+    1.861
+   ],
+   "hood_hinge": [
+    0.0,
+    0.956,
+    1.1
+   ]
+  },
+  {
+   "id": "parked_pickup",
+   "path": "props/parked_pickup",
+   "lane": "yard_street",
+   "tris": 4800,
+   "collision": "box",
+   "walkable": true,
+   "brief": "Decorative parked car: small vintage pickup ~4.0 x 1.8 x 1.6 m, sunny yellow body (quilt_yellow) with a white cab roof, long rounded bonnet with a chrome grille, open plank-floored bed holding a hay bale, pumpkins and a carved jack-o'-lantern (glow face) sitting on the bale. Front faces -Y (Godot +Z), origin at the ground centre, cab roof is the highest platform. Lamps unlit.",
+   "parts": [
+    "hood"
+   ],
+   "hood_aabb": [
+    -0.796,
+    0.868,
+    0.748,
+    0.796,
+    1.013,
+    1.794
+   ],
+   "hood_hinge": [
+    0.0,
+    1.013,
+    0.75
+   ]
+  },
+  {
+   "id": "thorn_knot_a",
+   "path": "monsters/thorn_knot_a",
+   "lane": "monsters",
+   "tris": 3500,
+   "collision": "none",
+   "brief": "Thorn vine bramble knot (infestation the player burns with fireballs; replaces C++ build_vine): thick dark-green bark vine stems corkscrewing up out of the ground and arching over into curled tips, roots knotting into the ground, studded with many bone-white spines (cream tips) pointing outward, a few small leaves and two small glowing purple buds. ~2.2 m across, ~2.5 m tall. Single merged mesh, origin at the ground centre. Silhouette: corkscrew spire - four stems twisted into one rope trunk that splits into crozier hooks at staggered heights."
+  },
+  {
+   "id": "thorn_knot_b",
+   "path": "monsters/thorn_knot_b",
+   "lane": "monsters",
+   "tris": 3500,
+   "collision": "none",
+   "brief": "Thorn vine bramble knot (infestation the player burns with fireballs; replaces C++ build_vine): thick dark-green bark vine stems corkscrewing up out of the ground and arching over into curled tips, roots knotting into the ground, studded with many bone-white spines (cream tips) pointing outward, a few small leaves and two small glowing purple buds. ~2.2 m across, ~2.5 m tall. Single merged mesh, origin at the ground centre. Silhouette: bramble dome - three arches diving back into the ground, crossing over a central curled spire."
+  },
+  {
+   "id": "thorn_knot_c",
+   "path": "monsters/thorn_knot_c",
+   "lane": "monsters",
+   "tris": 3500,
+   "collision": "none",
+   "brief": "Thorn vine bramble knot (infestation the player burns with fireballs; replaces C++ build_vine): thick dark-green bark vine stems corkscrewing up out of the ground and arching over into curled tips, roots knotting into the ground, studded with many bone-white spines (cream tips) pointing outward, a few small leaves and two small glowing purple buds. ~2.2 m across, ~2.5 m tall. Single merged mesh, origin at the ground centre. Silhouette: shepherd's crook - one fat stem leaning up into a big top curl, companion stems wound round it curling the other way."
+  },
+  {
+   "id": "thorn_root_mass",
+   "path": "monsters/thorn_root_mass",
+   "lane": "monsters",
+   "tris": 9000,
+   "collision": "none",
+   "parts": [
+    "roots",
+    "heart"
+   ],
+   "brief": "Thorn nest (replaces the C++ ThornVine heart: the big knot + purple blob): a huge gnarled root mass ~4.2 m across x ~3.6 m tall. Twisted rope-like bark roots rise from the ground and coil into a cage/crown of outward fiddlehead curls over a root cradle, big bone-white spines everywhere, smaller creeping vines spill out over the ground. The cage opens at the front (glTF +Z) on a glowing heart. Empty root 'thorn_root_mass' (origin at the ground centre) with two mesh children: 'roots' (origin = root; everything except the heart) and 'heart' (glow_purple seed-heart ~1.3 m across, cupped by dark veined plum husk petals; its origin is the heart centre at (0, 1.5, 0) game coordinates, identity rotation) so the game can pulse its scale and glow on its own."
+  },
+  {
+   "id": "candy_twist_berry_dots",
+   "path": "candy/candy_twist_berry_dots",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff2f74",
+   "brief": "Round twist-wrapped sweet in raspberry with white polka dots and pale pink fans. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_twist_aqua_bats",
+   "path": "candy/candy_twist_aqua_bats",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#2ffff0",
+   "brief": "Round twist-wrapped sweet in aqua printed with little purple bats, mint fans. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_twist_purple_pumpkins",
+   "path": "candy/candy_twist_purple_pumpkins",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#b45cff",
+   "brief": "Round twist-wrapped sweet in purple printed with orange pumpkins, lilac fans. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_twist_lime_cobalt",
+   "path": "candy/candy_twist_lime_cobalt",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#b8ff2e",
+   "brief": "Two-tone twist-wrapped sweet: lime half and cobalt half, matching fans. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_twist_cherry_lemon",
+   "path": "candy/candy_twist_cherry_lemon",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff3b4e",
+   "brief": "Two-tone twist-wrapped sweet: cherry half and lemon half, matching fans. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_twist_blue_stars",
+   "path": "candy/candy_twist_blue_stars",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#45c8ff",
+   "brief": "Round twist-wrapped sweet in sky blue printed with lemon stars. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_twist_peach_bands",
+   "path": "candy/candy_twist_peach_bands",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff9a5c",
+   "brief": "Round twist-wrapped sweet in peach with raspberry rings, lemon fans. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_twist_mint_check",
+   "path": "candy/candy_twist_mint_check",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#4dffc3",
+   "brief": "Round twist-wrapped sweet with a mint and white checker wrapper. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_twist_orange_ghosts",
+   "path": "candy/candy_twist_orange_ghosts",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff8a1f",
+   "brief": "Round twist-wrapped sweet in orange printed with white ghosts, lemon fans. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_taffy_pink",
+   "path": "candy/candy_taffy_pink",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff6fc8",
+   "brief": "Salt-water taffy log: pink with white lengthwise stripes in wax-paper twists. About 0.33 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_taffy_lemon",
+   "path": "candy/candy_taffy_lemon",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ffe23a",
+   "brief": "Salt-water taffy log: lemon with cobalt lengthwise stripes in wax-paper twists. About 0.33 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_toffee_twist",
+   "path": "candy/candy_toffee_twist",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#3dff6a",
+   "brief": "Square toffee in a green wrapper with gold foil bands and gold twists. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_gumball_trio",
+   "path": "candy/candy_gumball_trio",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff5a5a",
+   "brief": "Three gumballs stuck together: red, blue and lemon. About 0.28 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_gumball_rainbow",
+   "path": "candy/candy_gumball_rainbow",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff4fb8",
+   "brief": "Big rainbow gumball with seven coloured segments like a beach ball. About 0.24 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_jellybean_cherry",
+   "path": "candy/candy_jellybean_cherry",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff3b4e",
+   "brief": "One chunky cherry-red jelly bean. About 0.27 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_jellybean_speckled",
+   "path": "candy/candy_jellybean_speckled",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#45c8ff",
+   "brief": "Chunky pale-blue jelly bean with cobalt and violet speckles. About 0.27 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_jellybean_trio",
+   "path": "candy/candy_jellybean_trio",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ffe23a",
+   "brief": "Three crossed jelly beans: lemon, green and magenta. About 0.28 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_gummy_bear_red",
+   "path": "candy/candy_gummy_bear_red",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff3b4e",
+   "brief": "Chubby red gummy bear with tiny dot eyes. About 0.30 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_gummy_bear_green",
+   "path": "candy/candy_gummy_bear_green",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#3dff6a",
+   "brief": "Chubby green gummy bear with tiny dot eyes. About 0.30 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_gummy_bear_orange",
+   "path": "candy/candy_gummy_bear_orange",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff8a1f",
+   "brief": "Chubby orange gummy bear with tiny dot eyes. About 0.30 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_gummy_worm",
+   "path": "candy/candy_gummy_worm",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff8a1f",
+   "brief": "Ridged S-curve gummy worm, half orange half green. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_gummy_worm_berry",
+   "path": "candy/candy_gummy_worm_berry",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff4fb8",
+   "brief": "Ridged S-curve gummy worm, half pink half cobalt. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_gummy_bat",
+   "path": "candy/candy_gummy_bat",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#b45cff",
+   "brief": "Puffy violet gummy bat with white eyes and tiny fangs. About 0.30 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_peach_ring",
+   "path": "candy/candy_peach_ring",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff9a5c",
+   "brief": "Gummy peach ring: orange face, lemon back. About 0.25 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_apple_ring",
+   "path": "candy/candy_apple_ring",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#b8ff2e",
+   "brief": "Gummy apple ring: lime face, white back. About 0.25 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_peppermint",
+   "path": "candy/candy_peppermint",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff3b4e",
+   "brief": "Thick peppermint swirl disc, red and white pinwheel. About 0.24 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_starlight_mint",
+   "path": "candy/candy_starlight_mint",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#3dff6a",
+   "brief": "Green and white pinwheel mint wrapped in pleated cellophane twists. About 0.34 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_butterscotch",
+   "path": "candy/candy_butterscotch",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ffb020",
+   "brief": "Amber butterscotch disc on its opened yellow diamond wrapper. About 0.30 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_caramel_cube",
+   "path": "candy/candy_caramel_cube",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ffa040",
+   "brief": "Soft rounded caramel cube with a white zigzag drizzle. About 0.25 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_fudge_cube",
+   "path": "candy/candy_fudge_cube",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff8a1f",
+   "brief": "Rounded chocolate fudge cube with an orange zigzag drizzle. About 0.25 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_licorice_twist",
+   "path": "candy/candy_licorice_twist",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff2a3a",
+   "brief": "Twisted red licorice rope with star cross-section. About 0.33 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_licorice_rainbow",
+   "path": "candy/candy_licorice_rainbow",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff4fb8",
+   "brief": "Twisted licorice rope in rainbow bands. About 0.33 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_licorice_wheel",
+   "path": "candy/candy_licorice_wheel",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#c070ff",
+   "brief": "Coiled black licorice wheel with a pink candy bead in the middle. About 0.27 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_sour_belt_rainbow",
+   "path": "candy/candy_sour_belt_rainbow",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff8a1f",
+   "brief": "Wavy sour belt with five rainbow stripes. About 0.33 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_sour_belt_berry",
+   "path": "candy/candy_sour_belt_berry",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff3fa4",
+   "brief": "Wavy sour belt striped magenta, white and cobalt. About 0.33 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_buttons",
+   "path": "candy/candy_buttons",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff6fc8",
+   "brief": "Paper strip of candy buttons: pink, blue and lemon rows. About 0.30 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_rock_blue",
+   "path": "candy/candy_rock_blue",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#45c8ff",
+   "brief": "Blue rock-candy crystal cluster on a wooden stick. About 0.33 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_rock_pink",
+   "path": "candy/candy_rock_pink",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff4fb8",
+   "brief": "Pink rock-candy crystal cluster on a wooden stick. About 0.33 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_marshmallow_ghost",
+   "path": "candy/candy_marshmallow_ghost",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#d8d0ff",
+   "brief": "Plump marshmallow ghost with dot eyes, little mouth and pink cheeks. About 0.28 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_mellow_pumpkin",
+   "path": "candy/candy_mellow_pumpkin",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff8a1f",
+   "brief": "Mellowcreme candy pumpkin with green stem, curl and leaf. About 0.27 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_apple_mini",
+   "path": "candy/candy_apple_mini",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff3b4e",
+   "brief": "Mini cherry-red candy apple on a stick with a glossy puddle foot. About 0.30 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_cakepop_sprinkle",
+   "path": "candy/candy_cakepop_sprinkle",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff6fc8",
+   "brief": "Pink cake pop on a stick covered in rainbow sprinkles. About 0.30 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_cakepop_drizzle",
+   "path": "candy/candy_cakepop_drizzle",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff8a1f",
+   "brief": "Chocolate cake pop on a stick with an orange zigzag drizzle. About 0.30 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_bonbon_orange",
+   "path": "candy/candy_bonbon_orange",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff8a1f",
+   "brief": "Dark chocolate bonbon in a fluted purple cup, orange drizzle. About 0.24 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_bonbon_pink",
+   "path": "candy/candy_bonbon_pink",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff4fb8",
+   "brief": "White chocolate bonbon in a fluted red cup, pink drizzle. About 0.24 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_fizz_roll",
+   "path": "candy/candy_fizz_roll",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff6fc8",
+   "brief": "Roll of pastel fizz tablets half out of a striped paper wrapper. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_fizz_tube",
+   "path": "candy/candy_fizz_tube",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff3fa4",
+   "brief": "Sherbet straw: lemon paper tube with magenta spiral stripe, crimped ends. About 0.32 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_star_lemon",
+   "path": "candy/candy_star_lemon",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ffe23a",
+   "brief": "Puffy lemon hard-candy star with an orange inner star. About 0.28 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_heart_berry",
+   "path": "candy/candy_heart_berry",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff2f74",
+   "brief": "Puffy raspberry hard-candy heart with a pink inner heart. About 0.27 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_strawberry_drop",
+   "path": "candy/candy_strawberry_drop",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff3b4e",
+   "brief": "Strawberry hard candy: red berry with lemon seeds and a green leaf crown. About 0.27 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_eyeball",
+   "path": "candy/candy_eyeball",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#45c8ff",
+   "brief": "Cute candy eyeball: white ball, big blue iris, round pupil. About 0.24 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_coin_gold",
+   "path": "candy/candy_coin_gold",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ffd23a",
+   "brief": "Gold-foil chocolate coin embossed with an orange pumpkin. About 0.25 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_coin_silver",
+   "path": "candy/candy_coin_silver",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#bfe6ff",
+   "brief": "Silver-foil chocolate coin embossed with a cobalt bat. About 0.25 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_corn_harvest",
+   "path": "candy/candy_corn_harvest",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff8a1f",
+   "brief": "Harvest candy corn: chocolate base, orange middle, white tip. About 0.29 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_corn_unicorn",
+   "path": "candy/candy_corn_unicorn",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#d070ff",
+   "brief": "Unicorn candy corn: violet base, pink middle, white tip. About 0.29 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_gumdrop",
+   "path": "candy/candy_gumdrop",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#b8ff2e",
+   "brief": "Fluted lime gumdrop with sugar sparkles. About 0.24 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_gumdrop_pile",
+   "path": "candy/candy_gumdrop_pile",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff6a3a",
+   "brief": "Little pile of three gumdrops: red, green, orange. About 0.29 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_kiss_silver",
+   "path": "candy/candy_kiss_silver",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#bfe6ff",
+   "brief": "Foil-wrapped chocolate drop in crinkled silver with a white paper plume. About 0.27 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_kiss_magenta",
+   "path": "candy/candy_kiss_magenta",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff3fa4",
+   "brief": "Foil-wrapped chocolate drop in crinkled magenta with a white paper plume. About 0.27 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_ring_pop",
+   "path": "candy/candy_ring_pop",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff3b4e",
+   "brief": "Ring pop: cobalt plastic ring with a big faceted cherry candy gem. About 0.27 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_cotton_candy",
+   "path": "candy/candy_cotton_candy",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff6fc8",
+   "brief": "Cotton candy puff (pink, blue, rose) on a striped paper cone. About 0.33 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_jawbreaker",
+   "path": "candy/candy_jawbreaker",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#b45cff",
+   "brief": "Cracked-open jawbreaker showing rainbow rings on its cut face. About 0.24 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_popcorn_ball",
+   "path": "candy/candy_popcorn_ball",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 0,
+   "glow": "#ff8a1f",
+   "brief": "Orange caramel popcorn ball, lumpy kernels. About 0.26 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_bar_bat",
+   "path": "candy/candy_bar_bat",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 1,
+   "glow": "#b45cff",
+   "brief": "Chocolate bar in a purple wrapper with crimped ends, orange label with a bat, lemon stars. About 0.42 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_bar_pumpkin",
+   "path": "candy/candy_bar_pumpkin",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 1,
+   "glow": "#3dff6a",
+   "brief": "Chocolate bar in a green wrapper with crimped ends, cream label with an orange pumpkin. About 0.42 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_bar_open",
+   "path": "candy/candy_bar_open",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 1,
+   "glow": "#4f7dff",
+   "brief": "Half-unwrapped bar: cobalt sleeve with lemon label, chocolate squares over a caramel layer. About 0.42 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_pb_cups",
+   "path": "candy/candy_pb_cups",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 1,
+   "glow": "#ff8a1f",
+   "brief": "Two peanut-butter cups in fluted orange wrappers, one with a peanut swirl. About 0.38 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_caramel_apple",
+   "path": "candy/candy_caramel_apple",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 1,
+   "glow": "#ffa040",
+   "brief": "Red caramel apple on a stick, dripping caramel coat with peanut bits. About 0.44 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_choco_apple",
+   "path": "candy/candy_choco_apple",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 1,
+   "glow": "#9dff3a",
+   "brief": "Green apple on a stick dipped in chocolate with an orange drizzle. About 0.44 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_truffle_box",
+   "path": "candy/candy_truffle_box",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 1,
+   "glow": "#ff2f74",
+   "brief": "Open raspberry truffle box, gold liner and ribbon, four assorted truffles. About 0.40 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_choco_frog",
+   "path": "candy/candy_choco_frog",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 1,
+   "glow": "#ff9a3a",
+   "brief": "Chubby chocolate frog with big cream eyes and a smile. About 0.36 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_choco_bat",
+   "path": "candy/candy_choco_bat",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 1,
+   "glow": "#ff9a3a",
+   "brief": "Chocolate bat with a round tummy, cream eyes, wing ribs and a pumpkin badge. About 0.44 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_bar_trio",
+   "path": "candy/candy_bar_trio",
+   "lane": "candy_variety",
+   "tris": 500,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 1,
+   "glow": "#ff3fa4",
+   "brief": "Three mini candy bars (red, cobalt, lemon) tied with a magenta ribbon bow. About 0.40 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_lolly_rainbow",
+   "path": "candy/candy_lolly_rainbow",
+   "lane": "candy_variety",
+   "tris": 700,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 2,
+   "glow": "#ff5ad0",
+   "brief": "Giant rainbow swirl lollipop with a magenta bow on the stick. About 0.58 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_lolly_spooky",
+   "path": "candy/candy_lolly_spooky",
+   "lane": "candy_variety",
+   "tris": 700,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 2,
+   "glow": "#b45cff",
+   "brief": "Giant Halloween swirl lollipop (violet, lime, orange) with a white bow. About 0.58 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_lolly_coil",
+   "path": "candy/candy_lolly_coil",
+   "lane": "candy_variety",
+   "tris": 700,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 2,
+   "glow": "#2ffff0",
+   "brief": "Coiled rope lollipop twisted aqua, pink and white. About 0.56 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_cane_giant",
+   "path": "candy/candy_cane_giant",
+   "lane": "candy_variety",
+   "tris": 700,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 2,
+   "glow": "#ff3b4e",
+   "brief": "Giant candy cane, white with red and thin green spiral stripes. About 0.60 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_lolly_jack",
+   "path": "candy/candy_lolly_jack",
+   "lane": "candy_variety",
+   "tris": 700,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 2,
+   "glow": "#ff8a1f",
+   "brief": "Jack-o'-lantern lollipop: ribbed orange pumpkin disc, glowing grin, green stem. About 0.56 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_wand",
+   "path": "candy/candy_wand",
+   "lane": "candy_variety",
+   "tris": 700,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 2,
+   "glow": "#ffe23a",
+   "brief": "Candy wand: puffy lemon star on a violet-striped stick with pink and aqua ribbons and sparkles. About 0.60 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_lolly_ghost",
+   "path": "candy/candy_lolly_ghost",
+   "lane": "candy_variety",
+   "tris": 700,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 2,
+   "glow": "#d8d0ff",
+   "brief": "Ghost-shaped lollipop with a cute face and a violet bow. About 0.52 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_golden_apple",
+   "path": "candy/candy_golden_apple",
+   "lane": "candy_variety",
+   "tris": 700,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 3,
+   "glow": "#ffd23a",
+   "brief": "Golden candy apple: foil gold with a glowing gold drip coat, gold leaf, sparkles. About 0.52 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_golden_pumpkin",
+   "path": "candy/candy_golden_pumpkin",
+   "lane": "candy_variety",
+   "tris": 700,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 3,
+   "glow": "#ffc83a",
+   "brief": "Golden pumpkin: ribbed foil gold with a glowing grin, curl and leaf. About 0.52 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_golden_crown",
+   "path": "candy/candy_golden_crown",
+   "lane": "candy_variety",
+   "tris": 700,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 3,
+   "glow": "#ffe04a",
+   "brief": "Golden candy crown: foil band with glowing gumball tips, candy gems and a raspberry cushion. About 0.52 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "candy_golden_twist",
+   "path": "candy/candy_golden_twist",
+   "lane": "candy_variety",
+   "tris": 700,
+   "collision": "none",
+   "floating": true,
+   "candy_tier": 3,
+   "glow": "#ffd040",
+   "brief": "Big golden twist-wrapped candy in the house wrapped-candy style: shiny foil gold ball with two thin warm-white spiral stripes, crinkled darker-gold bow-tie twist ends, glowing gold twist knots and a glowing gold star on the front and back. About 0.50 m across; origin at its centre (it floats and spins)."
+  },
+  {
+   "id": "fire_wand",
+   "path": "props/fire_wand",
+   "lane": "characters_candy",
+   "tris": 600,
+   "collision": "none",
+   "floating": true,
+   "sockets": [
+    "tip"
+   ],
+   "brief": "Chunky storybook fire wand (~0.43 m) the dragon kid holds in the LEFT hand. Points along Godot +Z; origin at the centre of the wrapped leather grip (hand point). Gold pommel ball, leather grip with tilted wraps, gold collar, twisted two-tone dark-wood shaft, scalloped gold cup holding a faceted swirling flame crystal (glow_jack_hot core, glow_jack licks) whose tip curls up. socket_tip at the crystal centre, Godot (0, 0, 0.30): spawn fireballs / muzzle flames there."
   }
  ]
 }

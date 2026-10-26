@@ -61,23 +61,23 @@ enum CandyKind {
 	CANDY_MINT,
 	CANDY_GRAPE,
 	CANDY_LEMON,
+	CANDY_ORANGE,
+	CANDY_CORN,
 	CANDY_CHOCOLATE,
 	CANDY_LOLLIPOP,
 	CANDY_GOLDEN,
 	CANDY_KIND_COUNT
 };
 
+// The everyday pieces (wrapped candies and candy corn) come first; each is worth 1.
+constexpr int CANDY_BASIC_COUNT = CANDY_CORN + 1;
+
+// Tier of any candy kind, classic or variety (gen/candy_kinds.cpp): 0 everyday .. 3 golden.
+int candy_tier(int kind);
+
 inline int candy_value(int kind) {
-	switch (kind) {
-		case CANDY_CHOCOLATE:
-			return 5;
-		case CANDY_LOLLIPOP:
-			return 25;
-		case CANDY_GOLDEN:
-			return 100;
-		default:
-			return 1;
-	}
+	static const int value[4] = { 1, 5, 25, 100 };
+	return value[candy_tier(kind) & 3];
 }
 
 // Oriented box: collision volume and, when walkable, a platform whose top the player can stand on.
@@ -87,8 +87,10 @@ struct OBox {
 	bool solid = true;
 	bool walkable = false;
 	bool bouncy = false;
+	float bounce = 13.5f; // launch speed when bouncy
 	bool cylinder = false; // physics shape: cylinder (radius half.x, height 2*half.y) instead of box
 	bool boundary = false; // playground edge (own collision layer, ignored by the camera)
+	bool shot_through = false; // yard fences: solid to walk into, but fireballs fly through
 	int lot = -1;
 	float top() const { return xf.origin.y + half.y; }
 };

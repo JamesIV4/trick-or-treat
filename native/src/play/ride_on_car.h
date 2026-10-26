@@ -15,6 +15,13 @@ class RideOnCar : public godot::CharacterBody3D {
 
 public:
 	void build(const godot::Ref<godot::Material> &toon);
+	// Paint schemes (the shop's Car Paint tab). 0 is the original orange-and-purple Pumpkin Cruiser.
+	static int scheme_count();
+	static const char *scheme_name(int scheme);
+	static int scheme_cost(int scheme);
+	void set_scheme(int scheme);
+	// A standalone body-and-wheels model in a scheme (shop preview).
+	static godot::Node3D *make_preview(int scheme, const godot::Ref<godot::Material> &toon);
 	void _physics_process(double delta) override;
 	void _process(double delta) override;
 	void place(const godot::Vector3 &pos, float yaw);
@@ -24,15 +31,22 @@ public:
 	float speed() const { return speed_; }
 	float yaw() const { return yaw_; }
 	godot::Vector3 forward() const;
+	// Scripted driving (trailer shots): a world-space wish direction instead of the stick.
+	void set_auto(bool on, const godot::Vector3 &wish = godot::Vector3()) {
+		auto_ = on;
+		auto_wish_ = wish;
+	}
 
 protected:
 	static void _bind_methods();
 
 private:
 	godot::Node3D *visual_ = nullptr;
+	godot::MeshInstance3D *body_ = nullptr;
 	godot::MeshInstance3D *wheels_[4] = {};
 	godot::SpotLight3D *lamp_ = nullptr;
-	bool driving_ = false;
+	bool driving_ = false, auto_ = false;
+	godot::Vector3 auto_wish_;
 	float yaw_ = 0.0f, speed_ = 0.0f, wheel_spin_ = 0.0f, bounce_ = 0.0f, bounce_v_ = 0.0f;
 	godot::Basis tilt_;
 	bool was_floor_ = true;

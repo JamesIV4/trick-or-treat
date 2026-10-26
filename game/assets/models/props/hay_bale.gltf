@@ -6,6 +6,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"tot_build":"1792898895.823"
+			},
 			"name":"Scene",
 			"nodes":[
 				0
@@ -15,7 +18,7 @@
 	"nodes":[
 		{
 			"extras":{
-				"build":"20261024-162050-0.4008"
+				"build":"20261024-232815-0.8230"
 			},
 			"mesh":0,
 			"name":"hay_bale"
@@ -42,92 +45,92 @@
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":1128,
+			"count":1410,
 			"max":[
-				0.6819678544998169,
-				0.5721343755722046,
-				0.4163600504398346
+				0.6437168717384338,
+				0.5617130994796753,
+				0.3783000707626343
 			],
 			"min":[
-				-0.6901123523712158,
-				-0.022305142134428024,
-				-0.4498196244239807
+				-0.6449278593063354,
+				0,
+				-0.37946510314941406
 			],
 			"type":"VEC3"
 		},
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":1128,
+			"count":1410,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":1128,
+			"count":1410,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5126,
-			"count":1128,
+			"count":1410,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":4,
 			"componentType":5123,
-			"count":1128,
+			"count":1410,
 			"normalized":true,
 			"type":"VEC4"
 		},
 		{
 			"bufferView":5,
 			"componentType":5123,
-			"count":2304,
+			"count":2322,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":13536,
+			"byteLength":16920,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":13536,
-			"byteOffset":13536,
+			"byteLength":16920,
+			"byteOffset":16920,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":9024,
-			"byteOffset":27072,
+			"byteLength":11280,
+			"byteOffset":33840,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":9024,
-			"byteOffset":36096,
-			"target":34962
-		},
-		{
-			"buffer":0,
-			"byteLength":9024,
+			"byteLength":11280,
 			"byteOffset":45120,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":4608,
-			"byteOffset":54144,
+			"byteLength":11280,
+			"byteOffset":56400,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":4644,
+			"byteOffset":67680,
 			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":58752,
+			"byteLength":72324,
 			"uri":"hay_bale.bin"
 		}
 	]

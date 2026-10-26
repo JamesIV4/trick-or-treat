@@ -6,21 +6,36 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"tot_build":"1792951102.663"
+			},
 			"name":"Scene",
 			"nodes":[
-				0
+				1
 			]
 		}
 	],
 	"nodes":[
 		{
 			"mesh":0,
+			"name":"hood",
+			"translation":[
+				0,
+				0.9188841581344604,
+				0.8999999761581421
+			]
+		},
+		{
+			"children":[
+				0
+			],
+			"mesh":1,
 			"name":"parked_car"
 		}
 	],
 	"meshes":[
 		{
-			"name":"parked_car",
+			"name":"hood",
 			"primitives":[
 				{
 					"attributes":{
@@ -33,98 +48,196 @@
 					"indices":5
 				}
 			]
+		},
+		{
+			"name":"parked_car.001",
+			"primitives":[
+				{
+					"attributes":{
+						"POSITION":6,
+						"NORMAL":7,
+						"TEXCOORD_0":8,
+						"TEXCOORD_1":9,
+						"COLOR_0":10
+					},
+					"indices":11
+				}
+			]
 		}
 	],
 	"accessors":[
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":3238,
+			"count":81,
 			"max":[
-				0.9699999690055847,
-				1.619326114654541,
-				1.9550000429153442
+				0.7521070241928101,
+				0,
+				0.6742697954177856
 			],
 			"min":[
-				-0.9699999690055847,
-				0,
-				-1.9550000429153442
+				-0.7521070241928101,
+				-0.17008817195892334,
+				-0.004821419715881348
 			],
 			"type":"VEC3"
 		},
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":3238,
+			"count":81,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":3238,
+			"count":81,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5126,
-			"count":3238,
+			"count":81,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":4,
 			"componentType":5123,
-			"count":3238,
+			"count":81,
 			"normalized":true,
 			"type":"VEC4"
 		},
 		{
 			"bufferView":5,
 			"componentType":5123,
-			"count":11916,
+			"count":96,
+			"type":"SCALAR"
+		},
+		{
+			"bufferView":6,
+			"componentType":5126,
+			"count":4085,
+			"max":[
+				0.9556794166564941,
+				1.4719769954681396,
+				1.8433674573898315
+			],
+			"min":[
+				-0.9556725025177002,
+				0,
+				-1.784061312675476
+			],
+			"type":"VEC3"
+		},
+		{
+			"bufferView":7,
+			"componentType":5126,
+			"count":4085,
+			"type":"VEC3"
+		},
+		{
+			"bufferView":8,
+			"componentType":5126,
+			"count":4085,
+			"type":"VEC2"
+		},
+		{
+			"bufferView":9,
+			"componentType":5126,
+			"count":4085,
+			"type":"VEC2"
+		},
+		{
+			"bufferView":10,
+			"componentType":5123,
+			"count":4085,
+			"normalized":true,
+			"type":"VEC4"
+		},
+		{
+			"bufferView":11,
+			"componentType":5123,
+			"count":13164,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":38856,
+			"byteLength":972,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":38856,
-			"byteOffset":38856,
+			"byteLength":972,
+			"byteOffset":972,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":25904,
-			"byteOffset":77712,
+			"byteLength":648,
+			"byteOffset":1944,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":25904,
-			"byteOffset":103616,
+			"byteLength":648,
+			"byteOffset":2592,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":25904,
-			"byteOffset":129520,
+			"byteLength":648,
+			"byteOffset":3240,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":23832,
-			"byteOffset":155424,
+			"byteLength":192,
+			"byteOffset":3888,
+			"target":34963
+		},
+		{
+			"buffer":0,
+			"byteLength":49020,
+			"byteOffset":4080,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":49020,
+			"byteOffset":53100,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":32680,
+			"byteOffset":102120,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":32680,
+			"byteOffset":134800,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":32680,
+			"byteOffset":167480,
+			"target":34962
+		},
+		{
+			"buffer":0,
+			"byteLength":26328,
+			"byteOffset":200160,
 			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":179256,
+			"byteLength":226488,
 			"uri":"parked_car.bin"
 		}
 	]

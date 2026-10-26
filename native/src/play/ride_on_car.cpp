@@ -38,18 +38,68 @@ void RideOnCar::build(const Ref<Material> &toon) {
 	box.instantiate();
 	box->set_size(Vector3(1.4f, 0.8f, 2.3f));
 	cs->set_shape(box);
-	cs->set_position(Vector3(0, 0.6f, 0));
+	cs->set_position(Vector3(0, 0.4f, 0)); // bottom at y 0, where the wheels touch (0.6 sank the tyres 0.2 m)
 	add_child(cs);
 	visual_ = memnew(Node3D);
 	add_child(visual_);
 
+	body_ = memnew(MeshInstance3D);
+	body_->set_material_override(toon);
+	body_->set_instance_shader_parameter("rim_strength", 0.25f);
+	visual_->add_child(body_);
+	const Vector3 at[4] = { Vector3(-0.72f, 0.33f, 0.72f), Vector3(0.72f, 0.33f, 0.72f), Vector3(-0.72f, 0.33f, -0.72f), Vector3(0.72f, 0.33f, -0.72f) };
+	for (int i = 0; i < 4; ++i) {
+		wheels_[i] = memnew(MeshInstance3D);
+		wheels_[i]->set_material_override(toon);
+		wheels_[i]->set_position(at[i]);
+		visual_->add_child(wheels_[i]);
+	}
+	set_scheme(0);
+	lamp_ = memnew(SpotLight3D);
+	lamp_->set_color(Color(1.0f, 0.9f, 0.7f));
+	lamp_->set_param(Light3D::PARAM_RANGE, 16.0f);
+	lamp_->set_param(Light3D::PARAM_ENERGY, 2.5f);
+	lamp_->set_param(Light3D::PARAM_SPOT_ANGLE, 32.0f);
+	lamp_->set_position(Vector3(0, 0.7f, 1.2f));
+	lamp_->set_rotation(Vector3(-0.12f, Math_PI, 0));
+	visual_->add_child(lamp_);
+	set_physics_process(true);
+	set_process(true);
+}
+
+namespace {
+
+struct CarScheme {
+	const char *name;
+	int paint, trim, seat, flag, hub;
+	int paint_mat;
+	int cost;
+};
+const CarScheme SCHEMES[] = {
+	{ "Pumpkin Cruiser", pal::PUMPKIN, pal::WITCH_PURPLE, pal::WITCH_PURPLE, pal::BANNER_PURPLE, pal::PUMPKIN, mat::VINYL, 0 },
+	{ "Ghostly Glow", pal::GHOST_WHITE, pal::CANDY_SKY_LIGHT, pal::SHADOW_NAVY, pal::CANDY_SKY_LIGHT, pal::SILVER, mat::VINYL, 40 },
+	{ "Candy Corn", pal::CANDY_CORN_YELLOW, pal::PUMPKIN, pal::CANDY_CORN_WHITE, pal::PUMPKIN, pal::CANDY_CORN_WHITE, mat::VINYL, 60 },
+	{ "Witch's Brew", pal::WITCH_PURPLE, pal::WITCH_GREEN, pal::CAT_BLACK, pal::WITCH_GREEN, pal::WITCH_GREEN, mat::VINYL, 60 },
+	{ "Bubblegum", pal::CANDY_PINK, pal::CANDY_MINT, pal::LOLLY_WHITE, pal::CANDY_MINT, pal::CANDY_MINT, mat::VINYL, 80 },
+	{ "Midnight Bat", pal::CAT_BLACK, pal::CANDY_VIOLET, pal::BAT_WING, pal::CANDY_VIOLET, pal::CANDY_VIOLET, mat::VINYL, 80 },
+	{ "Mint Chip", pal::CANDY_MINT, pal::CHOCO, pal::CHOCO_DARK, pal::CHOCO, pal::CANDY_MINT_LIGHT, mat::VINYL, 100 },
+	{ "Slime Time", pal::SLIME_GREEN, pal::SLIME_DARK, pal::CAT_BLACK, pal::CANDY_LIME, pal::SLIME_LIGHT, mat::VINYL, 100 },
+	{ "Golden Treat", pal::FOIL_GOLD, pal::CHOCO_DARK, pal::WRAPPER_RED, pal::WRAPPER_RED, pal::FOIL_GOLD, mat::METAL, 200 },
+};
+constexpr int SCHEME_COUNT = int(sizeof(SCHEMES) / sizeof(SCHEMES[0]));
+
+const CarScheme &scheme_at(int s) {
+	return SCHEMES[Math::clamp(s, 0, SCHEME_COUNT - 1)];
+}
+
+Ref<ArrayMesh> body_mesh(const CarScheme &cs) {
 	MeshBuilder m;
-	const int paint = mat_cell(pal::PUMPKIN, mat::VINYL), trim = mat_cell(pal::WITCH_PURPLE, mat::VINYL), chrome = mat_cell(pal::SILVER, mat::METAL);
+	const int paint = mat_cell(cs.paint, cs.paint_mat), trim = mat_cell(cs.trim, mat::VINYL), chrome = mat_cell(pal::SILVER, mat::METAL);
 	m.rounded_box(Vector3(0, 0.55f, -0.05f), Vector3(0.72f, 0.26f, 1.12f), 0.18f, paint);
 	m.rounded_box(Vector3(0, 0.62f, 0.78f), Vector3(0.66f, 0.2f, 0.38f), 0.16f, paint);
 	m.rounded_box(Vector3(0, 0.36f, 0), Vector3(0.75f, 0.06f, 1.16f), 0.04f, trim);
-	m.rounded_box(Vector3(0, 0.78f, -0.3f), Vector3(0.46f, 0.1f, 0.36f), 0.06f, mat_cell(pal::WITCH_PURPLE, mat::FABRIC));
-	m.rounded_box(Vector3(0, 1.05f, -0.62f), Vector3(0.46f, 0.3f, 0.08f), 0.06f, mat_cell(pal::WITCH_PURPLE, mat::FABRIC));
+	m.rounded_box(Vector3(0, 0.78f, -0.3f), Vector3(0.46f, 0.1f, 0.36f), 0.06f, mat_cell(cs.seat, mat::FABRIC));
+	m.rounded_box(Vector3(0, 1.05f, -0.62f), Vector3(0.46f, 0.3f, 0.08f), 0.06f, mat_cell(cs.seat, mat::FABRIC));
 	// Windshield frame and glass.
 	m.beam(Vector3(-0.55f, 0.8f, 0.42f), Vector3(-0.5f, 1.25f, 0.3f), 0.05f, 0.05f, mat_cell(pal::LAMP_BLACK, mat::METAL));
 	m.beam(Vector3(0.55f, 0.8f, 0.42f), Vector3(0.5f, 1.25f, 0.3f), 0.05f, 0.05f, mat_cell(pal::LAMP_BLACK, mat::METAL));
@@ -72,39 +122,67 @@ void RideOnCar::build(const Ref<Material> &toon) {
 	}
 	// Antenna flag with a little pumpkin on top.
 	m.beam(Vector3(0.55f, 0.8f, -0.9f), Vector3(0.55f, 1.9f, -0.95f), 0.025f, 0.025f, chrome);
-	m.tri_out(Vector3(0.56f, 1.88f, -0.95f), Vector3(0.56f, 1.62f, -0.95f), Vector3(0.56f, 1.75f, -1.35f), mat_cell(pal::BANNER_PURPLE, mat::FABRIC), Vector3(0, 1.75f, -1.1f));
-	m.tri_out(Vector3(0.56f, 1.88f, -0.95f), Vector3(0.56f, 1.62f, -0.95f), Vector3(0.56f, 1.75f, -1.35f), mat_cell(pal::BANNER_PURPLE, mat::FABRIC), Vector3(1, 1.75f, -1.1f));
+	m.tri_out(Vector3(0.56f, 1.88f, -0.95f), Vector3(0.56f, 1.62f, -0.95f), Vector3(0.56f, 1.75f, -1.35f), mat_cell(cs.flag, mat::FABRIC), Vector3(0, 1.75f, -1.1f));
+	m.tri_out(Vector3(0.56f, 1.88f, -0.95f), Vector3(0.56f, 1.62f, -0.95f), Vector3(0.56f, 1.75f, -1.35f), mat_cell(cs.flag, mat::FABRIC), Vector3(1, 1.75f, -1.1f));
 	m.blob(Vector3(0.55f, 1.98f, -0.95f), Vector3(0.09f, 0.08f, 0.09f), mat_cell(pal::PUMPKIN, mat::PUMPKIN), 0);
-	MeshInstance3D *body = memnew(MeshInstance3D);
-	body->set_mesh(m.build());
-	body->set_material_override(toon);
-	body->set_instance_shader_parameter("rim_strength", 0.25f);
-	visual_->add_child(body);
+	return m.build();
+}
 
+Ref<ArrayMesh> wheel_mesh(const CarScheme &cs) {
 	MeshBuilder w;
 	w.set_transform(Transform3D(Basis(Vector3(0, 0, 1), Math_PI * 0.5f), Vector3(0.13f, 0, 0)));
 	w.cylinder(Vector3(), 0.33f, 0.26f, 12, mat_cell(pal::CHARCOAL, mat::VINYL));
-	w.cylinder(Vector3(0, -0.01f, 0), 0.17f, 0.28f, 8, chrome);
-	w.cylinder(Vector3(0, 0.12f, 0), 0.08f, 0.18f, 6, mat_cell(pal::PUMPKIN, mat::VINYL));
-	Ref<ArrayMesh> wheel = w.build();
-	const Vector3 at[4] = { Vector3(-0.72f, 0.33f, 0.72f), Vector3(0.72f, 0.33f, 0.72f), Vector3(-0.72f, 0.33f, -0.72f), Vector3(0.72f, 0.33f, -0.72f) };
-	for (int i = 0; i < 4; ++i) {
-		wheels_[i] = memnew(MeshInstance3D);
-		wheels_[i]->set_mesh(wheel);
-		wheels_[i]->set_material_override(toon);
-		wheels_[i]->set_position(at[i]);
-		visual_->add_child(wheels_[i]);
+	w.cylinder(Vector3(0, -0.01f, 0), 0.17f, 0.28f, 8, mat_cell(pal::SILVER, mat::METAL));
+	w.cylinder(Vector3(0, 0.12f, 0), 0.08f, 0.18f, 6, mat_cell(cs.hub, cs.hub == pal::FOIL_GOLD ? mat::METAL : mat::VINYL));
+	return w.build();
+}
+
+const Vector3 WHEEL_AT[4] = { Vector3(-0.72f, 0.33f, 0.72f), Vector3(0.72f, 0.33f, 0.72f), Vector3(-0.72f, 0.33f, -0.72f), Vector3(0.72f, 0.33f, -0.72f) };
+
+} // namespace
+
+int RideOnCar::scheme_count() {
+	return SCHEME_COUNT;
+}
+
+const char *RideOnCar::scheme_name(int scheme) {
+	return scheme_at(scheme).name;
+}
+
+int RideOnCar::scheme_cost(int scheme) {
+	return scheme_at(scheme).cost;
+}
+
+void RideOnCar::set_scheme(int scheme) {
+	const CarScheme &cs = scheme_at(scheme);
+	if (body_) {
+		body_->set_mesh(body_mesh(cs));
 	}
-	lamp_ = memnew(SpotLight3D);
-	lamp_->set_color(Color(1.0f, 0.9f, 0.7f));
-	lamp_->set_param(Light3D::PARAM_RANGE, 16.0f);
-	lamp_->set_param(Light3D::PARAM_ENERGY, 2.5f);
-	lamp_->set_param(Light3D::PARAM_SPOT_ANGLE, 32.0f);
-	lamp_->set_position(Vector3(0, 0.7f, 1.2f));
-	lamp_->set_rotation(Vector3(-0.12f, Math_PI, 0));
-	visual_->add_child(lamp_);
-	set_physics_process(true);
-	set_process(true);
+	const Ref<ArrayMesh> wheel = wheel_mesh(cs);
+	for (MeshInstance3D *w : wheels_) {
+		if (w) {
+			w->set_mesh(wheel);
+		}
+	}
+}
+
+Node3D *RideOnCar::make_preview(int scheme, const Ref<Material> &toon) {
+	const CarScheme &cs = scheme_at(scheme);
+	Node3D *root = memnew(Node3D);
+	MeshInstance3D *body = memnew(MeshInstance3D);
+	body->set_mesh(body_mesh(cs));
+	body->set_material_override(toon);
+	body->set_instance_shader_parameter("rim_strength", 0.25f);
+	root->add_child(body);
+	const Ref<ArrayMesh> wheel = wheel_mesh(cs);
+	for (const Vector3 &p : WHEEL_AT) {
+		MeshInstance3D *w = memnew(MeshInstance3D);
+		w->set_mesh(wheel);
+		w->set_material_override(toon);
+		w->set_position(p);
+		root->add_child(w);
+	}
+	return root;
 }
 
 void RideOnCar::place(const Vector3 &pos, float yaw) {
@@ -141,6 +219,9 @@ void RideOnCar::_physics_process(double delta) {
 			Vector3 right = cb.get_column(0);
 			right.y = 0;
 			wish = right.normalized() * stick.x - fwd.normalized() * stick.y;
+		}
+		if (auto_) {
+			wish = auto_wish_;
 		}
 		if (wish.length() > 1.0f) {
 			wish = wish.normalized();

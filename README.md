@@ -30,6 +30,7 @@ native\BuildNative.ps1                 # first run clones the pinned godot-cpp a
 | Fireball (homes in on a nearby monster, else what is ahead) | F, R or left click | Y or RB |
 | Tail spin (wider pickup, swats monsters, small hover in the air) | E or J | X |
 | Roll (ground) / ground pound with a fire ring (air) | Shift or K | B |
+| Hanging from a ledge: climb up / let go | Space / Ctrl | A / B |
 | Candy shop | Tab | Start |
 | Summon / leave the Pumpkin Cruiser (once bought) | V | LB |
 | Orbit camera | Q / C, or right-mouse drag | Right stick |
@@ -42,15 +43,23 @@ candy you carry; grab it before it blinks away (it never lowers an area's "candy
 Step onto a freed area's Lantern Gate pad (beside the side street, inside the lantern arch) to
 travel to any other freed place.
 
+Jump at a ledge that's just out of reach (a porch or garage roof, a deck) and the kid catches the
+lip and hangs there. Trampolines are scattered through the neighborhoods: big backyard ones throw
+you five metres up (nearly eight if you hold jump, or press it just as you land), and little ones
+sit beside roofs and other things worth climbing.
+
 ## The world
 
 - **Regions.** Space is a grid of 200 m regions, each a neighborhood (40%), a small town (25%) or
   woods (35%); the start is always a neighborhood. Everything is deterministic from the world seed.
 - **Roads.** Country roads join neighbouring regions street end to street end (or through a woods
-  junction), curving and following the big swells, with gravel shoulders and jack-o'-lantern posts.
+  junction), curving and following the big swells, with gravel shoulders and street lamps. They
+  leave a settlement exactly as wide as its street and narrow to country roads over about 10 m.
 - **Terrain.** Rolling hills from layered gradient noise, flat-shaded in 2 m cells, levelled into a
   plateau under each settlement and eased flat along the roads. A coarse horizon ring carries the
   hills out into the fog.
+- **Grass.** Clumps cover every grassy surface: lawns, street verges, pocket parks, the open ground
+  around settlements and the meadows (more sparsely the forest floor), tinted to the ground below.
 - **Woods.** Layered pines, maples, bare spooky trees, bushes, mossy rocks, stumps, fallen logs and
   glowing mushrooms, scattered by a density field, never on roads or in settlements.
 - **Towns.** A Main Street of continuous storefronts (bakery, candy shop, toy store, cinema...) with
@@ -105,7 +114,9 @@ Arguments after `--` are read by `FestivalGame`:
 ```powershell
 Godot --path game -- --seed=101                            # fixed world seed
 Godot --headless --path game -- --sweep=60 --seed=500      # validate 60 settlements (alternating neighborhood / town)
-Godot --path game -- --seed=101 --capture=shot.png --capture-view=play|overview|lot:3|nest:0|"at:x,z"|"atover:x,z"
+Godot --path game -- --seed=101 --capture=shot.png --capture-view=play|overview|lot:3|nest:0|gate|shop|"prop:ID#K"|"at:x,z"|"atover:x,z" [--overview-dist=20]
+Godot --path game -- --seed=101 --ledge-test=2 --capture=hang.png --capture-frames=9999   # jump at a roof edge, hang (screenshot), climb
+Godot --path game -- --seed=103 --capture-view=prop:trampoline_large --drop-test --capture=x.png   # bounce height
 Godot --path game -- --seed=101 --autopilot=120            # review bot: chases candy, fights, reports rate, hits, kills, fps
 Godot --path game -- --seed=101 --fly-test=40              # streaming stress test: glide east at car speed, log worst frames
 Godot --path game -- --fx-test | --open-shop --wallet=400 | --give-car | --free-home | --travel-test   # review aids
@@ -155,6 +166,18 @@ Grounded in published platformer design work:
 - **Forgiveness** (Thorson, "Celeste & Forgiveness"): coyote time, jump buffering, half gravity at
   the apex while jump is held, ceiling-edge correction, and a ledge-lip pop when a jump clips the
   top of a ledge. The candy magnet widens horizontal reach but height still has to be earned.
+- **Ledge grab** (Super Mario 64, Spyro): a jump that comes up just short of a ledge catches it;
+  jump climbs up, drop lets go. Only real ledges count (room to stand on top, a lip within arm's
+  reach), so fence rails and thin trim never snag the kid, and a jump still rising fast enough to
+  clear the ledge lands on it instead.
+- **Trampolines** give the neighborhoods a vertical toy: backyard trampolines launch at 17 m/s and
+  mini ones (14 m/s) are parked a step away from porch and garage roofs. Holding jump, or pressing it
+  within a quarter second before landing (or a moment after), springs 1.45x higher; releasing jump
+  never cuts a bounce short.
+- **Monsters path around obstacles**: each settlement has a 0.6 m walk grid (houses, fences, hedges,
+  porches and big props blocked); monsters follow A* routes, and nothing walks through houses.
+- **Fireball aim**: heavy lock-on only within about four body lengths (monsters, then spawners and
+  thorn nests, then vines); out to about ten, only targets already roughly ahead get a nudge.
 - **Readable landings** (Iwata Asks: Super Mario 3D Land): a drop shadow straight below the kid,
   and a small glow pool under every floating candy, so the spot to jump from is visible.
 - **Unambiguous jumps** ("Lessons from Suzy Cube: Measuring Up"): landings within 0.3 m of the
@@ -166,8 +189,8 @@ Grounded in published platformer design work:
 - **No jumping for stairs**: walking into a step or kerb up to 0.45 m lifts the kid onto it (the
   body eases up so it never pops).
 - **Feedback proportional to success** (Kao 2020; Kao et al. 2024): no per-candy pitch climb or
-  wobble and no timer combo; sweeping up a whole run cleanly ("Perfect run!") earns the chime,
-  confetti and a bonus equal to the run's size.
+  wobble; a small combo meter (x13) beside the candy counter counts candy collected in quick
+  succession, and sweeping up a whole run cleanly earns a chime and a burst of sparkles.
 
 ## Effects
 

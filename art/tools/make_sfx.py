@@ -26,6 +26,10 @@ THUMP = F.Inst(0x01, 0x01, 0x0C, 0x00, 0xFF, 0xF4, 0x0F, 0xF5, m_wave=1)
 STEP = F.Inst(0x02, 0x12, 0x4A, 0x04, 0x92, 0x64, 0x54, 0x7C)
 BELL = F.Inst(0x07, 0x02, 0x0E, 0x02, 0xF4, 0xF2, 0x55, 0x54)  # inharmonic door chime
 CRUNCH = F.Inst(0x0F, 0x01, 0x00, 0x00, 0xFF, 0xF6, 0x0A, 0x08, m_wave=2, feedback=6)
+CHIME = F.Inst(0x02, 0x01, 0x28, 0x00, 0xC6, 0xC4, 0x36, 0x24)  # soft music-box chime: low FM index, long fade
+# Doorbell chime bar: a bright metallic strike (x4 modulator dying away fast) over a nearly pure tone
+# that rings on.
+CHIME_BAR = F.Inst(0x04, 0x01, 0x1C, 0x00, 0xE6, 0xE2, 0x36, 0x14)
 
 
 def seq(inst, items, legato=True, tail=0.35):
@@ -72,6 +76,27 @@ def crackle(ticks, lo, hi, seed):
     return items
 
 
+def whoosh(seconds=0.24, f0=500.0, f1=1700.0, seed=5, attack=0.25, q=1.6):
+    """A soft airy swoosh: white noise through a resonant band-pass that sweeps up, swelling in
+    and fading out (a wing beat)."""
+    rng = np.random.default_rng(seed)
+    n = int(seconds * F.RATE)
+    noise = rng.standard_normal(n)
+    out = np.zeros(n)
+    lo = bp = 0.0
+    for i in range(n):
+        t = i / n
+        f = f0 * (f1 / f0) ** t
+        g = 2.0 * np.sin(np.pi * f / F.RATE)
+        hp = noise[i] - lo - bp / q
+        bp += g * hp
+        lo += g * bp
+        out[i] = bp
+    t = np.linspace(0.0, 1.0, n)
+    env = np.minimum(t / attack, 1.0) ** 1.5 * (1.0 - t) ** 1.8
+    return out * env
+
+
 def rumble(seconds=2.6):
     rng = np.random.default_rng(7)
     n = int(seconds * F.RATE)
@@ -89,18 +114,24 @@ SOUNDS = {
     "lollipop": lambda: seq(GLASS, [(84, 1), (85, 1), (86, 1), (0, 1), (88, 1), (89, 1), (90, 2), (0, 1), (92, 2), (93, 3), (95, 6)]),
     "golden": lambda: mix(seq(ORGAN, glide(60, 84, 44), tail=0.05),
                           seq(GLASS, [(96, 2), (0, 2), (91, 2), (0, 2), (96, 2), (0, 2), (100, 8)])),
-    "combo": lambda: seq(PING, [(74, 2), (78, 2), (81, 2), (86, 2), (90, 2), (93, 2), (98, 6)]),
+    # A candy run: two quick soft chime notes, a fifth up (short: it plays often).
+    "combo": lambda: seq(CHIME, [(79, 2), (0, 1), (84, 4)], tail=0.18),
     "treats": lambda: seq(GLASS, [(96, 2), (0, 1), (93, 2), (0, 1), (91, 2), (0, 1), (88, 2), (0, 1), (86, 2), (0, 1), (91, 2), (95, 2), (98, 6)]),
     # Movement.
     "jump": lambda: seq(HOP, glide(46, 40, 6) + glide(40, 64, 14), tail=0.15),
-    "flap": lambda: seq(BOING, glide(57, 69, 4) + [(0, 1)] + glide(61, 74, 4) + [(0, 1)] + glide(65, 79, 5), tail=0.15),
+    # Double jump: a wing flap. A quick, full downstroke of air (a sharp swell, sweeping down, so it
+    # reads as a beat rather than a breeze) and a smaller second beat just after.
+    "flap": lambda: layer(whoosh(0.16, 1400.0, 380.0, seed=5, attack=0.12, q=1.1),
+                           np.concatenate([np.zeros(int(0.1 * F.RATE)), whoosh(0.13, 1200.0, 420.0, seed=9, attack=0.15, q=1.1) * 0.55])),
     "bounce": lambda: seq(BOING, glide(62, 36, 11) + glide(36, 70, 13), tail=0.2),
     "land": lambda: seq(THUMP, glide(40, 24, 9), tail=0.1),
     "pound": lambda: mix(seq(CRUNCH, [(m, 1) for m in (52, 40, 47, 35, 44, 31, 38, 28, 33, 26)], tail=0.25)),
     "step_a": lambda: seq(STEP, [(55, 3)], tail=0.08),
     "step_b": lambda: seq(STEP, [(48, 4)], tail=0.08),
     # House events.
-    "doorbell": lambda: mix(seq(BELL, [(81, 20)], tail=0.05), seq(BELL, [(77, 30)], tail=0.9)),
+    # Ding-dong: a high chime bar, then one a major third lower while the first still rings.
+    "doorbell": lambda: layer(seq(CHIME_BAR, [(76, 70)], tail=0.9),
+                             seq(CHIME_BAR, [(0, 62), (72, 110)], tail=1.2)),
     "cleared": lambda: seq(ORGAN, [(72, 7), (0, 1), (76, 7), (0, 1), (79, 7), (0, 3), (76, 5), (0, 1), (79, 4), (84, 16)], tail=0.6),
     "night_bell": lambda: mix(*[seq(BELL, [(50, 50)], tail=0.4) for _ in range(3)]),
     "thunder": rumble,

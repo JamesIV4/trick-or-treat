@@ -1,0 +1,22 @@
+[
+ {"id": "kid_ghost", "gltf": "game/assets/models/characters/kid_ghost.gltf", "sheet": "art/review/sheets/kid_ghost.png",
+  "engine_preview": "art/review/engine/kid_ghost.png", "tris": 8094, "gates": "PASS", "rig": "PASS",
+  "optional_parts": ["wing_l", "wing_r"],
+  "notes": "Smooth white sheet (felt read as fleece, flannel as pyjamas). Tall dome with a forward brow carrying two big ink eye holes; the kid peeks out of the round 'boo' mouth. Sheet hem hitched up over the bucket arm. wing_l/wing_r = sheet flaps behind the arms, spread like ghost arms in the glide pose (sheets/kid_ghost_glide.png). No tail."},
+ {"id": "kid_cat", "gltf": "game/assets/models/characters/kid_cat.gltf", "sheet": "art/review/sheets/kid_cat.png",
+  "engine_preview": "art/review/engine/kid_cat.png", "tris": 8912, "gates": "PASS", "rig": "PASS",
+  "optional_parts": ["tail"],
+  "notes": "crow_blue (blue-black) felt so it survives the night lighting; pink-lined ears, yellow-green slit-pupil hood eyes, face-paint whiskers and nose, grey belly patch, orange collar + gold bell, paw boots, long S tail with an orange bow."},
+ {"id": "kid_witch", "gltf": "game/assets/models/characters/kid_witch.gltf", "sheet": "art/review/sheets/kid_witch.png",
+  "engine_preview": "art/review/engine/kid_witch.png", "tris": 8870, "gates": "PASS", "rig": "PASS",
+  "optional_parts": ["wing_l", "wing_r"],
+  "notes": "No hood: the kid's own hair (bare_head) with pigtails, under a big floppy hat whose tip flops sideways (height 1.36 m with the hat). wing_l/wing_r = cape halves, dark plum outside, orange lining and hem band; they open like wings in the glide pose."},
+ {"id": "kid_skeleton", "gltf": "game/assets/models/characters/kid_skeleton.gltf", "sheet": "art/review/sheets/kid_skeleton.png",
+  "engine_preview": "art/review/engine/kid_skeleton.png", "tris": 9782, "gates": "PASS", "rig": "PASS",
+  "optional_parts": [],
+  "notes": "Skull hood with a lower face opening (skull's toothy mouth framing the kid's eyes/cheeks/smile) so the sockets and nose sit on a forward brow; sockets on the crown read as a panda (passes 1-4). Bone print front and back (ribs on both sides so the gameplay camera sees it)."},
+ {"id": "kid_pumpkin", "gltf": "game/assets/models/characters/kid_pumpkin.gltf", "sheet": "art/review/sheets/kid_pumpkin.png",
+  "engine_preview": "art/review/engine/kid_pumpkin.png", "tris": 8200, "gates": "PASS", "rig": "PASS",
+  "optional_parts": ["wing_l", "wing_r"],
+  "notes": "Ribbed pumpkin body narrowed in X (0.222 m) so both hands stay outside it; felt jack face; leafy collar; green beanie with stem, leaves and tendril. wing_l/wing_r = two pumpkin leaves standing off the back, splayed near level so the game's spread pose lifts them into a V."}
+]

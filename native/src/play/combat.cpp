@@ -1,6 +1,13 @@
 #include "play/combat.h"
 
 #include <godot_cpp/classes/array_mesh.hpp>
+#include <godot_cpp/classes/camera3d.hpp>
+#include <godot_cpp/classes/os.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/classes/resource_loader.hpp>
+#include <godot_cpp/classes/shader.hpp>
+#include <godot_cpp/classes/shader_material.hpp>
+#include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/classes/gradient.hpp>
 #include <godot_cpp/classes/physics_direct_space_state3d.hpp>
 #include <godot_cpp/classes/physics_ray_query_parameters3d.hpp>
@@ -22,6 +29,7 @@ namespace tot {
 namespace {
 constexpr float SHOT_SPEED = 21.0f;
 constexpr float SHOT_LIFE = 1.1f;
+constexpr float TAIL_TIME = 0.3f; // the trail burning out after impact
 constexpr int SHOT_POOL = 14;
 
 Ref<StandardMaterial3D> glow_material(const Color &albedo, const Color &emission, float energy) {
@@ -73,17 +81,23 @@ void Combat::_bind_methods() {
 void Combat::_ready() {
 	Ref<SphereMesh> ball;
 	ball.instantiate();
-	ball->set_radius(0.24f);
-	ball->set_height(0.48f);
+	ball->set_radius(0.22f);
+	ball->set_height(0.44f);
 	ball->set_radial_segments(10);
 	ball->set_rings(6);
-	ball->set_material(glow_material(Color(1.0f, 0.62f, 0.2f), Color(1.0f, 0.45f, 0.1f), 4.0f));
+	ball->set_material(glow_material(Color(1.0f, 0.55f, 0.15f), Color(1.0f, 0.38f, 0.06f), 2.6f));
 	ball_mesh_ = ball;
 	Ref<Mesh> flame = spark_quad(0.28f);
 	const bool flipbook = Vfx::get() != nullptr;
 	if (flipbook) {
-		flame = Vfx::get()->flame_quad(0.42f);
+		flame = Vfx::get()->flame_quad(0.55f);
 	}
+	ribbon_mat_ = [] {
+		Ref<ShaderMaterial> m;
+		m.instantiate();
+		m->set_shader(ResourceLoader::get_singleton()->load("res://shaders/fire_trail.gdshader"));
+		return m;
+	}();
 	for (int i = 0; i < SHOT_POOL; ++i) {
 		Shot s;
 		s.node = memnew(MeshInstance3D);
@@ -94,20 +108,31 @@ void Combat::_ready() {
 		s.light = memnew(OmniLight3D);
 		s.light->set_color(Color(1.0f, 0.55f, 0.2f));
 		s.light->set_param(Light3D::PARAM_RANGE, 4.5f);
-		s.light->set_param(Light3D::PARAM_ENERGY, 1.6f);
+		s.light->set_param(Light3D::PARAM_ENERGY, 2.2f);
 		s.light->set_visible(false);
 		add_child(s.light);
+		s.ribbon_mesh.instantiate();
+		s.ribbon = memnew(MeshInstance3D);
+		s.ribbon->set_mesh(s.ribbon_mesh);
+		s.ribbon->set_material_override(ribbon_mat_);
+		s.ribbon->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
+		s.ribbon->set_visible(false);
+		add_child(s.ribbon);
+		// Licking flames wrapped around the hot core (the ribbon is the trail itself).
 		s.trail = make_particles(flame);
-		s.trail->set_amount(28);
-		s.trail->set_lifetime(0.35);
+		s.trail->set_amount(64);
+		s.trail->set_lifetime(0.26);
+		s.trail->set_emission_shape(CPUParticles3D::EMISSION_SHAPE_SPHERE);
+		s.trail->set_emission_sphere_radius(0.14f); // a full, round fire around the core
+		s.trail->set_use_local_coordinates(true); // flames lick around the core and travel with it
 		s.trail->set_emitting(false);
 		s.trail->set_direction(Vector3(0, 1, 0));
 		s.trail->set_spread(180.0f);
 		s.trail->set_param_min(CPUParticles3D::PARAM_INITIAL_LINEAR_VELOCITY, 0.2f);
 		s.trail->set_param_max(CPUParticles3D::PARAM_INITIAL_LINEAR_VELOCITY, 0.8f);
 		s.trail->set_gravity(Vector3(0, 1.5f, 0));
-		s.trail->set_param_min(CPUParticles3D::PARAM_SCALE, 0.5f);
-		s.trail->set_param_max(CPUParticles3D::PARAM_SCALE, 1.1f);
+		s.trail->set_param_min(CPUParticles3D::PARAM_SCALE, 1.2f);
+		s.trail->set_param_max(CPUParticles3D::PARAM_SCALE, 2.2f);
 		s.trail->set_color_ramp(flipbook ? fade_ramp(Color(1, 1, 1), Color(1, 1, 1)) : fade_ramp(Color(1.0f, 0.85f, 0.4f), Color(1.0f, 0.3f, 0.1f)));
 		if (flipbook) {
 			s.trail->set_param_min(CPUParticles3D::PARAM_ANIM_SPEED, 1.0f);
@@ -258,10 +283,14 @@ void Combat::fireball(const Vector3 &origin, const Vector3 &dir, float damage, i
 		s.vel = d.rotated(Vector3(0, 1, 0), spread) * SHOT_SPEED;
 		s.life = 0.0f;
 		s.damage = damage;
+		s.origin = origin;
+		s.hist.assign(1, origin);
+		s.tail_t = 0.0f;
 		s.node->set_global_position(origin);
 		s.node->set_visible(true);
 		s.light->set_visible(true);
 		s.trail->set_global_position(origin);
+		s.trail->restart(); // a fresh burst every shot, even when the pool reuses a burning one
 		s.trail->set_emitting(true);
 	}
 }
@@ -358,20 +387,22 @@ Damageable *Combat::aim_assist(const Vector3 &origin, const Vector3 &facing, flo
 	return best;
 }
 
-// Fireball targeting: the closest monster, monster spawner or thorn nest within 8 m wins from any
-// direction (monsters count as a little closer, being the threat); then one of those roughly
-// ahead; only then vines in a narrower cone.
+// Fireball targeting. Heavy lock-on only within about four body lengths of the kid (any direction);
+// out to about ten, only things already roughly ahead get a light nudge. Monsters first, then monster
+// spawners and thorn nests, vines last; within a tier the nearest wins, things ahead counting closer.
+// Nothing qualifies: the fireball flies straight.
 Damageable *Combat::pick_target(const Vector3 &origin, const Vector3 &facing) {
+	constexpr float HEAVY = 4.5f, LIGHT = 11.0f, LIGHT_CONE = 0.87f; // ~30 degrees
 	if (!gather_targets) {
 		return nullptr;
 	}
 	std::vector<Damageable *> targets;
 	gather_targets(targets);
 	const Vector3 f = Vector3(facing.x, 0, facing.z).normalized();
-	Damageable *close = nullptr, *ahead = nullptr;
-	float close_score = 8.0f, ahead_score = 1e9f;
+	Damageable *best[3] = { nullptr, nullptr, nullptr };
+	float best_score[3] = { 1e9f, 1e9f, 1e9f };
 	for (Damageable *t : targets) {
-		if ((!t->is_monster() && !t->is_nest()) || !t->target_alive()) {
+		if (!t->target_alive()) {
 			continue;
 		}
 		const Vector3 d = t->target_point() - origin;
@@ -379,24 +410,23 @@ Damageable *Combat::pick_target(const Vector3 &origin, const Vector3 &facing) {
 			continue;
 		}
 		const float dist = Math::max(0.0f, t->surface_distance(origin));
-		const float score = t->is_monster() ? dist * 0.75f : dist;
-		if (score < close_score) {
-			close_score = score;
-			close = t;
-		}
 		const float c = Vector3(d.x, 0, d.z).normalized().dot(f);
-		if (dist < 16.0f && c > 0.34f && dist * (1.6f - c) < ahead_score) {
-			ahead_score = dist * (1.6f - c);
-			ahead = t;
+		if (dist > LIGHT || (dist > HEAVY && c < LIGHT_CONE)) {
+			continue;
+		}
+		const int tier = t->is_monster() ? 0 : (t->is_nest() ? 1 : 2);
+		const float score = dist * (1.25f - 0.25f * c);
+		if (score < best_score[tier]) {
+			best_score[tier] = score;
+			best[tier] = t;
 		}
 	}
-	if (close) {
-		return close;
+	for (Damageable *t : best) {
+		if (t) {
+			return t;
+		}
 	}
-	if (ahead) {
-		return ahead;
-	}
-	return aim_assist(origin, facing, 18.0f, 0.8f);
+	return nullptr;
 }
 bool Combat::ray_blocked(const Vector3 &a, const Vector3 &b, Vector3 &hit) {
 	PhysicsDirectSpaceState3D *space = get_world_3d()->get_direct_space_state();
@@ -404,12 +434,69 @@ bool Combat::ray_blocked(const Vector3 &a, const Vector3 &b, Vector3 &hit) {
 		return false;
 	}
 	Ref<PhysicsRayQueryParameters3D> q = PhysicsRayQueryParameters3D::create(a, b, 1);
-	Dictionary r = space->intersect_ray(q);
-	if (r.is_empty()) {
-		return false;
+	// Shots fly through yard fences (bodies tagged "shot_through"): skip them and look further.
+	TypedArray<RID> skip;
+	for (int tries = 0; tries < 4; ++tries) {
+		Dictionary r = space->intersect_ray(q);
+		if (r.is_empty()) {
+			return false;
+		}
+		Object *col = r["collider"];
+		if (col && col->has_meta("shot_through")) {
+			skip.push_back(RID(r["rid"]));
+			q->set_exclude(skip);
+			continue;
+		}
+		hit = r["position"];
+		return true;
 	}
-	hit = r["position"];
-	return true;
+	return false;
+}
+
+// The flame trail: a camera-facing ribbon through the ball's recent positions, widest at the ball.
+void Combat::update_ribbon(Shot &s) {
+	s.ribbon_mesh->clear_surfaces();
+	Camera3D *cam = get_viewport() ? get_viewport()->get_camera_3d() : nullptr;
+	if (s.hist.size() < 2 || !cam) {
+		s.ribbon->set_visible(false);
+		return;
+	}
+	const Vector3 eye = cam->get_global_position();
+	PackedVector3Array v;
+	PackedVector2Array uv;
+	const int n = int(s.hist.size());
+	for (int i = 0; i < n; ++i) {
+		const Vector3 p = s.hist[i];
+		const Vector3 along = (s.hist[std::max(i - 1, 0)] - s.hist[std::min(i + 1, n - 1)]).normalized();
+		Vector3 side = along.cross(eye - p).normalized();
+		if (side.length() < 0.5f) {
+			side = Vector3(0, 1, 0);
+		}
+		const float u = float(i) / float(n - 1);
+		const float grow = 1.0f + 0.22f * Math::max(0.0f, s.damage - 1.0f); // and a fatter flame
+		const float w = 0.55f * grow * (1.0f - 0.4f * u) * (0.75f + 0.25f * std::sin(u * 9.0f + s.life * 30.0f));
+		v.push_back(p + side * w);
+		v.push_back(p - side * w);
+		uv.push_back(Vector2(u, 0.0f));
+		uv.push_back(Vector2(u, 1.0f));
+	}
+	PackedInt32Array idx;
+	for (int i = 0; i + 1 < n; ++i) {
+		const int a = i * 2;
+		for (int k : { a, a + 1, a + 2, a + 1, a + 3, a + 2 }) {
+			idx.push_back(k);
+		}
+	}
+	Array arrays;
+	arrays.resize(Mesh::ARRAY_MAX);
+	arrays[Mesh::ARRAY_VERTEX] = v;
+	arrays[Mesh::ARRAY_TEX_UV] = uv;
+	arrays[Mesh::ARRAY_INDEX] = idx;
+	s.ribbon_mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
+	s.ribbon->set_visible(true);
+	if (false) {
+		UtilityFunctions::print("RIBBON n=", n, " mat=", ribbon_mat_.is_valid(), " shader=", ribbon_mat_.is_valid() ? Ref<ShaderMaterial>(ribbon_mat_)->get_shader().is_valid() : false, " aabb=", s.ribbon_mesh->get_aabb(), " head=", s.hist[0]);
+	}
 }
 
 void Combat::explode(Shot &s, bool hit) {
@@ -417,7 +504,24 @@ void Combat::explode(Shot &s, bool hit) {
 	s.node->set_visible(false);
 	s.light->set_visible(false);
 	s.trail->set_emitting(false);
+	s.tail_t = TAIL_TIME;
+	s.hist.insert(s.hist.begin(), s.pos); // the head stops at the impact point
 	puff(s.pos, hit ? Color(1.0f, 0.7f, 0.25f) : Color(1.0f, 0.5f, 0.2f), hit ? 22 : 12, hit ? 4.0f : 2.2f);
+	if (Vfx *vfx = Vfx::get()) {
+		// A puff of fire where it lands, bigger on a hit.
+		const float big = hit ? 1.0f : 0.7f;
+		vfx->flames(s.pos, hit ? 14 : 9, 0.3f * big, 1.6f * big);
+		vfx->flash(s.pos, Color(1.0f, 0.55f, 0.18f), 1.8f * big);
+		vfx->smoke(s.pos + Vector3(0, 0.2f, 0), Color(1.0f, 0.78f, 0.6f), 0.6f * big, 3);
+		// A point-blank shot never really flew: lay fire along the short path so it still reads.
+		const float path = s.origin.distance_to(s.pos);
+		if (s.life < 0.12f && path > 0.4f) {
+			const int n = Math::min(3, int(path / 0.6f) + 1);
+			for (int i = 1; i <= n; ++i) {
+				vfx->flames(s.origin.lerp(s.pos, float(i) / float(n + 1)), 6, 0.12f, 1.2f);
+			}
+		}
+	}
 	if (!hit && on_fizzle) {
 		on_fizzle(s.pos);
 	}
@@ -431,6 +535,18 @@ void Combat::_process(double delta) {
 	}
 	for (Shot &s : shots_) {
 		if (!s.active) {
+			if (s.tail_t > 0.0f) {
+				// After impact the tail catches up with the impact point while it fades.
+				s.tail_t -= dt;
+				for (int k = 0; k < 2 && s.hist.size() > 2; ++k) {
+					s.hist.pop_back();
+				}
+				s.ribbon->set_instance_shader_parameter("fade", Math::max(0.0f, s.tail_t / TAIL_TIME));
+				update_ribbon(s);
+				if (s.tail_t <= 0.0f) {
+					s.ribbon->set_visible(false);
+				}
+			}
 			continue;
 		}
 		s.life += dt;
@@ -474,6 +590,14 @@ void Combat::_process(double delta) {
 		s.node->set_global_position(s.pos);
 		s.light->set_global_position(s.pos);
 		s.trail->set_global_position(s.pos);
+		s.hist.insert(s.hist.begin(), s.pos);
+		// Hotter (upgraded) fire leaves a longer trail.
+		const size_t len = size_t(13 + 5 * std::max(0.0f, (s.damage - 1.0f) / 0.65f));
+		while (s.hist.size() > len) {
+			s.hist.pop_back();
+		}
+		s.ribbon->set_instance_shader_parameter("fade", 1.0f);
+		update_ribbon(s);
 		const float pulse = 1.0f + 0.15f * std::sin(s.life * 40.0f);
 		s.node->set_scale(Vector3(pulse, pulse, pulse));
 		if (s.life > SHOT_LIFE) {

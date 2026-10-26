@@ -485,18 +485,21 @@ void build_house(GenContext &ctx, Lot &lot) {
 	hc.rbox(Vector3(h.porch_x, deck - 0.07f, (pz0 + pz1) * 0.5f), Vector3(h.porch_w * 0.5f, 0.07f, h.porch_d * 0.5f), 0.03f, mat_cell(pal::PLANK, mat::PLANKS));
 	m.clear_uv_axes();
 	hc.solid(Vector3(h.porch_x, deck * 0.5f, (pz0 + pz1) * 0.5f), Vector3(h.porch_w * 0.5f, deck * 0.5f, h.porch_d * 0.5f), true);
+	// Wraparound steps: each lower step also runs round both sides of the one above, so the kid can
+	// walk up from the front or from either side (no getting stuck against the side of the flight).
 	const int steps = 3;
 	const float step_h = deck / steps, step_d = 0.36f, step_w = 1.7f;
 	for (int i = 0; i < steps; ++i) {
 		const float top = deck - step_h * i;
-		const float sz = pz1 + step_d * (i + 0.5f);
-		hc.rbox(Vector3(h.door_x, top * 0.5f, sz), Vector3(step_w * 0.5f, top * 0.5f, step_d * 0.5f), 0.025f, mat_cell(pal::PLANK, mat::PLANKS),
-				mat_cell(pal::WOOD_LIGHT, mat::PLANKS));
-		hc.solid(Vector3(h.door_x, top * 0.5f, sz), Vector3(step_w * 0.5f, top * 0.5f, step_d * 0.5f), true);
-	}
-	for (float sx : { -1.0f, 1.0f }) {
-		m.beam(Vector3(h.door_x + sx * (step_w * 0.5f + 0.05f), deck, pz1), Vector3(h.door_x + sx * (step_w * 0.5f + 0.05f), 0.02f, pz1 + step_d * steps), 0.1f, 0.22f,
-				trim);
+		const float hw = step_w * 0.5f + step_d * i, depth = step_d * (i + 1);
+		const Vector3 c(h.door_x, top * 0.5f, pz1 + depth * 0.5f);
+		hc.rbox(c, Vector3(hw, top * 0.5f, depth * 0.5f), 0.025f, mat_cell(pal::PLANK, mat::PLANKS), mat_cell(pal::WOOD_LIGHT, mat::PLANKS));
+		hc.solid(c, Vector3(hw, top * 0.5f, depth * 0.5f), true);
+		// A trim nosing along the front and side edges of each tread.
+		m.box(Vector3(h.door_x, top - 0.02f, pz1 + depth + 0.01f), Vector3(hw + 0.01f, 0.03f, 0.02f), trim);
+		for (float sx : { -1.0f, 1.0f }) {
+			m.box(Vector3(h.door_x + sx * (hw + 0.01f), top - 0.02f, pz1 + depth * 0.5f), Vector3(0.02f, 0.03f, depth * 0.5f + 0.01f), trim);
+		}
 	}
 	hc.box(Vector3(h.door_x, deck + 0.012f, zf + 0.55f), Vector3(0.5f, 0.012f, 0.32f), mat_cell(pal::PUMPKIN_DARK, mat::BURLAP));
 	lot.doorbell = lot.to_world(h.door_x, deck, zf + 0.7f);
@@ -519,8 +522,10 @@ void build_house(GenContext &ctx, Lot &lot) {
 	// Ceiling lamp over the door.
 	m.cylinder(Vector3(h.door_x, roof_y - 0.32f, zf + 0.9f), 0.16f, 0.3f, 8, pal::GLOW_PORCH, 0.11f);
 	m.cylinder(Vector3(h.door_x, roof_y - 0.06f, zf + 0.9f), 0.2f, 0.06f, 8, mat_cell(pal::IRON, mat::METAL));
-	// Rails: front on both sides of the steps; one end rail on the driveway side (passage side open).
-	const float sx0 = h.door_x - step_w * 0.5f - 0.05f, sx1 = h.door_x + step_w * 0.5f + 0.05f;
+	// Rails: front on both sides of the steps, starting past the widest (bottom) step so the whole
+	// wraparound flight opens onto the deck; one end rail on the driveway side (passage side open).
+	const float mouth = step_w * 0.5f + step_d * (steps - 1) + 0.05f;
+	const float sx0 = h.door_x - mouth, sx1 = h.door_x + mouth;
 	if (sx0 - px0 > 0.5f) {
 		rail_run(hc, Vector3(px0 + 0.15f, 0, pz1 - 0.15f), Vector3(sx0, 0, pz1 - 0.15f), deck);
 	}
@@ -708,6 +713,7 @@ void build_house(GenContext &ctx, Lot &lot) {
 						m.beam(Vector3(p0.x, rail_y, p0.z), Vector3(p1.x, rail_y, p1.z), 0.07f, 0.09f, fence_wood);
 						if (add_collision) {
 							ctx.add_box(lot.index, Vector3(mid.x, height * 0.5f, mid.z), Vector3(std::abs(dir.x) * hl + 0.06f, height * 0.5f, std::abs(dir.z) * hl + 0.06f), false);
+							ctx.boxes.back().shot_through = true;
 						}
 						seg_start = -1.0f;
 					}
@@ -715,7 +721,22 @@ void build_house(GenContext &ctx, Lot &lot) {
 			}
 		};
 		const float fh = h.fence_type == 1 ? 1.0f : 1.1f;
-		run(Vector3(fx, 0, -0.8f), Vector3(fx, 0, -lot.depth + 0.4f), fh, false);
+		// Each run is a choice of its own (a separate stream, so the rest of the layout is
+		// unchanged): a side between houses is left open, fences just the backyard (from behind the
+		// house), or runs the whole depth of the lot.
+		Rng frng = ctx.rng(STAGE_HOUSE, uint64_t(lot.index), 0xFE7CEu);
+		const float behind = Math::min(-0.8f, h.front_z - h.depth - 0.3f);
+		auto side_run = [&](float x) {
+			const float r = frng.range(0.0f, 1.0f);
+			if (r < 0.35f) {
+				return;
+			}
+			const float z0 = r < 0.65f ? behind : -0.8f;
+			if (z0 - (-lot.depth + 0.4f) > 1.0f) {
+				run(Vector3(x, 0, z0), Vector3(x, 0, -lot.depth + 0.4f), fh, false);
+			}
+		};
+		side_run(fx);
 		bool first_in_row = true;
 		for (const Lot &o : ctx.lots) {
 			if (o.side == lot.side && o.index == lot.index - 1) {
@@ -723,9 +744,11 @@ void build_house(GenContext &ctx, Lot &lot) {
 			}
 		}
 		if (first_in_row) {
-			run(Vector3(-fx, 0, -0.8f), Vector3(-fx, 0, -lot.depth + 0.4f), fh, false);
+			side_run(-fx);
 		}
-		if (lot.persona == Persona::CozyGrandparents || lot.persona == Persona::GreenThumbs || lot.persona == Persona::Bakers) {
+		// A low front picket: most tidy households, now and then anyone else.
+		const bool tidy = lot.persona == Persona::CozyGrandparents || lot.persona == Persona::GreenThumbs || lot.persona == Persona::Bakers;
+		if (frng.chance(tidy ? 0.75f : 0.15f)) {
 			run(Vector3(-fx, 0, -0.5f), Vector3(fx, 0, -0.5f), 0.75f, true);
 		}
 		m.set_ground_ao(false);

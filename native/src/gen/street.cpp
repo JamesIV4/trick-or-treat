@@ -348,6 +348,16 @@ void build_street(GenContext &ctx) {
 			const float hv = hc + s.verge;
 			m.quad_out(P(c0, l0, hc, verge_y), P(c1, l1, hc, verge_y), P(c1, l1, hv, verge_y), P(c0, l0, hv, verge_y), verge_cell, P(c0, l0, (hc + hv) * 0.5f, -1));
 			m.quad_out(P(c0, l0, hv, walk_y), P(c1, l1, hv, walk_y), P(c1, l1, he, walk_y), P(c0, l0, he, walk_y), tone, P(c0, l0, (hv + he) * 0.5f, -1));
+			// Close the curb, verge and sidewalk where the street runs out into the country road.
+			if (i == 0 || i + 2 == n) {
+				const Vector3 &c = i == 0 ? c0 : c1, &l = i == 0 ? l0 : l1;
+				const Vector3 out = (i == 0 ? c0 - c1 : c1 - c0).normalized();
+				const float bands[3][3] = { { hr, hc, curb_h }, { hc, hv, verge_y }, { hv, he, walk_y } };
+				for (const auto &b : bands) {
+					m.quad_out(P(c, l, b[0], -0.05f), P(c, l, b[1], -0.05f), P(c, l, b[1], b[2]), P(c, l, b[0], b[2]), b[2] == verge_y ? verge_cell : tone,
+							P(c, l, (b[0] + b[1]) * 0.5f, b[2] * 0.5f) - out);
+				}
+			}
 		}
 	}
 	// Dashed centre line, skipping the intersection.
@@ -359,7 +369,7 @@ void build_street(GenContext &ctx) {
 		const Vector3 la = s.left_at(x), lb = s.left_at(x + 2.0f);
 		Vector3 q[4] = { a - la * 0.09f, b - lb * 0.09f, b + lb * 0.09f, a + la * 0.09f };
 		for (Vector3 &p : q) {
-			p.y = 0.02f;
+			p.y = 0.035f;
 		}
 		m.quad_out(q[0], q[1], q[2], q[3], pal::ROAD_LINE, (a + b) * 0.5f - Vector3(0, 1, 0));
 	}
@@ -374,7 +384,7 @@ void build_street(GenContext &ctx) {
 			const float sd = float(side);
 			Vector3 a0 = s.center[i] + s.left[i] * (sd * (hr - 0.4f)), a1 = s.center[i + 1] + s.left[i + 1] * (sd * (hr - 0.4f));
 			Vector3 b0 = s.center[i] + s.left[i] * (sd * hr), b1 = s.center[i + 1] + s.left[i + 1] * (sd * hr);
-			a0.y = a1.y = b0.y = b1.y = 0.014f;
+			a0.y = a1.y = b0.y = b1.y = 0.03f;
 			m.quad_out(a0, a1, b1, b0, mat_cell(pal::STONE, mat::CONCRETE), (a0 + b1) * 0.5f - Vector3(0, 1, 0));
 		}
 		for (float x = s.center.front().x + drng.range(6.0f, 12.0f); x < s.center.back().x; x += drng.range(16.0f, 22.0f)) {
@@ -403,31 +413,19 @@ void build_street(GenContext &ctx) {
 	{
 		const Vector3 o = s.lane_origin + Vector3(0, 0, float(s.lane_dir) * (hc + 1.4f));
 		for (int k = -3; k <= 3; ++k) {
-			const Vector3 c = o + Vector3(k * 1.1f, 0.024f, 0);
+			const Vector3 c = o + Vector3(k * 1.1f, 0.035f, 0);
 			m.quad_out(c + Vector3(-0.3f, 0, -0.9f), c + Vector3(0.3f, 0, -0.9f), c + Vector3(0.3f, 0, 0.9f), c + Vector3(-0.3f, 0, 0.9f),
 					mat_cell(pal::TRIM_WHITE, mat::CONCRETE), c - Vector3(0, 1, 0));
 		}
 	}
-	// Painted pumpkin hopscotch across the road beside the intersection.
-	const float hx = s.lane_x + (s.lane_x < 0 ? 7.5f : -7.5f);
-	const Vector3 hcen = s.at(hx), hl = s.left_at(hx);
-	for (int i = -3; i <= 3; ++i) {
-		const Vector3 c = hcen + hl * (i * 1.1f);
-		const int cell = (i & 1) ? pal::PUMPKIN : pal::CANDY_CORN_YELLOW;
-		Vector3 t = Vector3(1, 0, 0);
-		Vector3 q[4] = { c - t * 0.45f - hl * 0.45f, c + t * 0.45f - hl * 0.45f, c + t * 0.45f + hl * 0.45f, c - t * 0.45f + hl * 0.45f };
-		for (Vector3 &p : q) {
-			p.y = 0.022f;
-		}
-		m.quad_out(q[0], q[1], q[2], q[3], cell, c - Vector3(0, 1, 0));
-	}
-	// Side lane: straight along z from the main street centre.
+	// Side lane: straight along z from the main street's edge (it doesn't overlap the main asphalt,
+	// which would depth-fight).
 	const Vector3 o = s.lane_origin;
 	const Vector3 dir(0, 0, float(s.lane_dir));
 	const Vector3 lat(1, 0, 0);
 	std::vector<Vector3> lc, ll;
 	for (float d = 0.0f; d <= s.lane_len + 0.01f; d += 1.0f) {
-		lc.push_back(o + dir * d);
+		lc.push_back(o + dir * Math::max(d, hr));
 		ll.push_back(lat);
 	}
 	m.ribbon(lc, ll, -hr, hr, 0.012f, mat_cell(pal::ASPHALT, mat::ASPHALT));
@@ -448,6 +446,14 @@ void build_street(GenContext &ctx) {
 			const float hv = hc + s.verge;
 			m.quad_out(P(i, hc, verge_y), P(i + 1, hc, verge_y), P(i + 1, hv, verge_y), P(i, hv, verge_y), verge_cell, P(i, (hc + hv) * 0.5f, -1));
 			m.quad_out(P(i, hv, walk_y), P(i + 1, hv, walk_y), P(i + 1, he, walk_y), P(i, he, walk_y), tone, P(i, (hv + he) * 0.5f, -1));
+			if (i + 2 == lc.size()) {
+				// Close the lane's curb, verge and sidewalk ends.
+				const float bands[3][3] = { { hr, hc, curb_h }, { hc, hv, verge_y }, { hv, he, walk_y } };
+				for (const auto &b : bands) {
+					m.quad_out(P(i + 1, b[0], -0.05f), P(i + 1, b[1], -0.05f), P(i + 1, b[1], b[2]), P(i + 1, b[0], b[2]), b[2] == verge_y ? verge_cell : tone,
+							P(i + 1, (b[0] + b[1]) * 0.5f, b[2] * 0.5f) - dir);
+				}
+			}
 		}
 	}
 	// Lane centre dashes.
@@ -455,7 +461,7 @@ void build_street(GenContext &ctx) {
 		const Vector3 a = o + dir * d, b = o + dir * (d + 2.0f);
 		Vector3 q[4] = { a - lat * 0.09f, b - lat * 0.09f, b + lat * 0.09f, a + lat * 0.09f };
 		for (Vector3 &p : q) {
-			p.y = 0.022f;
+			p.y = 0.035f;
 		}
 		m.quad_out(q[0], q[1], q[2], q[3], pal::ROAD_LINE, (a + b) * 0.5f - Vector3(0, 1, 0));
 	}
@@ -465,7 +471,7 @@ void build_street(GenContext &ctx) {
 static void hay_wall(GenContext &ctx, Vector3 center, Vector3 along, float width, Rng &rng) {
 	MeshBuilder &m = ctx.boundary_mesh;
 	const Vector3 up(0, 1, 0);
-	const Vector3 across = up.cross(along).normalized();
+	const Vector3 across = along.cross(up).normalized(); // right-handed (along, up, across): a mirrored basis turns the mesh inside out
 	const int cols = int(width / 1.15f);
 	for (int row = 0; row < 6; ++row) {
 		for (int c = 0; c < cols; ++c) {
@@ -497,17 +503,23 @@ static void hedge_run(GenContext &ctx, Vector3 a, Vector3 b, Rng &rng, float hei
 	if (len < 0.1f) {
 		return;
 	}
-	const Vector3 along = d / len, up(0, 1, 0), across = up.cross(along);
+	const Vector3 along = d / len, up(0, 1, 0), across = along.cross(up); // right-handed, or the core renders inside out
 	Transform3D t(Basis(along, up, across), (a + b) * 0.5f);
+	// A low dark core fills the gaps; overlapping leafy bushes of varied size make the hedge itself.
 	m.set_transform(t);
-	m.rounded_box(Vector3(0, height * 0.45f, 0), Vector3(len * 0.5f + 0.3f, height * 0.45f, 0.6f), 0.25f, mat_cell(pal::HEDGE_DARK, mat::HEDGE), mat_cell(pal::HEDGE, mat::HEDGE));
-	for (float s = -len * 0.5f; s <= len * 0.5f; s += 1.6f) {
-		m.blob(Vector3(s + rng.range(-0.3f, 0.3f), height * 0.92f, rng.range(-0.15f, 0.15f)), Vector3(1.0f, 0.55f, 0.75f), mat_cell(pal::HEDGE, mat::HEDGE), 1, 0.15f, uint32_t(rng.next()));
-	}
+	m.rounded_box(Vector3(0, height * 0.3f, 0), Vector3(len * 0.5f + 0.3f, height * 0.3f, 0.5f), 0.25f, mat_cell(pal::HEDGE_DARK, mat::HEDGE), mat_cell(pal::HEDGE_DARK, mat::HEDGE));
 	m.set_transform(Transform3D());
+	for (float s = -len * 0.5f; s <= len * 0.5f + 0.01f; s += rng.range(1.1f, 1.5f)) {
+		const float sc = height / 0.92f * rng.range(0.62f, 0.85f);
+		ctx.add_prop(-1, "bush_round", t.xform(Vector3(s, 0, rng.range(-0.25f, 0.25f))), rng.range(0.0f, Math_TAU), sc, 0.3f);
+		ctx.props.back().collide = false; // the boundary box below blocks
+	}
+	// In the open world the hedge only blocks at ground level, so the kid can jump over (through the
+	// leafy tops); a standalone neighborhood keeps it as a tall playground wall.
+	const float wall = ctx.embedded ? 0.6f : 10.0f;
 	OBox box;
-	box.xf = Transform3D(Basis(along, up, across), (a + b) * 0.5f + up * 10.0f);
-	box.half = Vector3(len * 0.5f + 0.3f, 10.0f, 0.7f);
+	box.xf = Transform3D(Basis(along, up, across), (a + b) * 0.5f + up * wall);
+	box.half = Vector3(len * 0.5f + 0.3f, wall, 0.7f);
 	box.boundary = true;
 	ctx.boxes.push_back(box);
 }

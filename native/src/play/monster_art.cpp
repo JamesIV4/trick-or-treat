@@ -1,5 +1,7 @@
 #include "play/monster_art.h"
 
+#include "gen/asset_library.h"
+
 #include <godot_cpp/core/math.hpp>
 
 #include <cmath>
@@ -18,7 +20,7 @@ const char *monster_name(MonsterType t) {
 }
 
 const char *nest_name(MonsterType t) {
-	static const char *n[] = { "Cracked Pumpkin", "Bat Belfry", "Crooked Graves", "Haunted Lantern", "Gremlin Burrow", "Sarcophagus",
+	static const char *n[] = { "Cracked Pumpkin", "Bat Belfry", "Crooked Graves", "Haunted Lantern", "Candy-Corn Hive", "Sarcophagus",
 		"Bubbling Cauldron", "Crow Post", "Web Nest", "Fairy Ring" };
 	return n[int(t)];
 }
@@ -40,8 +42,35 @@ void thorn(MeshBuilder &m, Vector3 base, Vector3 dir, float len, float r, int ce
 	const Vector3 z = x.cross(dir).normalized();
 	const Transform3D save = m.transform();
 	m.set_transform(save * Transform3D(Basis(x, dir, z), base));
-	m.cylinder(Vector3(), r, len, 5, cell, 0.0f);
+	// Bone-white spine with a brighter tip.
+	m.cylinder(Vector3(), r, len * 0.72f, 5, cell, r * 0.3f);
+	m.cylinder(Vector3(0, len * 0.72f, 0), r * 0.3f, len * 0.28f, 5, pal::TRIM_WHITE, 0.0f);
 	m.set_transform(save);
+}
+
+// A round tapered stem segment from a to b (an oriented cylinder; joints get a knuckle blob).
+void tube(MeshBuilder &m, Vector3 a, Vector3 b, float ra, float rb, int cell) {
+	const Vector3 d = b - a;
+	const float len = d.length();
+	if (len < 1e-3f) {
+		return;
+	}
+	const Vector3 y = d / len;
+	const Vector3 side = std::abs(y.y) > 0.9f ? Vector3(1, 0, 0) : Vector3(0, 1, 0);
+	const Vector3 x = side.cross(y).normalized();
+	const Vector3 z = x.cross(y).normalized();
+	const Transform3D save = m.transform();
+	m.set_transform(save * Transform3D(Basis(x, y, z), a));
+	m.cylinder(Vector3(), ra, len, 7, cell, rb);
+	m.set_transform(save);
+}
+
+// A small pointed leaf lying along `dir` from `base`, tilted up a little.
+void leaf(MeshBuilder &m, Vector3 base, Vector3 dir, Vector3 side, float size, int cell) {
+	const Vector3 tip = base + dir * size;
+	const Vector3 mid = base + dir * (size * 0.45f) + Vector3(0, size * 0.12f, 0);
+	m.tri_out(base, mid + side * size * 0.28f, tip, cell, mid - Vector3(0, 1, 0));
+	m.tri_out(base, tip, mid - side * size * 0.28f, cell, mid - Vector3(0, 1, 0));
 }
 
 Ref<ArrayMesh> finish(MeshBuilder &m) {
@@ -286,7 +315,7 @@ void build_gremlin(MonsterArt &a) {
 	}
 	a.nest = finish(n);
 	a.nest_radius = 1.0f;
-	a.nest_height = 0.9f;
+	a.nest_height = 1.6f; // the authored Candy-Corn Hive stands 1.6 m
 }
 
 void build_mummy(MonsterArt &a) {
@@ -541,7 +570,7 @@ void build_toadstool(MonsterArt &a) {
 Ref<ArrayMesh> build_vine(uint32_t seed) {
 	MeshBuilder m;
 	Rng rng(seed);
-	const int stems[2] = { mat_cell(pal::VINE_DARK, mat::LEAVES), mat_cell(pal::VINE, mat::LEAVES) };
+	const int stems[2] = { mat_cell(pal::VINE_DARK, mat::BARK), mat_cell(pal::VINE, mat::BARK) };
 	const int thorn_cell = mat_cell(pal::BONE, mat::FLAT);
 	const int tendrils = rng.irange(6, 8);
 	for (int t = 0; t < tendrils; ++t) {
@@ -567,7 +596,7 @@ Ref<ArrayMesh> build_vine(uint32_t seed) {
 			p = q;
 			w *= 0.86f;
 		}
-		if (rng.chance(0.6f)) {
+		if (rng.chance(0.3f)) {
 			m.blob(p, Vector3(0.16f, 0.14f, 0.16f), pal::GLOW_PURPLE, 1);
 		}
 	}
@@ -581,58 +610,103 @@ Ref<ArrayMesh> build_vine(uint32_t seed) {
 
 } // namespace
 
-// A creeping thorn vine along a ground path (points relative to the first): two strands twisting
-// around each other, tapering toward the tip, bristling with big pale thorns and the odd glowing
-// purple bud.
+// A creeping thorn vine along a ground path (points relative to the first): two round strands
+// twisting around each other and tapering toward the tip, bristling with bone-white spines, with
+// pairs of small leaves, the odd curling side shoot and a few glowing purple buds.
 Ref<ArrayMesh> build_tendril_mesh(const std::vector<Vector3> &pts, float width, uint32_t seed) {
 	MeshBuilder m;
 	Rng rng(seed);
 	if (pts.size() < 2) {
 		return Ref<ArrayMesh>();
 	}
-	const int stems[2] = { mat_cell(pal::VINE_DARK, mat::LEAVES), mat_cell(pal::VINE, mat::LEAVES) };
+	const int stems[2] = { mat_cell(pal::VINE_DARK, mat::BARK), mat_cell(pal::VINE, mat::BARK) };
 	const int thorn_cell = mat_cell(pal::BONE, mat::FLAT);
-	float run = 0.0f, total = 0.0f;
+	const int leaf_cell = mat_cell(pal::VINE, mat::LEAVES);
+	float total = 0.0f;
 	for (size_t i = 1; i < pts.size(); ++i) {
 		total += pts[i].distance_to(pts[i - 1]);
 	}
-	const float phase = rng.range(0.0f, Math_TAU);
-	for (size_t i = 0; i + 1 < pts.size(); ++i) {
-		const Vector3 a = pts[i], b = pts[i + 1];
-		const float seg = a.distance_to(b);
-		const Vector3 dir = (b - a) / Math::max(seg, 1e-4f);
-		const Vector3 side = Vector3(-dir.z, 0, dir.x);
-		const float k0 = 1.0f - run / total, k1 = 1.0f - (run + seg) / total;
-		const float w0 = width * (0.35f + 0.65f * k0), w1 = width * (0.35f + 0.65f * k1);
-		for (int strand = 0; strand < 2; ++strand) {
-			const float sp = strand == 0 ? 0.0f : Math_PI;
-			auto at = [&](const Vector3 &p, float r, float w) {
-				const float ang = r * 2.2f + phase + sp;
-				return p + side * (std::cos(ang) * w * 0.35f) + Vector3(0, w * 0.55f + std::sin(ang) * w * 0.3f, 0);
-			};
-			m.beam(at(a, run, w0), at(b, run + seg, w1), w0 * 0.62f, w0 * 0.62f, stems[strand], Vector3(0, 1, 0));
+	// Resample the path every 0.35 m so the twist reads as a smooth curve.
+	std::vector<Vector3> path;
+	std::vector<float> runs;
+	{
+		float run = 0.0f;
+		for (size_t i = 0; i + 1 < pts.size(); ++i) {
+			const float seg = pts[i].distance_to(pts[i + 1]);
+			const int n = std::max(1, int(seg / 0.35f));
+			for (int k = 0; k < n; ++k) {
+				path.push_back(pts[i].lerp(pts[i + 1], float(k) / n));
+				runs.push_back(run + seg * float(k) / n);
+			}
+			run += seg;
 		}
-		// Thorns: big, pale, pointing out and up, alternating sides.
-		for (float t = 0.2f; t < seg; t += 0.42f) {
-			const Vector3 base = a + dir * t;
-			const float w = Math::lerp(w0, w1, t / Math::max(seg, 1e-4f));
+		path.push_back(pts.back());
+		runs.push_back(total);
+	}
+	const float phase = rng.range(0.0f, Math_TAU);
+	auto width_at = [&](float r) { return width * (0.3f + 0.7f * (1.0f - r / total)); };
+	auto side_at = [&](size_t i) {
+		const Vector3 d = path[std::min(i + 1, path.size() - 1)] - path[i > 0 ? i - 1 : 0];
+		return Vector3(-d.z, 0, d.x).normalized();
+	};
+	auto strand = [&](size_t i, int s) {
+		const float w = width_at(runs[i]);
+		const float ang = runs[i] * 2.0f + phase + (s ? Math_PI : 0.0f);
+		return path[i] + side_at(i) * (std::cos(ang) * w * 0.32f) + Vector3(0, w * 0.5f + std::sin(ang) * w * 0.26f, 0);
+	};
+	for (size_t i = 0; i + 1 < path.size(); ++i) {
+		for (int s = 0; s < 2; ++s) {
+			const float w0 = width_at(runs[i]) * 0.3f, w1 = width_at(runs[i + 1]) * 0.3f;
+			tube(m, strand(i, s), strand(i + 1, s), w0, w1, stems[s]);
+		}
+	}
+	// Spines, leaves, shoots and buds along the run.
+	float next_thorn = 0.15f, next_leaf = rng.range(0.6f, 1.2f), next_shoot = rng.range(2.0f, 4.0f);
+	for (size_t i = 0; i + 1 < path.size(); ++i) {
+		const float r = runs[i];
+		const float w = width_at(r);
+		const Vector3 dir = (path[i + 1] - path[i]).normalized();
+		const Vector3 side = side_at(i);
+		if (r >= next_thorn) {
+			next_thorn += rng.range(0.28f, 0.42f);
 			const float sd = rng.chance(0.5f) ? 1.0f : -1.0f;
 			const Vector3 tdir = (side * sd * rng.range(0.6f, 1.0f) + Vector3(0, rng.range(0.5f, 1.1f), 0) + dir * rng.range(-0.3f, 0.3f)).normalized();
-			const float len = (0.45f + 0.45f * w / width) * rng.range(0.8f, 1.15f);
-			thorn(m, base + Vector3(0, w * 0.6f, 0) + tdir * w * 0.3f, tdir, len, 0.07f + 0.08f * w / width, thorn_cell);
+			const float len = (0.42f + 0.45f * w / width) * rng.range(0.8f, 1.15f);
+			thorn(m, path[i] + Vector3(0, w * 0.55f, 0) + tdir * w * 0.25f, tdir, len, 0.06f + 0.08f * w / width, thorn_cell);
 		}
-		if (rng.chance(0.18f)) {
-			m.blob(a + side * width * 0.45f * (rng.chance(0.5f) ? 1.0f : -1.0f) + Vector3(0, width * 0.7f, 0), Vector3(0.14f, 0.12f, 0.14f), pal::GLOW_PURPLE, 1);
+		if (r >= next_leaf) {
+			next_leaf += rng.range(0.9f, 1.6f);
+			for (float sd : { -1.0f, 1.0f }) {
+				const Vector3 base = path[i] + side * sd * w * 0.3f + Vector3(0, w * 0.45f, 0);
+				leaf(m, base, (side * sd + dir * 0.4f).normalized(), dir, rng.range(0.28f, 0.4f), leaf_cell);
+			}
 		}
-		if (rng.chance(0.25f)) {
-			const Vector3 l = a + side * width * 0.5f + Vector3(0, width * 0.3f, 0);
-			m.tri_out(l, l + side * 0.35f + dir * 0.1f, l + dir * 0.3f, mat_cell(pal::VINE, mat::LEAVES), l - Vector3(0, 1, 0));
+		if (r >= next_shoot && r < total - 1.0f) {
+			// A curling side shoot ending in a bud.
+			next_shoot += rng.range(2.5f, 4.5f);
+			const float sd = rng.chance(0.5f) ? 1.0f : -1.0f;
+			Vector3 p = path[i] + Vector3(0, w * 0.5f, 0);
+			Vector3 d = (side * sd + Vector3(0, 0.5f, 0)).normalized();
+			float sw = w * 0.22f;
+			for (int k = 0; k < 4; ++k) {
+				d = d.rotated(Vector3(0, 1, 0), sd * 0.5f).normalized();
+				d.y -= 0.18f;
+				const Vector3 q = p + d.normalized() * 0.32f;
+				tube(m, p, q, sw, sw * 0.75f, stems[1]);
+				if (k == 1) {
+					thorn(m, q, (d + Vector3(0, 0.8f, 0)).normalized(), 0.3f, 0.05f, thorn_cell);
+				}
+				p = q;
+				sw *= 0.75f;
+			}
+			m.blob(p, Vector3(0.11f, 0.1f, 0.11f), rng.chance(0.6f) ? pal::GLOW_PURPLE : leaf_cell, 1);
 		}
-		run += seg;
+		if (rng.chance(0.03f)) {
+			m.blob(path[i] + side * w * 0.45f * (rng.chance(0.5f) ? 1.0f : -1.0f) + Vector3(0, w * 0.7f, 0), Vector3(0.13f, 0.11f, 0.13f), pal::GLOW_PURPLE, 1);
+		}
 	}
 	return m.build();
 }
-
 void MonsterArtKit::build() {
 	build_pumpkin(art[int(MonsterType::PumpkinHopper)]);
 	build_bat(art[int(MonsterType::Bat)]);
@@ -715,4 +789,56 @@ void MonsterArtKit::build() {
 	}
 }
 
+void MonsterArtKit::apply_assets(AssetLibrary &lib) {
+	static const char *kinds[] = { "pumpkin", "bat", "skeleton", "ghost", "gremlin", "mummy", "slime", "scarecrow", "spider", "toadstool" };
+	for (int i = 0; i < int(MonsterType::Count); ++i) {
+		MonsterArt &a = art[i];
+		// The bouncing pumpkin keeps its original procedural look (the user preferred it).
+		const std::string mid = i == int(MonsterType::PumpkinHopper) ? std::string() : std::string("monster_") + kinds[i];
+		Vector3 origin;
+		const Ref<ArrayMesh> body = mid.empty() ? Ref<Mesh>() : lib.part_mesh(mid, "body", &origin);
+		if (body.is_valid()) {
+			a.body = body;
+			const Ref<ArrayMesh> pa = lib.part_mesh(mid, "part_a", &a.pivot_a);
+			const Ref<ArrayMesh> pb = lib.part_mesh(mid, "part_b", &a.pivot_b);
+			a.part_a = pa;
+			a.part_b = pb;
+		}
+		const std::string nid = std::string("nest_") + kinds[i];
+		if (lib.get(nid)->published) {
+			const Ref<ArrayMesh> nest = lib.merged_mesh(nid);
+			if (nest.is_valid()) {
+				a.nest = nest;
+			}
+		}
+	}
+	// Thorn knots and the thorn nest's root mass with its heart.
+	const char *knots[3] = { "thorn_knot_a", "thorn_knot_b", "thorn_knot_c" };
+	for (int k = 0; k < 3; ++k) {
+		if (lib.get(knots[k])->published) {
+			const Ref<ArrayMesh> m = lib.merged_mesh(knots[k]);
+			if (m.is_valid()) {
+				vine[k] = m;
+			}
+		}
+	}
+	if (lib.get("thorn_root_mass")->published) {
+		Vector3 o; // the roots' origin is the ground centre
+		root_mass = lib.part_mesh("thorn_root_mass", "roots", &o);
+		root_heart = lib.part_mesh("thorn_root_mass", "heart", &root_heart_origin);
+	}
+	// The travel gate (pad + post, and its lantern in the same space) and the candy shop cart.
+	struct Swap {
+		const char *id;
+		Ref<ArrayMesh> *mesh;
+	};
+	for (const Swap &s : { Swap{ "travel_gate_base", &gate_base }, Swap{ "travel_gate_lantern", &gate_lantern }, Swap{ "shop_cart", &shop_cart } }) {
+		if (lib.get(s.id)->published) {
+			const Ref<ArrayMesh> m = lib.merged_mesh(s.id);
+			if (m.is_valid()) {
+				*s.mesh = m;
+			}
+		}
+	}
+}
 } // namespace tot

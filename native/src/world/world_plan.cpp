@@ -77,7 +77,7 @@ const RegionPlan &WorldPlan::base(int i, int j) {
 	if (r.settlement()) {
 		// Plan just the street and lots (cheap and deterministic) to know the footprint and exits.
 		GenContext ctx;
-		ctx.seed = r.seed;
+		ctx.seed = settlement_seed(r); // exactly what the streamer generates with, so streets meet roads
 		ctx.kind = r.kind == RegionKind::Town ? SettlementKind::Town : SettlementKind::Neighborhood;
 		ctx.embedded = true;
 		plan_street(ctx);
@@ -103,7 +103,7 @@ const RegionPlan &WorldPlan::base(int i, int j) {
 		const Vector3 e = s.center.back(), w = s.center.front();
 		r.ports[PORT_E] = port(e, e - s.center[s.center.size() - 3]);
 		r.ports[PORT_W] = port(w, w - s.center[2]);
-		const Vector3 lane_end = s.lane_origin + Vector3(0, 0, float(s.lane_dir) * (s.lane_len + 0.5f));
+		const Vector3 lane_end = s.lane_origin + Vector3(0, 0, float(s.lane_dir) * s.lane_len); // the road starts where the lane asphalt ends
 		r.lane_side = s.lane_dir > 0 ? PORT_N : PORT_S;
 		r.ports[r.lane_side] = port(lane_end, Vector3(0, 0, float(s.lane_dir)));
 		const char **suffix = r.kind == RegionKind::Town ? NAME_TOWN : NAME_HOOD;

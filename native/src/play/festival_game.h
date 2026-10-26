@@ -17,11 +17,13 @@
 #include <godot_cpp/classes/world_environment.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "core/rng.h"
 #include "play/monster_art.h"
 #include "play/monsters.h"
 
@@ -52,6 +54,12 @@ public:
 	bool get_lightning() const { return lightning_; }
 	godot::Dictionary get_stats() const { return stats_; }
 	int get_wallet() const { return wallet_; }
+	// Saved games (scripts/saves.gd writes them to disk): everything the night has achieved, and
+	// where the kid stands. load_state rebuilds the world from the save's seed with that progress.
+	godot::Dictionary save_state();
+	bool load_state(const godot::Dictionary &d);
+	// A night is under way, with no menu up (play time and autosaves count only then).
+	bool is_playing() const { return started_ && !in_menu_ && !menu_open_ && teleport_t_ < 0.0f && cine_mode_.is_empty(); }
 
 protected:
 	static void _bind_methods();
@@ -72,6 +80,10 @@ private:
 	// Signals.
 	void on_candy(int kind, int value, int lot, godot::Vector3 pos, int id, int64_t key);
 	void on_house_cleared(int lot, int64_t key);
+	void bump_combo();
+	int fire_lead() const;
+	int combo_ = 0;
+	float combo_t_ = 0.0f;
 	void on_sequence(int size, godot::Vector3 pos, int64_t key);
 	void on_pounded(godot::Vector3 pos);
 	void on_landed(float impact);
@@ -83,6 +95,9 @@ private:
 	void on_lightning(float strength);
 	void on_stepped(int parity);
 	void on_purchase(godot::String id);
+	void on_start_mode(int mode);
+	void on_pause_choice(godot::String choice);
+	void on_shop_tab(int dir);
 	void on_travel(int index);
 	void on_menu_closed();
 	// World.
@@ -95,6 +110,31 @@ private:
 	void gather_targets(std::vector<Damageable *> &out);
 	void toggle_car();
 	void open_shop();
+	// Shop tabs: 0 upgrades, 1 car paint, 2 costumes (switched with the bumpers / Q and E).
+	int shop_tab_ = 0;
+	godot::String shop_focus_; // keep this item focused when the shop refreshes
+	int car_paint_ = 0;
+	std::vector<char> paint_owned_;
+	int costume_ = 0;
+	std::vector<char> costume_found_;
+	// Hidden costumes: one floats high above a rooftop in some settlements until it's found.
+	struct CostumePickup {
+		godot::Node3D *node = nullptr;
+		int costume = 0;
+		uint64_t key = 0;
+		godot::Vector3 pos;
+	};
+	std::vector<CostumePickup> costume_pickups_;
+	float costume_t_ = 0.0f;
+	void place_costume(Area &a);
+	// Wild monsters: a few roam the woods around the player (no nests), coming and going with them.
+	std::vector<Monster *> wild_;
+	godot::Node3D *wild_root_ = nullptr;
+	float wild_t_ = 0.0f;
+	Rng wild_rng_;
+	void update_wild(float dt);
+	void clear_wild();
+	void update_costume_pickups(float dt);
 	void begin_teleport(const godot::Vector3 &to);
 	godot::Vector3 player_point() const;
 	float fire_damage() const;
@@ -115,8 +155,51 @@ private:
 	int next_fx_ = 0;
 	bool fx_test_ = false, review_car_ = false, review_shop_ = false, review_free_ = false, review_travel_ = false, review_accept_ = false;
 	float fly_test_ = 0.0f, fly_t_ = 0.0f, fly_worst_ = 0.0f;
-	int stairs_lot_ = -1;
+	int stairs_lot_ = -1, mantle_lot_ = -1;
 	float stairs_best_ = 0.0f;
+	int ledge_lot_ = -1, ledge_frame_ = -1; // --ledge-test: jump at a roof edge, hang, climb
+	godot::Vector3 ledge_target_, ledge_dir_;
+	float ledge_top_ = 0.0f;
+	bool drop_pressed_ = false;
+	float drop_test_ = -1.0f, drop_base_ = 0.0f, drop_peak_ = 0.0f; // --drop-test with prop:ID
+	// Cinematic director (festival_cine.cpp): --cine=reel plays scripted showcase shots back to back
+	// (for Godot's movie writer, with captions); --cine=NAME plays one; --cine-out=DIR saves a still
+	// of each shot; --cine-clean leaves out the captions.
+	struct CineShot {
+		std::string name, caption, sub;
+		float duration = 5.0f;
+		float still_at = 0.5f; // fraction of the shot where its still is taken
+		bool avoid = true; // keep the camera out of walls (pull in in front of anything between it and the kid)
+		bool play_only = false; // a menu screenshot: only in --cine-play runs
+		int64_t seed = 0; // a world of its own (0: the reel's seed); the world reloads when it changes
+		bool gameplay = false; // seen as the player sees it: the normal camera and HUD, no caption
+		bool trailer = true; // part of the trailer reel (false: screenshots only)
+		std::function<void()> setup;
+		std::function<void(float t)> tick; // t: seconds into the shot
+		std::function<godot::Transform3D(float t, float &fov)> cam;
+	};
+	std::vector<CineShot> cine_;
+	godot::String cine_mode_, cine_out_;
+	bool cine_clean_ = false, cine_still_ = false, cine_fading_ = false;
+	bool cine_play_ = false; // --cine-play: the same action, seen through the normal game camera and HUD
+	int cine_i_ = -1;
+	float cine_t_ = 0.0f, cine_fire_ = 0.0f;
+	godot::Vector3 cine_a_, cine_b_, cine_c_, cine_d_; // per-shot anchors
+	godot::Vector3 cine_town_, cine_town_dir_;
+	bool cine_town_found_ = false;
+	void cine_build();
+	void cine_begin(int i);
+	void cine_step(float dt);
+	void cine_reset_player();
+	void cine_home(godot::Vector3 &spawn, godot::Vector3 &street); // the current home area's spawn and street direction
+	int64_t cine_base_seed_ = 0, cine_bounce_seed_ = 0;
+	bool cine_aim_on_ = false; // shots that fire at a set point instead of the auto-aim's pick
+	godot::Vector3 cine_aim_;
+	float cine_cut_at_ = -1.0f; // a shot that ends early (once its action is done)
+	bool cine_aggro_ = false; // gameplay segments: monsters come for the kid as usual (who can't be hurt)
+	bool cine_clear(const godot::Vector3 &a, const godot::Vector3 &b); // nothing solid between a and b
+	// The first camera offset (side, back) with a clear view of every target from both ends of its move.
+	godot::Vector2 cine_lane(const godot::Vector3 &anchor, const godot::Vector3 &back_dir, std::initializer_list<float> sides, std::initializer_list<float> backs, float push, float height, std::initializer_list<godot::Vector3> targets);
 	void parse_cmdline();
 	void capture_and_maybe_quit();
 
@@ -140,6 +223,14 @@ private:
 	std::vector<FreedArea> freed_;
 	std::vector<uint64_t> travel_keys_;
 	Upgrades up_;
+	// Game modes: 0 Trick or Treat (no monsters or vines, every gate awake), 1 Save the Town.
+	int mode_ = 1;
+	bool in_menu_ = false; // the main menu is up over the live world
+	bool started_ = false; // a mode has been picked since the world last loaded
+	uint64_t menu_closed_frame_ = 0;
+	void show_main_menu();
+	void reset_progress(); // a new game: no candy, upgrades, paints or found costumes
+	godot::Dictionary pending_states_; // a loading save's area progress, handed to the streamer in start_world
 
 	int64_t seed_ = 0;
 	bool lightning_ = true;

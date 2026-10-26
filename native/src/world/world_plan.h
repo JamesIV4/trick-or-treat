@@ -41,6 +41,11 @@ struct RegionPlan {
 	bool settlement() const { return kind != RegionKind::Woods; }
 };
 
+// The seed a settlement is generated from (the plan's street, lots and road ports must use the same).
+inline int64_t settlement_seed(const RegionPlan &r) {
+	return int64_t(r.seed & 0x7FFFFFFFFFFFull);
+}
+
 struct RoadPlan {
 	std::vector<Vector3> pts; // world centreline every ~3 m; y = road surface height
 	float x0 = 0, x1 = 0, z0 = 0, z1 = 0; // bounds of the centreline

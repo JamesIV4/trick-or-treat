@@ -1,0 +1,74 @@
+{
+ "kid_ghost": {
+  "tris": 8094,
+  "parts": {
+   "body": 1324,
+   "head": 3028,
+   "wing_l": 248,
+   "wing_r": 248,
+   "leg_l": 460,
+   "leg_r": 460,
+   "arm_l": 278,
+   "arm_r": 278,
+   "bucket": 1102,
+   "bucket_candy": 668
+  }
+ },
+ "kid_cat": {
+  "tris": 8912,
+  "parts": {
+   "body": 1082,
+   "head": 3712,
+   "tail": 720,
+   "leg_l": 536,
+   "leg_r": 536,
+   "arm_l": 278,
+   "arm_r": 278,
+   "bucket": 1102,
+   "bucket_candy": 668
+  }
+ },
+ "kid_witch": {
+  "tris": 8870,
+  "parts": {
+   "body": 1350,
+   "head": 3706,
+   "wing_l": 356,
+   "wing_r": 356,
+   "leg_l": 388,
+   "leg_r": 388,
+   "arm_l": 278,
+   "arm_r": 278,
+   "bucket": 1102,
+   "bucket_candy": 668
+  }
+ },
+ "kid_skeleton": {
+  "tris": 9782,
+  "parts": {
+   "body": 1944,
+   "head": 3260,
+   "leg_l": 798,
+   "leg_r": 798,
+   "arm_l": 606,
+   "arm_r": 606,
+   "bucket": 1102,
+   "bucket_candy": 668
+  }
+ },
+ "kid_pumpkin": {
+  "tris": 8200,
+  "parts": {
+   "body": 1596,
+   "head": 3250,
+   "wing_l": 170,
+   "wing_r": 170,
+   "leg_l": 344,
+   "leg_r": 344,
+   "arm_l": 278,
+   "arm_r": 278,
+   "bucket": 1102,
+   "bucket_candy": 668
+  }
+ }
+}

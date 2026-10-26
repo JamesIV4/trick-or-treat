@@ -6,7 +6,7 @@ on a transparent film through an orthographic camera:
   glow         soft round light
   ring         thin glowing ring dotted with tiny stars (pickup / blast shockwave)
   smoke_4x4    cartoon puff of faceted blobs swelling and dissolving (poofs, dust)  16 frames
-  flame_4x4    flickering teardrop flame, yellow core to red tips                   16 frames
+  (flame_4x4 comes from make_fire.py: a procedural turbulent flame; the old teardrop read as a raindrop)
   swirl_4x4    magic spiral ribbon unwinding and fading (candy pickup)               16 frames
 Frames land in art/vfx/_frames; assemble_vfx.py packs them into game/assets/vfx/.
 Little 3D particle meshes (chunky star, heart, candy corn, confetti) are exported as JSON
@@ -480,7 +480,6 @@ def main():
     glow()
     ring()
     smoke()
-    flame()
     swirl()
     particle_meshes()
     print("VFX_DONE")

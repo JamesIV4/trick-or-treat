@@ -6,6 +6,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"tot_build":"1792899604.057"
+			},
 			"name":"Scene",
 			"nodes":[
 				0
@@ -39,14 +42,14 @@
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":836,
+			"count":1079,
 			"max":[
 				0.21363046765327454,
-				1.342491865158081,
-				0.2887386083602905
+				1.347618579864502,
+				0.2896000146865845
 			],
 			"min":[
-				-0.12904158234596252,
+				-0.21325403451919556,
 				0,
 				-0.25
 			],
@@ -55,76 +58,76 @@
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":836,
+			"count":1079,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":836,
+			"count":1079,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5126,
-			"count":836,
+			"count":1079,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":4,
 			"componentType":5123,
-			"count":836,
+			"count":1079,
 			"normalized":true,
 			"type":"VEC4"
 		},
 		{
 			"bufferView":5,
 			"componentType":5123,
-			"count":1968,
+			"count":2340,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":10032,
+			"byteLength":12948,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":10032,
-			"byteOffset":10032,
+			"byteLength":12948,
+			"byteOffset":12948,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":6688,
-			"byteOffset":20064,
+			"byteLength":8632,
+			"byteOffset":25896,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":6688,
-			"byteOffset":26752,
+			"byteLength":8632,
+			"byteOffset":34528,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":6688,
-			"byteOffset":33440,
+			"byteLength":8632,
+			"byteOffset":43160,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":3936,
-			"byteOffset":40128,
+			"byteLength":4680,
+			"byteOffset":51792,
 			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":44064,
+			"byteLength":56472,
 			"uri":"mailbox.bin"
 		}
 	]

@@ -14,7 +14,8 @@ import gates  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "game" / "assets" / "catalog.json"
-FIELDS = ("id", "path", "collision", "walkable", "radius", "height")
+FIELDS = ("id", "path", "collision", "walkable", "radius", "height", "collision_top", "bounce", "candy_tier", "glow",
+          "hood_aabb", "hood_hinge")
 
 
 def main():

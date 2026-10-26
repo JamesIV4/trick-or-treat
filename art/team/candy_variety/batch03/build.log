@@ -1,0 +1,1001 @@
+﻿INFO Draco mesh compression is available, use library at C:\Program Files\Blender Foundation\Blender 5.1\5.1\scripts\addons_core\io_scene_gltf2\extern_draco.dll
+07:10:50 | INFO: Starting glTF 2.0 export
+07:10:50 | INFO: Extracting primitive: candy_twist_berry_dots
+07:10:50 | INFO: Primitives created: 1
+07:10:50 | INFO: Finished glTF 2.0 export in 0.0028905868530273438 s
+00:01.828  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_berry_dots_0.png'
+00:01.843  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_berry_dots_1.png'
+00:01.875  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_berry_dots_0.png'
+00:01.906  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_berry_dots_1.png'
+00:01.922  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_berry_dots_2.png'
+00:01.937  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_berry_dots_3.png'
+
+BUILT candy_twist_berry_dots           tier 0 tris  498/500 dims [0.32, 0.17, 0.171]
+07:10:51 | INFO: Starting glTF 2.0 export
+07:10:51 | INFO: Extracting primitive: candy_twist_aqua_bats
+07:10:51 | INFO: Primitives created: 1
+07:10:51 | INFO: Finished glTF 2.0 export in 0.0025124549865722656 s
+00:02.156  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_aqua_bats_0.png'
+00:02.172  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_aqua_bats_1.png'
+00:02.203  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_aqua_bats_0.png'
+00:02.218  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_aqua_bats_1.png'
+00:02.234  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_aqua_bats_2.png'
+00:02.265  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_aqua_bats_3.png'
+
+BUILT candy_twist_aqua_bats            tier 0 tris  488/500 dims [0.32, 0.173, 0.17]
+07:10:51 | INFO: Starting glTF 2.0 export
+07:10:51 | INFO: Extracting primitive: candy_twist_purple_pumpkins
+07:10:51 | INFO: Primitives created: 1
+07:10:51 | INFO: Finished glTF 2.0 export in 0.0026693344116210938 s
+00:02.484  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_purple_pumpkins_0.png'
+00:02.500  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_purple_pumpkins_1.png'
+00:02.515  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_purple_pumpkins_0.png'
+00:02.547  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_purple_pumpkins_1.png'
+00:02.562  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_purple_pumpkins_2.png'
+00:02.578  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_purple_pumpkins_3.png'
+
+BUILT candy_twist_purple_pumpkins      tier 0 tris  460/500 dims [0.32, 0.172, 0.17]
+07:10:51 | INFO: Starting glTF 2.0 export
+07:10:51 | INFO: Extracting primitive: candy_twist_lime_cobalt
+07:10:51 | INFO: Primitives created: 1
+07:10:51 | INFO: Finished glTF 2.0 export in 0.002357006072998047 s
+00:02.797  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_lime_cobalt_0.png'
+00:02.812  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_lime_cobalt_1.png'
+00:02.843  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_lime_cobalt_0.png'
+00:02.859  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_lime_cobalt_1.png'
+00:02.875  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_lime_cobalt_2.png'
+00:02.890  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_lime_cobalt_3.png'
+
+BUILT candy_twist_lime_cobalt          tier 0 tris  450/500 dims [0.32, 0.169, 0.17]
+07:10:52 | INFO: Starting glTF 2.0 export
+07:10:52 | INFO: Extracting primitive: candy_twist_cherry_lemon
+07:10:52 | INFO: Primitives created: 1
+07:10:52 | INFO: Finished glTF 2.0 export in 0.002219676971435547 s
+00:03.109  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_cherry_lemon_0.png'
+00:03.125  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_cherry_lemon_1.png'
+00:03.156  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_cherry_lemon_0.png'
+00:03.172  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_cherry_lemon_1.png'
+00:03.187  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_cherry_lemon_2.png'
+00:03.218  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_cherry_lemon_3.png'
+
+BUILT candy_twist_cherry_lemon         tier 0 tris  450/500 dims [0.32, 0.169, 0.17]
+07:10:52 | INFO: Starting glTF 2.0 export
+07:10:52 | INFO: Extracting primitive: candy_twist_blue_stars
+07:10:52 | INFO: Primitives created: 1
+07:10:52 | INFO: Finished glTF 2.0 export in 0.002240896224975586 s
+00:03.437  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_blue_stars_0.png'
+00:03.437  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_blue_stars_1.png'
+00:03.468  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_blue_stars_0.png'
+00:03.484  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_blue_stars_1.png'
+00:03.515  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_blue_stars_2.png'
+00:03.531  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_blue_stars_3.png'
+
+BUILT candy_twist_blue_stars           tier 0 tris  424/500 dims [0.32, 0.173, 0.17]
+07:10:52 | INFO: Starting glTF 2.0 export
+07:10:52 | INFO: Extracting primitive: candy_twist_peach_bands
+07:10:52 | INFO: Primitives created: 1
+07:10:52 | INFO: Finished glTF 2.0 export in 0.002207517623901367 s
+00:03.750  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_peach_bands_0.png'
+00:03.765  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_peach_bands_1.png'
+00:03.781  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_peach_bands_0.png'
+00:03.812  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_peach_bands_1.png'
+00:03.828  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_peach_bands_2.png'
+00:03.843  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_peach_bands_3.png'
+
+BUILT candy_twist_peach_bands          tier 0 tris  450/500 dims [0.32, 0.169, 0.17]
+07:10:53 | INFO: Starting glTF 2.0 export
+07:10:53 | INFO: Extracting primitive: candy_twist_mint_check
+07:10:53 | INFO: Primitives created: 1
+07:10:53 | INFO: Finished glTF 2.0 export in 0.0022819042205810547 s
+00:04.062  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_mint_check_0.png'
+00:04.078  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_mint_check_1.png'
+00:04.109  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_mint_check_0.png'
+00:04.125  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_mint_check_1.png'
+00:04.140  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_mint_check_2.png'
+00:04.172  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_mint_check_3.png'
+
+BUILT candy_twist_mint_check           tier 0 tris  450/500 dims [0.32, 0.169, 0.17]
+07:10:53 | INFO: Starting glTF 2.0 export
+07:10:53 | INFO: Extracting primitive: candy_twist_orange_ghosts
+07:10:53 | INFO: Primitives created: 1
+07:10:53 | INFO: Finished glTF 2.0 export in 0.0021338462829589844 s
+00:04.390  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_orange_ghosts_0.png'
+00:04.406  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_twist_orange_ghosts_1.png'
+00:04.422  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_orange_ghosts_0.png'
+00:04.437  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_orange_ghosts_1.png'
+00:04.468  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_orange_ghosts_2.png'
+00:04.484  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_twist_orange_ghosts_3.png'
+
+BUILT candy_twist_orange_ghosts        tier 0 tris  468/500 dims [0.32, 0.176, 0.17]
+07:10:53 | INFO: Starting glTF 2.0 export
+07:10:53 | INFO: Extracting primitive: candy_taffy_pink
+07:10:53 | INFO: Primitives created: 1
+07:10:53 | INFO: Finished glTF 2.0 export in 0.002322673797607422 s
+00:04.703  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_taffy_pink_0.png'
+00:04.718  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_taffy_pink_1.png'
+00:04.750  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_taffy_pink_0.png'
+00:04.765  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_taffy_pink_1.png'
+00:04.781  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_taffy_pink_2.png'
+00:04.812  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_taffy_pink_3.png'
+
+BUILT candy_taffy_pink                 tier 0 tris  450/500 dims [0.33, 0.107, 0.155]
+07:10:54 | INFO: Starting glTF 2.0 export
+07:10:54 | INFO: Extracting primitive: candy_taffy_lemon
+07:10:54 | INFO: Primitives created: 1
+07:10:54 | INFO: Finished glTF 2.0 export in 0.0019450187683105469 s
+00:05.031  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_taffy_lemon_0.png'
+00:05.047  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_taffy_lemon_1.png'
+00:05.062  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_taffy_lemon_0.png'
+00:05.078  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_taffy_lemon_1.png'
+00:05.109  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_taffy_lemon_2.png'
+00:05.125  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_taffy_lemon_3.png'
+
+BUILT candy_taffy_lemon                tier 0 tris  450/500 dims [0.33, 0.107, 0.155]
+07:10:54 | INFO: Starting glTF 2.0 export
+07:10:54 | INFO: Extracting primitive: candy_toffee_twist
+07:10:54 | INFO: Primitives created: 1
+07:10:54 | INFO: Finished glTF 2.0 export in 0.0021262168884277344 s
+00:05.359  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_toffee_twist_0.png'
+00:05.359  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_toffee_twist_1.png'
+00:05.390  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_toffee_twist_0.png'
+00:05.406  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_toffee_twist_1.png'
+00:05.422  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_toffee_twist_2.png'
+00:05.453  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_toffee_twist_3.png'
+
+BUILT candy_toffee_twist               tier 0 tris  450/500 dims [0.32, 0.133, 0.165]
+07:10:54 | INFO: Starting glTF 2.0 export
+07:10:54 | INFO: Extracting primitive: candy_gumball_trio
+07:10:54 | INFO: Primitives created: 1
+07:10:54 | INFO: Finished glTF 2.0 export in 0.002012014389038086 s
+00:05.672  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gumball_trio_0.png'
+00:05.687  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gumball_trio_1.png'
+00:05.703  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumball_trio_0.png'
+00:05.734  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumball_trio_1.png'
+00:05.750  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumball_trio_2.png'
+00:05.765  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumball_trio_3.png'
+
+BUILT candy_gumball_trio               tier 0 tris  432/500 dims [0.28, 0.167, 0.261]
+07:10:54 | INFO: Starting glTF 2.0 export
+07:10:54 | INFO: Extracting primitive: candy_gumball_rainbow
+07:10:54 | INFO: Primitives created: 1
+07:10:54 | INFO: Finished glTF 2.0 export in 0.002270936965942383 s
+00:05.984  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gumball_rainbow_0.png'
+00:05.984  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gumball_rainbow_1.png'
+00:06.015  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumball_rainbow_0.png'
+00:06.031  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumball_rainbow_1.png'
+00:06.062  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumball_rainbow_2.png'
+00:06.078  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumball_rainbow_3.png'
+
+BUILT candy_gumball_rainbow            tier 0 tris  224/500 dims [0.238, 0.231, 0.24]
+07:10:55 | INFO: Starting glTF 2.0 export
+07:10:55 | INFO: Extracting primitive: candy_jellybean_cherry
+07:10:55 | INFO: Primitives created: 1
+07:10:55 | INFO: Finished glTF 2.0 export in 0.0018825531005859375 s
+00:06.281  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_jellybean_cherry_0.png'
+00:06.297  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_jellybean_cherry_1.png'
+00:06.328  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jellybean_cherry_0.png'
+00:06.343  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jellybean_cherry_1.png'
+00:06.359  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jellybean_cherry_2.png'
+00:06.375  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jellybean_cherry_3.png'
+
+BUILT candy_jellybean_cherry           tier 0 tris  180/500 dims [0.27, 0.106, 0.125]
+07:10:55 | INFO: Starting glTF 2.0 export
+07:10:55 | INFO: Extracting primitive: candy_jellybean_speckled
+07:10:55 | INFO: Primitives created: 1
+07:10:55 | INFO: Finished glTF 2.0 export in 0.0019426345825195312 s
+00:06.609  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_jellybean_speckled_0.png'
+00:06.609  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_jellybean_speckled_1.png'
+00:06.640  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jellybean_speckled_0.png'
+00:06.656  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jellybean_speckled_1.png'
+00:06.672  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jellybean_speckled_2.png'
+00:06.703  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jellybean_speckled_3.png'
+
+BUILT candy_jellybean_speckled         tier 0 tris  234/500 dims [0.27, 0.112, 0.125]
+07:10:55 | INFO: Starting glTF 2.0 export
+07:10:55 | INFO: Extracting primitive: candy_jellybean_trio
+07:10:55 | INFO: Primitives created: 1
+07:10:55 | INFO: Finished glTF 2.0 export in 0.0019381046295166016 s
+00:06.906  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_jellybean_trio_0.png'
+00:06.922  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_jellybean_trio_1.png'
+00:06.953  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jellybean_trio_0.png'
+00:06.968  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jellybean_trio_1.png'
+00:06.984  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jellybean_trio_2.png'
+00:07.015  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jellybean_trio_3.png'
+
+BUILT candy_jellybean_trio             tier 0 tris  336/500 dims [0.28, 0.158, 0.221]
+07:10:56 | INFO: Starting glTF 2.0 export
+07:10:56 | INFO: Extracting primitive: candy_gummy_bear_red
+07:10:56 | INFO: Primitives created: 1
+07:10:56 | INFO: Finished glTF 2.0 export in 0.0021762847900390625 s
+00:07.234  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gummy_bear_red_0.png'
+00:07.250  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gummy_bear_red_1.png'
+00:07.281  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bear_red_0.png'
+00:07.297  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bear_red_1.png'
+00:07.328  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bear_red_2.png'
+00:07.343  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bear_red_3.png'
+
+BUILT candy_gummy_bear_red             tier 0 tris  468/500 dims [0.193, 0.141, 0.3]
+07:10:56 | INFO: Starting glTF 2.0 export
+07:10:56 | INFO: Extracting primitive: candy_gummy_bear_green
+07:10:56 | INFO: Primitives created: 1
+07:10:56 | INFO: Finished glTF 2.0 export in 0.0020759105682373047 s
+00:07.578  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gummy_bear_green_0.png'
+00:07.578  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gummy_bear_green_1.png'
+00:07.609  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bear_green_0.png'
+00:07.640  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bear_green_1.png'
+00:07.656  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bear_green_2.png'
+00:07.672  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bear_green_3.png'
+
+BUILT candy_gummy_bear_green           tier 0 tris  468/500 dims [0.193, 0.141, 0.3]
+07:10:56 | INFO: Starting glTF 2.0 export
+07:10:56 | INFO: Extracting primitive: candy_gummy_bear_orange
+07:10:56 | INFO: Primitives created: 1
+07:10:56 | INFO: Finished glTF 2.0 export in 0.002115011215209961 s
+00:07.906  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gummy_bear_orange_0.png'
+00:07.922  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gummy_bear_orange_1.png'
+00:07.937  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bear_orange_0.png'
+00:07.968  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bear_orange_1.png'
+00:07.984  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bear_orange_2.png'
+00:08.015  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bear_orange_3.png'
+
+BUILT candy_gummy_bear_orange          tier 0 tris  468/500 dims [0.193, 0.141, 0.3]
+07:10:57 | INFO: Starting glTF 2.0 export
+07:10:57 | INFO: Extracting primitive: candy_gummy_worm
+07:10:57 | INFO: Primitives created: 1
+07:10:57 | INFO: Finished glTF 2.0 export in 0.0018191337585449219 s
+00:08.218  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gummy_worm_0.png'
+00:08.234  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gummy_worm_1.png'
+00:08.250  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_worm_0.png'
+00:08.281  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_worm_1.png'
+00:08.297  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_worm_2.png'
+00:08.328  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_worm_3.png'
+
+BUILT candy_gummy_worm                 tier 0 tris  240/500 dims [0.32, 0.093, 0.174]
+07:10:57 | INFO: Starting glTF 2.0 export
+07:10:57 | INFO: Extracting primitive: candy_gummy_worm_berry
+07:10:57 | INFO: Primitives created: 1
+07:10:57 | INFO: Finished glTF 2.0 export in 0.002009868621826172 s
+00:08.547  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gummy_worm_berry_0.png'
+00:08.562  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gummy_worm_berry_1.png'
+00:08.593  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_worm_berry_0.png'
+00:08.609  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_worm_berry_1.png'
+00:08.640  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_worm_berry_2.png'
+00:08.656  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_worm_berry_3.png'
+
+BUILT candy_gummy_worm_berry           tier 0 tris  240/500 dims [0.32, 0.093, 0.174]
+07:10:57 | INFO: Starting glTF 2.0 export
+07:10:57 | INFO: Extracting primitive: candy_gummy_bat
+07:10:57 | INFO: Primitives created: 1
+07:10:57 | INFO: Finished glTF 2.0 export in 0.0018682479858398438 s
+00:08.859  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gummy_bat_0.png'
+00:08.875  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gummy_bat_1.png'
+00:08.906  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bat_0.png'
+00:08.922  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bat_1.png'
+00:08.953  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bat_2.png'
+00:08.968  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gummy_bat_3.png'
+
+BUILT candy_gummy_bat                  tier 0 tris  194/500 dims [0.3, 0.065, 0.129]
+07:10:58 | INFO: Starting glTF 2.0 export
+07:10:58 | INFO: Extracting primitive: candy_peach_ring
+07:10:58 | INFO: Primitives created: 1
+07:10:58 | INFO: Finished glTF 2.0 export in 0.0019326210021972656 s
+00:09.187  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_peach_ring_0.png'
+00:09.203  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_peach_ring_1.png'
+00:09.218  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_peach_ring_0.png'
+00:09.250  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_peach_ring_1.png'
+00:09.265  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_peach_ring_2.png'
+00:09.297  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_peach_ring_3.png'
+
+BUILT candy_peach_ring                 tier 0 tris  256/500 dims [0.25, 0.138, 0.232]
+07:10:58 | INFO: Starting glTF 2.0 export
+07:10:58 | INFO: Extracting primitive: candy_apple_ring
+07:10:58 | INFO: Primitives created: 1
+07:10:58 | INFO: Finished glTF 2.0 export in 0.0019559860229492188 s
+00:09.500  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_apple_ring_0.png'
+00:09.515  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_apple_ring_1.png'
+00:09.547  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_apple_ring_0.png'
+00:09.562  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_apple_ring_1.png'
+00:09.578  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_apple_ring_2.png'
+00:09.609  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_apple_ring_3.png'
+
+BUILT candy_apple_ring                 tier 0 tris  256/500 dims [0.25, 0.138, 0.232]
+07:10:58 | INFO: Starting glTF 2.0 export
+07:10:58 | INFO: Extracting primitive: candy_peppermint
+07:10:58 | INFO: Primitives created: 1
+07:10:58 | INFO: Finished glTF 2.0 export in 0.002040863037109375 s
+00:09.828  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_peppermint_0.png'
+00:09.843  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_peppermint_1.png'
+00:09.875  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_peppermint_0.png'
+00:09.906  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_peppermint_1.png'
+00:09.922  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_peppermint_2.png'
+00:09.953  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_peppermint_3.png'
+
+BUILT candy_peppermint                 tier 0 tris  352/500 dims [0.24, 0.066, 0.24]
+07:10:59 | INFO: Starting glTF 2.0 export
+07:10:59 | INFO: Extracting primitive: candy_starlight_mint
+07:10:59 | INFO: Primitives created: 1
+07:10:59 | INFO: Finished glTF 2.0 export in 0.002068758010864258 s
+00:10.172  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_starlight_mint_0.png'
+00:10.187  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_starlight_mint_1.png'
+00:10.218  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_starlight_mint_0.png'
+00:10.250  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_starlight_mint_1.png'
+00:10.281  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_starlight_mint_2.png'
+00:10.297  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_starlight_mint_3.png'
+
+BUILT candy_starlight_mint             tier 0 tris  492/500 dims [0.34, 0.072, 0.221]
+07:10:59 | INFO: Starting glTF 2.0 export
+07:10:59 | INFO: Extracting primitive: candy_butterscotch
+07:10:59 | INFO: Primitives created: 1
+07:10:59 | INFO: Finished glTF 2.0 export in 0.0018265247344970703 s
+00:10.515  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_butterscotch_0.png'
+00:10.531  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_butterscotch_1.png'
+00:10.562  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_butterscotch_0.png'
+00:10.578  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_butterscotch_1.png'
+00:10.609  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_butterscotch_2.png'
+00:10.640  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_butterscotch_3.png'
+
+BUILT candy_butterscotch               tier 0 tris  244/500 dims [0.3, 0.067, 0.242]
+07:10:59 | INFO: Starting glTF 2.0 export
+07:10:59 | INFO: Extracting primitive: candy_caramel_cube
+07:10:59 | INFO: Primitives created: 1
+07:10:59 | INFO: Finished glTF 2.0 export in 0.0018491744995117188 s
+00:10.843  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_caramel_cube_0.png'
+00:10.859  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_caramel_cube_1.png'
+00:10.890  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_caramel_cube_0.png'
+00:10.922  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_caramel_cube_1.png'
+00:10.937  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_caramel_cube_2.png'
+00:10.968  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_caramel_cube_3.png'
+
+BUILT candy_caramel_cube               tier 0 tris  194/500 dims [0.241, 0.25, 0.206]
+07:11:00 | INFO: Starting glTF 2.0 export
+07:11:00 | INFO: Extracting primitive: candy_fudge_cube
+07:11:00 | INFO: Primitives created: 1
+07:11:00 | INFO: Finished glTF 2.0 export in 0.0028896331787109375 s
+00:11.187  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_fudge_cube_0.png'
+00:11.187  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_fudge_cube_1.png'
+00:11.218  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_fudge_cube_0.png'
+00:11.250  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_fudge_cube_1.png'
+00:11.265  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_fudge_cube_2.png'
+00:11.297  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_fudge_cube_3.png'
+
+BUILT candy_fudge_cube                 tier 0 tris  194/500 dims [0.241, 0.25, 0.206]
+07:11:00 | INFO: Starting glTF 2.0 export
+07:11:00 | INFO: Extracting primitive: candy_licorice_twist
+07:11:00 | INFO: Primitives created: 1
+07:11:00 | INFO: Finished glTF 2.0 export in 0.002080678939819336 s
+00:11.515  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_licorice_twist_0.png'
+00:11.531  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_licorice_twist_1.png'
+00:11.562  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_licorice_twist_0.png'
+00:11.578  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_licorice_twist_1.png'
+00:11.609  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_licorice_twist_2.png'
+00:11.640  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_licorice_twist_3.png'
+
+BUILT candy_licorice_twist             tier 0 tris  356/500 dims [0.33, 0.086, 0.122]
+07:11:00 | INFO: Starting glTF 2.0 export
+07:11:00 | INFO: Extracting primitive: candy_licorice_rainbow
+07:11:00 | INFO: Primitives created: 1
+07:11:00 | INFO: Finished glTF 2.0 export in 0.0019106864929199219 s
+00:11.843  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_licorice_rainbow_0.png'
+00:11.859  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_licorice_rainbow_1.png'
+00:11.890  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_licorice_rainbow_0.png'
+00:11.922  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_licorice_rainbow_1.png'
+00:11.937  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_licorice_rainbow_2.png'
+00:11.968  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_licorice_rainbow_3.png'
+
+BUILT candy_licorice_rainbow           tier 0 tris  356/500 dims [0.33, 0.086, 0.122]
+07:11:01 | INFO: Starting glTF 2.0 export
+07:11:01 | INFO: Extracting primitive: candy_licorice_wheel
+07:11:01 | INFO: Primitives created: 1
+07:11:01 | INFO: Finished glTF 2.0 export in 0.0019097328186035156 s
+00:12.203  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_licorice_wheel_0.png'
+00:12.203  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_licorice_wheel_1.png'
+00:12.250  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_licorice_wheel_0.png'
+00:12.265  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_licorice_wheel_1.png'
+00:12.297  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_licorice_wheel_2.png'
+00:12.328  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_licorice_wheel_3.png'
+
+BUILT candy_licorice_wheel             tier 0 tris  420/500 dims [0.257, 0.081, 0.27]
+07:11:01 | INFO: Starting glTF 2.0 export
+07:11:01 | INFO: Extracting primitive: candy_sour_belt_rainbow
+07:11:01 | INFO: Primitives created: 1
+07:11:01 | INFO: Finished glTF 2.0 export in 0.0018858909606933594 s
+00:12.547  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_sour_belt_rainbow_0.png'
+00:12.547  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_sour_belt_rainbow_1.png'
+00:12.578  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_sour_belt_rainbow_0.png'
+00:12.609  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_sour_belt_rainbow_1.png'
+00:12.640  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_sour_belt_rainbow_2.png'
+00:12.672  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_sour_belt_rainbow_3.png'
+
+BUILT candy_sour_belt_rainbow          tier 0 tris  332/500 dims [0.33, 0.078, 0.106]
+07:11:01 | INFO: Starting glTF 2.0 export
+07:11:01 | INFO: Extracting primitive: candy_sour_belt_berry
+07:11:01 | INFO: Primitives created: 1
+07:11:01 | INFO: Finished glTF 2.0 export in 0.0018990039825439453 s
+00:12.875  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_sour_belt_berry_0.png'
+00:12.890  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_sour_belt_berry_1.png'
+00:12.922  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_sour_belt_berry_0.png'
+00:12.953  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_sour_belt_berry_1.png'
+00:12.984  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_sour_belt_berry_2.png'
+00:13.000  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_sour_belt_berry_3.png'
+
+BUILT candy_sour_belt_berry            tier 0 tris  332/500 dims [0.33, 0.078, 0.106]
+07:11:02 | INFO: Starting glTF 2.0 export
+07:11:02 | INFO: Extracting primitive: candy_buttons
+07:11:02 | INFO: Primitives created: 1
+07:11:02 | INFO: Finished glTF 2.0 export in 0.0020601749420166016 s
+00:13.234  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_buttons_0.png'
+00:13.250  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_buttons_1.png'
+00:13.281  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_buttons_0.png'
+00:13.297  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_buttons_1.png'
+00:13.328  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_buttons_2.png'
+00:13.359  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_buttons_3.png'
+
+BUILT candy_buttons                    tier 0 tris  476/500 dims [0.3, 0.083, 0.125]
+07:11:02 | INFO: Starting glTF 2.0 export
+07:11:02 | INFO: Extracting primitive: candy_rock_blue
+07:11:02 | INFO: Primitives created: 1
+07:11:02 | INFO: Finished glTF 2.0 export in 0.0022585391998291016 s
+00:13.593  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_rock_blue_0.png'
+00:13.593  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_rock_blue_1.png'
+00:13.625  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_rock_blue_0.png'
+00:13.656  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_rock_blue_1.png'
+00:13.687  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_rock_blue_2.png'
+00:13.703  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_rock_blue_3.png'
+
+BUILT candy_rock_blue                  tier 0 tris  404/500 dims [0.18, 0.18, 0.33]
+07:11:02 | INFO: Starting glTF 2.0 export
+07:11:02 | INFO: Extracting primitive: candy_rock_pink
+07:11:02 | INFO: Primitives created: 1
+07:11:02 | INFO: Finished glTF 2.0 export in 0.002123594284057617 s
+00:13.937  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_rock_pink_0.png'
+00:13.953  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_rock_pink_1.png'
+00:13.984  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_rock_pink_0.png'
+00:14.000  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_rock_pink_1.png'
+00:14.031  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_rock_pink_2.png'
+00:14.062  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_rock_pink_3.png'
+
+BUILT candy_rock_pink                  tier 0 tris  404/500 dims [0.18, 0.18, 0.33]
+07:11:03 | INFO: Starting glTF 2.0 export
+07:11:03 | INFO: Extracting primitive: candy_marshmallow_ghost
+07:11:03 | INFO: Primitives created: 1
+07:11:03 | INFO: Finished glTF 2.0 export in 0.0021407604217529297 s
+00:14.281  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_marshmallow_ghost_0.png'
+00:14.297  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_marshmallow_ghost_1.png'
+00:14.328  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_marshmallow_ghost_0.png'
+00:14.343  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_marshmallow_ghost_1.png'
+00:14.375  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_marshmallow_ghost_2.png'
+00:14.406  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_marshmallow_ghost_3.png'
+
+BUILT candy_marshmallow_ghost          tier 0 tris  326/500 dims [0.28, 0.227, 0.277]
+07:11:03 | INFO: Starting glTF 2.0 export
+07:11:03 | INFO: Extracting primitive: candy_mellow_pumpkin
+07:11:03 | INFO: Primitives created: 1
+07:11:03 | INFO: Finished glTF 2.0 export in 0.0024080276489257812 s
+00:14.625  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_mellow_pumpkin_0.png'
+00:14.640  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_mellow_pumpkin_1.png'
+00:14.672  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_mellow_pumpkin_0.png'
+00:14.703  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_mellow_pumpkin_1.png'
+00:14.718  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_mellow_pumpkin_2.png'
+00:14.750  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_mellow_pumpkin_3.png'
+
+BUILT candy_mellow_pumpkin             tier 0 tris  332/500 dims [0.251, 0.27, 0.222]
+07:11:03 | INFO: Starting glTF 2.0 export
+07:11:03 | INFO: Extracting primitive: candy_apple_mini
+07:11:03 | INFO: Primitives created: 1
+07:11:03 | INFO: Finished glTF 2.0 export in 0.0020227432250976562 s
+00:14.968  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_apple_mini_0.png'
+00:14.984  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_apple_mini_1.png'
+00:15.015  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_apple_mini_0.png'
+00:15.047  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_apple_mini_1.png'
+00:15.078  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_apple_mini_2.png'
+00:15.109  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_apple_mini_3.png'
+
+BUILT candy_apple_mini                 tier 0 tris  330/500 dims [0.23, 0.224, 0.3]
+07:11:04 | INFO: Starting glTF 2.0 export
+07:11:04 | INFO: Extracting primitive: candy_cakepop_sprinkle
+07:11:04 | INFO: Primitives created: 1
+07:11:04 | INFO: Finished glTF 2.0 export in 0.002063274383544922 s
+00:15.328  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_cakepop_sprinkle_0.png'
+00:15.343  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_cakepop_sprinkle_1.png'
+00:15.375  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cakepop_sprinkle_0.png'
+00:15.390  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cakepop_sprinkle_1.png'
+00:15.422  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cakepop_sprinkle_2.png'
+00:15.453  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cakepop_sprinkle_3.png'
+
+BUILT candy_cakepop_sprinkle           tier 0 tris  320/500 dims [0.193, 0.193, 0.3]
+07:11:04 | INFO: Starting glTF 2.0 export
+07:11:04 | INFO: Extracting primitive: candy_cakepop_drizzle
+07:11:04 | INFO: Primitives created: 1
+07:11:04 | INFO: Finished glTF 2.0 export in 0.002193450927734375 s
+00:15.672  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_cakepop_drizzle_0.png'
+00:15.687  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_cakepop_drizzle_1.png'
+00:15.718  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cakepop_drizzle_0.png'
+00:15.750  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cakepop_drizzle_1.png'
+00:15.781  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cakepop_drizzle_2.png'
+00:15.797  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cakepop_drizzle_3.png'
+
+BUILT candy_cakepop_drizzle            tier 0 tris  478/500 dims [0.205, 0.196, 0.3]
+07:11:05 | INFO: Starting glTF 2.0 export
+07:11:05 | INFO: Extracting primitive: candy_bonbon_orange
+07:11:05 | INFO: Primitives created: 1
+07:11:05 | INFO: Finished glTF 2.0 export in 0.002070188522338867 s
+00:16.031  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_bonbon_orange_0.png'
+00:16.047  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_bonbon_orange_1.png'
+00:16.078  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bonbon_orange_0.png'
+00:16.109  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bonbon_orange_1.png'
+00:16.125  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bonbon_orange_2.png'
+00:16.156  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bonbon_orange_3.png'
+
+BUILT candy_bonbon_orange              tier 0 tris  496/500 dims [0.24, 0.22, 0.212]
+07:11:05 | INFO: Starting glTF 2.0 export
+07:11:05 | INFO: Extracting primitive: candy_bonbon_pink
+07:11:05 | INFO: Primitives created: 1
+07:11:05 | INFO: Finished glTF 2.0 export in 0.002061128616333008 s
+00:16.390  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_bonbon_pink_0.png'
+00:16.390  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_bonbon_pink_1.png'
+00:16.422  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bonbon_pink_0.png'
+00:16.453  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bonbon_pink_1.png'
+00:16.484  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bonbon_pink_2.png'
+00:16.515  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bonbon_pink_3.png'
+
+BUILT candy_bonbon_pink                tier 0 tris  496/500 dims [0.24, 0.22, 0.212]
+07:11:05 | INFO: Starting glTF 2.0 export
+07:11:05 | INFO: Extracting primitive: candy_fizz_roll
+07:11:05 | INFO: Primitives created: 1
+07:11:05 | INFO: Finished glTF 2.0 export in 0.002061605453491211 s
+00:16.734  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_fizz_roll_0.png'
+00:16.734  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_fizz_roll_1.png'
+00:16.765  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_fizz_roll_0.png'
+00:16.797  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_fizz_roll_1.png'
+00:16.828  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_fizz_roll_2.png'
+00:16.843  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_fizz_roll_3.png'
+
+BUILT candy_fizz_roll                  tier 0 tris  474/500 dims [0.32, 0.093, 0.13]
+07:11:06 | INFO: Starting glTF 2.0 export
+07:11:06 | INFO: Extracting primitive: candy_fizz_tube
+07:11:06 | INFO: Primitives created: 1
+07:11:06 | INFO: Finished glTF 2.0 export in 0.002040863037109375 s
+00:17.062  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_fizz_tube_0.png'
+00:17.062  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_fizz_tube_1.png'
+00:17.093  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_fizz_tube_0.png'
+00:17.125  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_fizz_tube_1.png'
+00:17.156  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_fizz_tube_2.png'
+00:17.172  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_fizz_tube_3.png'
+
+BUILT candy_fizz_tube                  tier 0 tris  220/500 dims [0.32, 0.066, 0.219]
+07:11:06 | INFO: Starting glTF 2.0 export
+07:11:06 | INFO: Extracting primitive: candy_star_lemon
+07:11:06 | INFO: Primitives created: 1
+07:11:06 | INFO: Finished glTF 2.0 export in 0.0017659664154052734 s
+00:17.390  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_star_lemon_0.png'
+00:17.406  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_star_lemon_1.png'
+00:17.422  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_star_lemon_0.png'
+00:17.453  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_star_lemon_1.png'
+00:17.484  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_star_lemon_2.png'
+00:17.500  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_star_lemon_3.png'
+
+BUILT candy_star_lemon                 tier 0 tris   92/500 dims [0.28, 0.119, 0.266]
+07:11:06 | INFO: Starting glTF 2.0 export
+07:11:06 | INFO: Extracting primitive: candy_heart_berry
+07:11:06 | INFO: Primitives created: 1
+07:11:06 | INFO: Finished glTF 2.0 export in 0.0021355152130126953 s
+00:17.718  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_heart_berry_0.png'
+00:17.734  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_heart_berry_1.png'
+00:17.765  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_heart_berry_0.png'
+00:17.797  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_heart_berry_1.png'
+00:17.828  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_heart_berry_2.png'
+00:17.843  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_heart_berry_3.png'
+
+BUILT candy_heart_berry                tier 0 tris  212/500 dims [0.27, 0.115, 0.251]
+07:11:07 | INFO: Starting glTF 2.0 export
+07:11:07 | INFO: Extracting primitive: candy_strawberry_drop
+07:11:07 | INFO: Primitives created: 1
+07:11:07 | INFO: Finished glTF 2.0 export in 0.0020494461059570312 s
+00:18.062  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_strawberry_drop_0.png'
+00:18.078  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_strawberry_drop_1.png'
+00:18.109  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_strawberry_drop_0.png'
+00:18.140  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_strawberry_drop_1.png'
+00:18.172  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_strawberry_drop_2.png'
+00:18.203  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_strawberry_drop_3.png'
+
+BUILT candy_strawberry_drop            tier 0 tris  252/500 dims [0.231, 0.226, 0.27]
+07:11:07 | INFO: Starting glTF 2.0 export
+07:11:07 | INFO: Extracting primitive: candy_eyeball
+07:11:07 | INFO: Primitives created: 1
+07:11:07 | INFO: Finished glTF 2.0 export in 0.002093076705932617 s
+00:18.422  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_eyeball_0.png'
+00:18.437  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_eyeball_1.png'
+00:18.468  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_eyeball_0.png'
+00:18.500  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_eyeball_1.png'
+00:18.515  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_eyeball_2.png'
+00:18.547  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_eyeball_3.png'
+
+BUILT candy_eyeball                    tier 0 tris  256/500 dims [0.237, 0.24, 0.24]
+07:11:07 | INFO: Starting glTF 2.0 export
+07:11:07 | INFO: Extracting primitive: candy_coin_gold
+07:11:07 | INFO: Primitives created: 1
+07:11:07 | INFO: Finished glTF 2.0 export in 0.001886606216430664 s
+00:18.765  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_coin_gold_0.png'
+00:18.781  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_coin_gold_1.png'
+00:18.812  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_coin_gold_0.png'
+00:18.843  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_coin_gold_1.png'
+00:18.859  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_coin_gold_2.png'
+00:18.890  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_coin_gold_3.png'
+
+BUILT candy_coin_gold                  tier 0 tris  276/500 dims [0.25, 0.038, 0.25]
+07:11:08 | INFO: Starting glTF 2.0 export
+07:11:08 | INFO: Extracting primitive: candy_coin_silver
+07:11:08 | INFO: Primitives created: 1
+07:11:08 | INFO: Finished glTF 2.0 export in 0.001959562301635742 s
+00:19.109  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_coin_silver_0.png'
+00:19.125  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_coin_silver_1.png'
+00:19.156  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_coin_silver_0.png'
+00:19.172  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_coin_silver_1.png'
+00:19.203  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_coin_silver_2.png'
+00:19.218  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_coin_silver_3.png'
+
+BUILT candy_coin_silver                tier 0 tris  280/500 dims [0.25, 0.038, 0.25]
+07:11:08 | INFO: Starting glTF 2.0 export
+07:11:08 | INFO: Extracting primitive: candy_corn_harvest
+07:11:08 | INFO: Primitives created: 1
+07:11:08 | INFO: Finished glTF 2.0 export in 0.0021278858184814453 s
+00:19.437  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_corn_harvest_0.png'
+00:19.453  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_corn_harvest_1.png'
+00:19.484  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_corn_harvest_0.png'
+00:19.515  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_corn_harvest_1.png'
+00:19.547  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_corn_harvest_2.png'
+00:19.578  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_corn_harvest_3.png'
+
+BUILT candy_corn_harvest               tier 0 tris  288/500 dims [0.222, 0.131, 0.29]
+07:11:08 | INFO: Starting glTF 2.0 export
+07:11:08 | INFO: Extracting primitive: candy_corn_unicorn
+07:11:08 | INFO: Primitives created: 1
+07:11:08 | INFO: Finished glTF 2.0 export in 0.0018696784973144531 s
+00:19.797  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_corn_unicorn_0.png'
+00:19.797  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_corn_unicorn_1.png'
+00:19.828  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_corn_unicorn_0.png'
+00:19.859  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_corn_unicorn_1.png'
+00:19.875  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_corn_unicorn_2.png'
+00:19.906  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_corn_unicorn_3.png'
+
+BUILT candy_corn_unicorn               tier 0 tris  288/500 dims [0.222, 0.131, 0.29]
+07:11:09 | INFO: Starting glTF 2.0 export
+07:11:09 | INFO: Extracting primitive: candy_gumdrop
+07:11:09 | INFO: Primitives created: 1
+07:11:09 | INFO: Finished glTF 2.0 export in 0.0018534660339355469 s
+00:20.125  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gumdrop_0.png'
+00:20.140  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gumdrop_1.png'
+00:20.172  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumdrop_0.png'
+00:20.187  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumdrop_1.png'
+00:20.218  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumdrop_2.png'
+00:20.234  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumdrop_3.png'
+
+BUILT candy_gumdrop                    tier 0 tris  216/500 dims [0.24, 0.228, 0.176]
+07:11:09 | INFO: Starting glTF 2.0 export
+07:11:09 | INFO: Extracting primitive: candy_gumdrop_pile
+07:11:09 | INFO: Primitives created: 1
+07:11:09 | INFO: Finished glTF 2.0 export in 0.0019342899322509766 s
+00:20.453  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gumdrop_pile_0.png'
+00:20.468  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_gumdrop_pile_1.png'
+00:20.500  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumdrop_pile_0.png'
+00:20.531  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumdrop_pile_1.png'
+00:20.547  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumdrop_pile_2.png'
+00:20.578  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_gumdrop_pile_3.png'
+
+BUILT candy_gumdrop_pile               tier 0 tris  360/500 dims [0.29, 0.187, 0.198]
+07:11:09 | INFO: Starting glTF 2.0 export
+07:11:09 | INFO: Extracting primitive: candy_kiss_silver
+07:11:09 | INFO: Primitives created: 1
+07:11:09 | INFO: Finished glTF 2.0 export in 0.001971721649169922 s
+00:20.797  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_kiss_silver_0.png'
+00:20.812  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_kiss_silver_1.png'
+00:20.843  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_kiss_silver_0.png'
+00:20.859  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_kiss_silver_1.png'
+00:20.890  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_kiss_silver_2.png'
+00:20.922  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_kiss_silver_3.png'
+
+BUILT candy_kiss_silver                tier 0 tris  260/500 dims [0.211, 0.211, 0.27]
+07:11:10 | INFO: Starting glTF 2.0 export
+07:11:10 | INFO: Extracting primitive: candy_kiss_magenta
+07:11:10 | INFO: Primitives created: 1
+07:11:10 | INFO: Finished glTF 2.0 export in 0.0018684864044189453 s
+00:21.125  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_kiss_magenta_0.png'
+00:21.140  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_kiss_magenta_1.png'
+00:21.172  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_kiss_magenta_0.png'
+00:21.203  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_kiss_magenta_1.png'
+00:21.218  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_kiss_magenta_2.png'
+00:21.250  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_kiss_magenta_3.png'
+
+BUILT candy_kiss_magenta               tier 0 tris  260/500 dims [0.211, 0.211, 0.27]
+07:11:10 | INFO: Starting glTF 2.0 export
+07:11:10 | INFO: Extracting primitive: candy_ring_pop
+07:11:10 | INFO: Primitives created: 1
+07:11:10 | INFO: Finished glTF 2.0 export in 0.0020596981048583984 s
+00:21.468  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_ring_pop_0.png'
+00:21.484  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_ring_pop_1.png'
+00:21.515  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_ring_pop_0.png'
+00:21.547  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_ring_pop_1.png'
+00:21.562  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_ring_pop_2.png'
+00:21.593  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_ring_pop_3.png'
+
+BUILT candy_ring_pop                   tier 0 tris  356/500 dims [0.169, 0.15, 0.27]
+07:11:10 | INFO: Starting glTF 2.0 export
+07:11:10 | INFO: Extracting primitive: candy_cotton_candy
+07:11:10 | INFO: Primitives created: 1
+07:11:10 | INFO: Finished glTF 2.0 export in 0.002360820770263672 s
+00:21.828  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_cotton_candy_0.png'
+00:21.828  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_cotton_candy_1.png'
+00:21.859  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cotton_candy_0.png'
+00:21.890  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cotton_candy_1.png'
+00:21.922  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cotton_candy_2.png'
+00:21.937  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cotton_candy_3.png'
+
+BUILT candy_cotton_candy               tier 0 tris  442/500 dims [0.205, 0.167, 0.33]
+07:11:11 | INFO: Starting glTF 2.0 export
+07:11:11 | INFO: Extracting primitive: candy_jawbreaker
+07:11:11 | INFO: Primitives created: 1
+07:11:11 | INFO: Finished glTF 2.0 export in 0.0018849372863769531 s
+00:22.156  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_jawbreaker_0.png'
+00:22.172  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_jawbreaker_1.png'
+00:22.203  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jawbreaker_0.png'
+00:22.234  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jawbreaker_1.png'
+00:22.250  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jawbreaker_2.png'
+00:22.281  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_jawbreaker_3.png'
+
+BUILT candy_jawbreaker                 tier 0 tris  288/500 dims [0.24, 0.158, 0.24]
+07:11:11 | INFO: Starting glTF 2.0 export
+07:11:11 | INFO: Extracting primitive: candy_popcorn_ball
+07:11:11 | INFO: Primitives created: 1
+07:11:11 | INFO: Finished glTF 2.0 export in 0.0020761489868164062 s
+00:22.515  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_popcorn_ball_0.png'
+00:22.515  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_popcorn_ball_1.png'
+00:22.547  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_popcorn_ball_0.png'
+00:22.578  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_popcorn_ball_1.png'
+00:22.609  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_popcorn_ball_2.png'
+00:22.656  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_popcorn_ball_3.png'
+
+BUILT candy_popcorn_ball               tier 0 tris  464/500 dims [0.254, 0.26, 0.255]
+07:11:11 | INFO: Starting glTF 2.0 export
+07:11:11 | INFO: Extracting primitive: candy_bar_bat
+07:11:11 | INFO: Primitives created: 1
+07:11:11 | INFO: Finished glTF 2.0 export in 0.0022084712982177734 s
+00:22.875  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_bar_bat_0.png'
+00:22.890  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_bar_bat_1.png'
+00:22.922  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_bat_0.png'
+00:22.953  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_bat_1.png'
+00:22.968  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_bat_2.png'
+00:23.000  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_bat_3.png'
+
+BUILT candy_bar_bat                    tier 1 tris  380/500 dims [0.42, 0.128, 0.179]
+07:11:12 | INFO: Starting glTF 2.0 export
+07:11:12 | INFO: Extracting primitive: candy_bar_pumpkin
+07:11:12 | INFO: Primitives created: 1
+07:11:12 | INFO: Finished glTF 2.0 export in 0.0019383430480957031 s
+00:23.218  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_bar_pumpkin_0.png'
+00:23.234  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_bar_pumpkin_1.png'
+00:23.250  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_pumpkin_0.png'
+00:23.281  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_pumpkin_1.png'
+00:23.312  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_pumpkin_2.png'
+00:23.343  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_pumpkin_3.png'
+
+BUILT candy_bar_pumpkin                tier 1 tris  312/500 dims [0.42, 0.128, 0.179]
+07:11:12 | INFO: Starting glTF 2.0 export
+07:11:12 | INFO: Extracting primitive: candy_bar_open
+07:11:12 | INFO: Primitives created: 1
+07:11:12 | INFO: Finished glTF 2.0 export in 0.0019767284393310547 s
+00:23.562  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_bar_open_0.png'
+00:23.562  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_bar_open_1.png'
+00:23.593  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_open_0.png'
+00:23.625  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_open_1.png'
+00:23.640  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_open_2.png'
+00:23.672  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_open_3.png'
+
+BUILT candy_bar_open                   tier 1 tris  328/500 dims [0.42, 0.13, 0.173]
+07:11:12 | INFO: Starting glTF 2.0 export
+07:11:12 | INFO: Extracting primitive: candy_pb_cups
+07:11:12 | INFO: Primitives created: 1
+07:11:12 | INFO: Finished glTF 2.0 export in 0.002088785171508789 s
+00:23.906  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_pb_cups_0.png'
+00:23.922  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_pb_cups_1.png'
+00:23.937  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_pb_cups_0.png'
+00:23.968  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_pb_cups_1.png'
+00:24.000  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_pb_cups_2.png'
+00:24.031  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_pb_cups_3.png'
+
+BUILT candy_pb_cups                    tier 1 tris  492/500 dims [0.38, 0.256, 0.193]
+07:11:13 | INFO: Starting glTF 2.0 export
+07:11:13 | INFO: Extracting primitive: candy_caramel_apple
+07:11:13 | INFO: Primitives created: 1
+07:11:13 | INFO: Finished glTF 2.0 export in 0.0021092891693115234 s
+00:24.265  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_caramel_apple_0.png'
+00:24.281  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_caramel_apple_1.png'
+00:24.312  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_caramel_apple_0.png'
+00:24.375  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_caramel_apple_1.png'
+00:24.390  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_caramel_apple_2.png'
+00:24.422  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_caramel_apple_3.png'
+
+BUILT candy_caramel_apple              tier 1 tris  438/500 dims [0.299, 0.291, 0.44]
+07:11:13 | INFO: Starting glTF 2.0 export
+07:11:13 | INFO: Extracting primitive: candy_choco_apple
+07:11:13 | INFO: Primitives created: 1
+07:11:13 | INFO: Finished glTF 2.0 export in 0.0023353099822998047 s
+00:24.656  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_choco_apple_0.png'
+00:24.672  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_choco_apple_1.png'
+00:24.703  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_choco_apple_0.png'
+00:24.734  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_choco_apple_1.png'
+00:24.750  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_choco_apple_2.png'
+00:24.781  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_choco_apple_3.png'
+
+BUILT candy_choco_apple                tier 1 tris  466/500 dims [0.299, 0.291, 0.44]
+07:11:14 | INFO: Starting glTF 2.0 export
+07:11:14 | INFO: Extracting primitive: candy_truffle_box
+07:11:14 | INFO: Primitives created: 1
+07:11:14 | INFO: Finished glTF 2.0 export in 0.0023567676544189453 s
+00:25.015  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_truffle_box_0.png'
+00:25.031  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_truffle_box_1.png'
+00:25.062  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_truffle_box_0.png'
+00:25.093  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_truffle_box_1.png'
+00:25.109  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_truffle_box_2.png'
+00:25.140  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_truffle_box_3.png'
+
+BUILT candy_truffle_box                tier 1 tris  492/500 dims [0.302, 0.211, 0.4]
+07:11:14 | INFO: Starting glTF 2.0 export
+07:11:14 | INFO: Extracting primitive: candy_choco_frog
+07:11:14 | INFO: Primitives created: 1
+07:11:14 | INFO: Finished glTF 2.0 export in 0.0019631385803222656 s
+00:25.375  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_choco_frog_0.png'
+00:25.390  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_choco_frog_1.png'
+00:25.422  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_choco_frog_0.png'
+00:25.453  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_choco_frog_1.png'
+00:25.484  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_choco_frog_2.png'
+00:25.515  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_choco_frog_3.png'
+
+BUILT candy_choco_frog                 tier 1 tris  480/500 dims [0.349, 0.333, 0.36]
+07:11:14 | INFO: Starting glTF 2.0 export
+07:11:14 | INFO: Extracting primitive: candy_choco_bat
+07:11:14 | INFO: Primitives created: 1
+07:11:14 | INFO: Finished glTF 2.0 export in 0.001997232437133789 s
+00:25.734  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_choco_bat_0.png'
+00:25.750  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_choco_bat_1.png'
+00:25.781  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_choco_bat_0.png'
+00:25.797  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_choco_bat_1.png'
+00:25.828  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_choco_bat_2.png'
+00:25.859  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_choco_bat_3.png'
+
+BUILT candy_choco_bat                  tier 1 tris  312/500 dims [0.44, 0.117, 0.187]
+07:11:15 | INFO: Starting glTF 2.0 export
+07:11:15 | INFO: Extracting primitive: candy_bar_trio
+07:11:15 | INFO: Primitives created: 1
+07:11:15 | INFO: Finished glTF 2.0 export in 0.0024759769439697266 s
+00:26.078  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_bar_trio_0.png'
+00:26.093  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_bar_trio_1.png'
+00:26.125  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_trio_0.png'
+00:26.140  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_trio_1.png'
+00:26.172  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_trio_2.png'
+00:26.203  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_bar_trio_3.png'
+
+BUILT candy_bar_trio                   tier 1 tris  376/500 dims [0.4, 0.32, 0.311]
+07:11:15 | INFO: Starting glTF 2.0 export
+07:11:15 | INFO: Extracting primitive: candy_lolly_rainbow
+07:11:15 | INFO: Primitives created: 1
+07:11:15 | INFO: Finished glTF 2.0 export in 0.0024046897888183594 s
+00:26.422  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_lolly_rainbow_0.png'
+00:26.437  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_lolly_rainbow_1.png'
+00:26.468  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_rainbow_0.png'
+00:26.500  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_rainbow_1.png'
+00:26.515  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_rainbow_2.png'
+00:26.547  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_rainbow_3.png'
+
+BUILT candy_lolly_rainbow              tier 2 tris  620/700 dims [0.376, 0.056, 0.58]
+07:11:15 | INFO: Starting glTF 2.0 export
+07:11:15 | INFO: Extracting primitive: candy_lolly_spooky
+07:11:15 | INFO: Primitives created: 1
+07:11:15 | INFO: Finished glTF 2.0 export in 0.0021963119506835938 s
+00:26.781  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_lolly_spooky_0.png'
+00:26.797  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_lolly_spooky_1.png'
+00:26.828  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_spooky_0.png'
+00:26.859  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_spooky_1.png'
+00:26.875  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_spooky_2.png'
+00:26.906  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_spooky_3.png'
+
+BUILT candy_lolly_spooky               tier 2 tris  620/700 dims [0.376, 0.056, 0.58]
+07:11:16 | INFO: Starting glTF 2.0 export
+07:11:16 | INFO: Extracting primitive: candy_lolly_coil
+07:11:16 | INFO: Primitives created: 1
+07:11:16 | INFO: Finished glTF 2.0 export in 0.0033283233642578125 s
+00:27.140  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_lolly_coil_0.png'
+00:27.156  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_lolly_coil_1.png'
+00:27.187  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_coil_0.png'
+00:27.203  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_coil_1.png'
+00:27.234  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_coil_2.png'
+00:27.265  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_coil_3.png'
+
+BUILT candy_lolly_coil                 tier 2 tris  560/700 dims [0.325, 0.051, 0.56]
+07:11:16 | INFO: Starting glTF 2.0 export
+07:11:16 | INFO: Extracting primitive: candy_cane_giant
+07:11:16 | INFO: Primitives created: 1
+07:11:16 | INFO: Finished glTF 2.0 export in 0.002412557601928711 s
+00:27.484  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_cane_giant_0.png'
+00:27.500  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_cane_giant_1.png'
+00:27.531  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cane_giant_0.png'
+00:27.562  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cane_giant_1.png'
+00:27.578  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cane_giant_2.png'
+00:27.609  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_cane_giant_3.png'
+
+BUILT candy_cane_giant                 tier 2 tris  540/700 dims [0.298, 0.087, 0.6]
+07:11:16 | INFO: Starting glTF 2.0 export
+07:11:16 | INFO: Extracting primitive: candy_lolly_jack
+07:11:16 | INFO: Primitives created: 1
+07:11:16 | INFO: Finished glTF 2.0 export in 0.0021181106567382812 s
+00:27.828  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_lolly_jack_0.png'
+00:27.843  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_lolly_jack_1.png'
+00:27.875  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_jack_0.png'
+00:27.906  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_jack_1.png'
+00:27.922  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_jack_2.png'
+00:27.953  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_jack_3.png'
+
+BUILT candy_lolly_jack                 tier 2 tris  474/700 dims [0.382, 0.068, 0.56]
+07:11:17 | INFO: Starting glTF 2.0 export
+07:11:17 | INFO: Extracting primitive: candy_wand
+07:11:17 | INFO: Primitives created: 1
+07:11:17 | INFO: Finished glTF 2.0 export in 0.0020325183868408203 s
+00:28.172  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_wand_0.png'
+00:28.187  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_wand_1.png'
+00:28.218  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_wand_0.png'
+00:28.250  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_wand_1.png'
+00:28.281  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_wand_2.png'
+00:28.297  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_wand_3.png'
+
+BUILT candy_wand                       tier 2 tris  468/700 dims [0.343, 0.058, 0.6]
+07:11:17 | INFO: Starting glTF 2.0 export
+07:11:17 | INFO: Extracting primitive: candy_lolly_ghost
+07:11:17 | INFO: Primitives created: 1
+07:11:17 | INFO: Finished glTF 2.0 export in 0.0021605491638183594 s
+00:28.515  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_lolly_ghost_0.png'
+00:28.531  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_lolly_ghost_1.png'
+00:28.562  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_ghost_0.png'
+00:28.593  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_ghost_1.png'
+00:28.625  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_ghost_2.png'
+00:28.640  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_lolly_ghost_3.png'
+
+BUILT candy_lolly_ghost                tier 2 tris  402/700 dims [0.271, 0.106, 0.52]
+07:11:17 | INFO: Starting glTF 2.0 export
+07:11:17 | INFO: Extracting primitive: candy_golden_apple
+07:11:17 | INFO: Primitives created: 1
+07:11:17 | INFO: Finished glTF 2.0 export in 0.0022437572479248047 s
+00:28.875  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_golden_apple_0.png'
+00:28.890  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_golden_apple_1.png'
+00:28.922  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_golden_apple_0.png'
+00:28.937  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_golden_apple_1.png'
+00:28.968  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_golden_apple_2.png'
+00:29.000  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_golden_apple_3.png'
+
+BUILT candy_golden_apple               tier 3 tris  574/700 dims [0.52, 0.338, 0.36]
+07:11:18 | INFO: Starting glTF 2.0 export
+07:11:18 | INFO: Extracting primitive: candy_golden_pumpkin
+07:11:18 | INFO: Primitives created: 1
+07:11:18 | INFO: Finished glTF 2.0 export in 0.0020856857299804688 s
+00:29.218  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_golden_pumpkin_0.png'
+00:29.234  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_golden_pumpkin_1.png'
+00:29.265  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_golden_pumpkin_0.png'
+00:29.297  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_golden_pumpkin_1.png'
+00:29.328  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_golden_pumpkin_2.png'
+00:29.343  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_golden_pumpkin_3.png'
+
+BUILT candy_golden_pumpkin             tier 3 tris  443/700 dims [0.516, 0.52, 0.424]
+07:11:18 | INFO: Starting glTF 2.0 export
+07:11:18 | INFO: Extracting primitive: candy_golden_crown
+07:11:18 | INFO: Primitives created: 1
+07:11:18 | INFO: Finished glTF 2.0 export in 0.0024187564849853516 s
+00:29.593  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_golden_crown_0.png'
+00:29.609  render           | Saved: 'S:\Repos\trick-or-treat\art\team\candy_variety\batch03\tiles\candy_golden_crown_1.png'
+00:29.640  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_golden_crown_0.png'
+00:29.672  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_golden_crown_1.png'
+00:29.703  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_golden_crown_2.png'
+00:29.734  render           | Saved: 'S:\Repos\trick-or-treat\art\review\sheets\_candy_golden_crown_3.png'
+
+BUILT candy_golden_crown               tier 3 tris  622/700 dims [0.479, 0.52, 0.476]
+FAILED: none
+Blender 5.1.2 (hash ec6e62d40fa9 built 2026-05-19 01:37:34)
+
+Blender quit

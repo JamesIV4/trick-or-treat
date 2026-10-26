@@ -10,6 +10,8 @@
 
 namespace tot {
 
+class AssetLibrary;
+
 enum class MonsterType { PumpkinHopper, Bat, Skeleton, Ghost, Gremlin, Mummy, Slime, Scarecrow, Spider, Toadstool, Count };
 
 const char *monster_name(MonsterType t);
@@ -25,8 +27,14 @@ struct MonsterArt {
 struct MonsterArtKit {
 	MonsterArt art[int(MonsterType::Count)];
 	godot::Ref<godot::ArrayMesh> vine[3];
+	// Thorn nest from the Blender root mass (null: built procedurally from a knot and a blob).
+	godot::Ref<godot::ArrayMesh> root_mass, root_heart;
+	godot::Vector3 root_heart_origin;
 	godot::Ref<godot::ArrayMesh> gate_base, gate_lantern, shop_cart;
 	void build();
+	// Swap in the published Blender monsters and nests (monster_<kind> with body/part_a/part_b,
+	// nest_<kind>) wherever they exist; the procedural versions stay as fallbacks.
+	void apply_assets(AssetLibrary &lib);
 	const MonsterArt &operator[](MonsterType t) const { return art[int(t)]; }
 };
 

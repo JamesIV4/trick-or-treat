@@ -6,6 +6,9 @@
 	"scene":0,
 	"scenes":[
 		{
+			"extras":{
+				"tot_build":"1792899644.168"
+			},
 			"name":"Scene",
 			"nodes":[
 				0
@@ -39,92 +42,92 @@
 		{
 			"bufferView":0,
 			"componentType":5126,
-			"count":812,
+			"count":764,
 			"max":[
-				0.29245710372924805,
-				0.5375322103500366,
-				0.2593837082386017
+				0.2919887602329254,
+				0.5742404460906982,
+				0.2919887602329254
 			],
 			"min":[
-				-0.2965397238731384,
+				-0.28114384412765503,
 				0,
-				-0.2888113558292389
+				-0.24697677791118622
 			],
 			"type":"VEC3"
 		},
 		{
 			"bufferView":1,
 			"componentType":5126,
-			"count":812,
+			"count":764,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":2,
 			"componentType":5126,
-			"count":812,
+			"count":764,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":3,
 			"componentType":5126,
-			"count":812,
+			"count":764,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":4,
 			"componentType":5123,
-			"count":812,
+			"count":764,
 			"normalized":true,
 			"type":"VEC4"
 		},
 		{
 			"bufferView":5,
 			"componentType":5123,
-			"count":2514,
+			"count":2400,
 			"type":"SCALAR"
 		}
 	],
 	"bufferViews":[
 		{
 			"buffer":0,
-			"byteLength":9744,
+			"byteLength":9168,
 			"byteOffset":0,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":9744,
-			"byteOffset":9744,
+			"byteLength":9168,
+			"byteOffset":9168,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":6496,
-			"byteOffset":19488,
+			"byteLength":6112,
+			"byteOffset":18336,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":6496,
-			"byteOffset":25984,
+			"byteLength":6112,
+			"byteOffset":24448,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":6496,
-			"byteOffset":32480,
+			"byteLength":6112,
+			"byteOffset":30560,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":5028,
-			"byteOffset":38976,
+			"byteLength":4800,
+			"byteOffset":36672,
 			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":44004,
+			"byteLength":41472,
 			"uri":"flower_pot.bin"
 		}
 	]

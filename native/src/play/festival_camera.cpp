@@ -27,6 +27,11 @@ void FestivalCamera::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("snap"), &FestivalCamera::snap);
 	ClassDB::bind_method(D_METHOD("shake", "amount"), &FestivalCamera::shake);
 	ClassDB::bind_method(D_METHOD("set_overview", "on"), &FestivalCamera::set_overview);
+	ClassDB::bind_method(D_METHOD("set_orbit_speed", "speed"), &FestivalCamera::set_orbit_speed);
+	ClassDB::bind_method(D_METHOD("set_invert_orbit", "on"), &FestivalCamera::set_invert_orbit);
+	ClassDB::bind_method(D_METHOD("set_auto_follow", "on"), &FestivalCamera::set_auto_follow);
+	ClassDB::bind_method(D_METHOD("set_shake_scale", "scale"), &FestivalCamera::set_shake_scale);
+	ClassDB::bind_method(D_METHOD("set_base_fov", "fov"), &FestivalCamera::set_base_fov);
 }
 
 void FestivalCamera::_ready() {
@@ -63,25 +68,60 @@ void FestivalCamera::_process(double delta) {
 	}
 	const float dt = float(delta);
 	time_ += dt;
+	if (cinematic_) {
+		cam_->set_global_transform(cine_xf_);
+		cam_->set_fov(cine_fov_);
+		RenderingServer::get_singleton()->global_shader_parameter_set("cutout_radius", 0.0f);
+		return;
+	}
+	cam_->set_fov(base_fov_);
 	Input *in = Input::get_singleton();
 	const Vector3 tp = target_->get_global_position();
 
-	// The camera keeps one steady orientation (set at the start of the night). It never turns on
-	// its own; only the player's orbit input rotates it, and it stays where they leave it.
+	// The player's orbit input turns the camera, and it stays where they leave it.
 	float orbit = in->get_axis("cam_left", "cam_right");
 	if (in->is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)) {
 		orbit += Math::clamp(in->get_last_mouse_velocity().x * 0.0015f, -2.0f, 2.0f);
 	}
+	orbit *= orbit_speed_ * (invert_orbit_ ? -1.0f : 1.0f);
 	if (std::abs(orbit) > 0.05f) {
 		user_ = wrap(user_ + orbit * 2.0f * dt);
+		orbit_quiet_ = 0.0f;
+	}
+	orbit_quiet_ += dt;
+	if (attract_) {
+		user_ = wrap(user_ + dt * 0.12f);
+		orbit_quiet_ = 0.0f;
+	}
+	// While the kid keeps running one way, the camera swings round behind them (never while the
+	// player is orbiting): barely at all for a small difference, faster the further the run points
+	// away from the view, capped at a moderate turn rate so it never whips round.
+	if (auto_follow_ && !overview_ && orbit_quiet_ > 1.2f && dt > 0.0f) {
+		if (CharacterBody3D *body = Object::cast_to<CharacterBody3D>(follow_body_ ? follow_body_ : target_)) {
+			const Vector3 v = body->get_velocity();
+			const float speed = Vector2(v.x, v.z).length();
+			if (speed > 2.0f) {
+				const float behind = std::atan2(-v.x, -v.z);
+				float off = wrap(behind - yaw_);
+				// Running straight at the camera: keep turning the way it already was (no dithering).
+				if (std::abs(off) > 2.9f && follow_sign_ != 0.0f) {
+					off = follow_sign_ * std::abs(off);
+				}
+				follow_sign_ = off >= 0.0f ? 1.0f : -1.0f;
+				const float away = std::abs(off) / Math_PI; // 0 lined up .. 1 running toward the camera
+				const float gain = (0.3f + 1.1f * away) * Math::clamp((speed - 2.0f) / 5.0f, 0.0f, 1.0f);
+				const float turn = Math::clamp(off * gain, -1.4f, 1.4f); // rad/s
+				user_ = wrap(user_ + turn * dt);
+			}
+		}
 	}
 	const float base = heading_sign_ > 0 ? guide_ : guide_ + Math_PI;
 	const float desired = base + DIAGONAL + user_;
 	yaw_ += wrap(desired - yaw_) * (1.0f - std::exp(-dt * 10.0f));
 
 	// Pull back when the player is high up (roofs, tree house).
-	const float want_dist = overview_ ? 46.0f : 10.0f + Math::clamp((tp.y - 2.0f) * 0.45f, 0.0f, 3.5f);
-	const float want_pitch = overview_ ? 0.95f : 0.43f;
+	const float want_dist = overview_ ? overview_dist_ : 9.5f + Math::clamp((tp.y - 2.0f) * 0.45f, 0.0f, 3.5f);
+	const float want_pitch = overview_ ? 0.95f : 0.52f;
 	dist_ = Math::lerp(dist_, want_dist, 1.0f - std::exp(-dt * 2.0f));
 	pitch_ = Math::lerp(pitch_, want_pitch, 1.0f - std::exp(-dt * 2.0f));
 	// Lazy follow: horizontal quick, vertical slower so jumps don't bounce the frame.
@@ -117,7 +157,7 @@ void FestivalCamera::_process(double delta) {
 	}
 	pos = pivot + offset * (arm_ / Math::max(dist_, 0.01f));
 	if (shake_ > 0.0f) {
-		pos += Vector3(std::sin(time_ * 53.0f), std::sin(time_ * 71.0f), std::sin(time_ * 37.0f)) * shake_ * 0.12f;
+		pos += Vector3(std::sin(time_ * 53.0f), std::sin(time_ * 71.0f), std::sin(time_ * 37.0f)) * shake_ * shake_scale_ * 0.12f;
 		shake_ = Math::max(0.0f, shake_ - dt * 3.0f);
 	}
 	cam_->set_global_position(pos);

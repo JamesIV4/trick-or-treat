@@ -23,6 +23,8 @@ public:
 	void _exit_tree() override;
 
 	// Candy: the pickup moment, scaled by how special the candy is (0 plain .. 3 golden).
+	void candy_sparkles(const godot::Vector3 &pos, const godot::Color &color, int count, float speed, float size, float rise);
+	static godot::Color saturated(const godot::Color &c);
 	void candy_pickup(const godot::Vector3 &pos, const godot::Color &color, int tier);
 	// A sparkle trail following candy as it flies to the bucket.
 	int trail_begin(const godot::Color &color);

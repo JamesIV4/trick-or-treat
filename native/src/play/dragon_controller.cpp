@@ -7,11 +7,16 @@
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/gradient.hpp>
 #include <godot_cpp/classes/kinematic_collision3d.hpp>
+#include <godot_cpp/classes/os.hpp>
+#include <godot_cpp/classes/physics_direct_space_state3d.hpp>
+#include <godot_cpp/classes/physics_ray_query_parameters3d.hpp>
+#include <godot_cpp/classes/world3d.hpp>
 #include <godot_cpp/classes/sphere_mesh.hpp>
 #include <godot_cpp/classes/standard_material3d.hpp>
 #include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/math.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <cmath>
 
@@ -28,6 +33,10 @@ namespace {
 using namespace move;
 constexpr float ROLL_SPEED = 12.5f;
 constexpr float GLIDE_FALL = 2.3f;
+constexpr float CAST_TIME = 0.38f; // the wand flick: arm up and pointing, then back down
+// Trampoline super bounce: jump held on contact, or pressed up to 0.25 s before landing or 0.15 s
+// after, springs 1.45x higher.
+constexpr float SUPER_BOUNCE = 1.45f, SUPER_WINDOW_BEFORE = 0.35f, SUPER_WINDOW_AFTER = 0.25f;
 
 float angle_lerp(float a, float b, float t) {
 	float d = Math::fmod(b - a + Math_PI * 3.0f, Math_TAU) - Math_PI;
@@ -50,6 +59,7 @@ void DragonController::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("landed", PropertyInfo(Variant::FLOAT, "impact")));
 	ADD_SIGNAL(MethodInfo("pounded", PropertyInfo(Variant::VECTOR3, "position")));
 	ADD_SIGNAL(MethodInfo("bounced"));
+	ADD_SIGNAL(MethodInfo("grabbed"));
 	ADD_SIGNAL(MethodInfo("spun"));
 	ADD_SIGNAL(MethodInfo("fired"));
 	ADD_SIGNAL(MethodInfo("stepped", PropertyInfo(Variant::INT, "parity")));
@@ -75,12 +85,12 @@ void DragonController::puff(const Vector3 &pos, int amount, float spread, const 
 		mat->set_billboard_mode(BaseMaterial3D::BILLBOARD_PARTICLES);
 		mat->set_transparency(BaseMaterial3D::TRANSPARENCY_ALPHA);
 		Ref<SphereMesh> ball;
-		ball.instantiate();
-		ball->set_radius(0.09f);
-		ball->set_height(0.18f);
-		ball->set_radial_segments(8);
-		ball->set_rings(4);
-		ball->set_material(mat);
+			ball.instantiate();
+			ball->set_radius(0.09f);
+			ball->set_height(0.18f);
+			ball->set_radial_segments(8);
+			ball->set_rings(4);
+			ball->set_material(mat);
 		Ref<Gradient> fade;
 		fade.instantiate();
 		fade->set_offsets(PackedFloat32Array({ 0.0f, 0.6f, 1.0f }));
@@ -120,8 +130,8 @@ void DragonController::puff(const Vector3 &pos, int amount, float spread, const 
 }
 
 void DragonController::celebrate(int kind) {
-	bucket_punch_ = kind >= 4 ? 1.4f : 1.0f;
-	squash_v_ -= kind >= 4 ? 1.6f : 0.7f;
+	bucket_punch_ = candy_tier(kind) >= 1 ? 1.4f : 1.0f;
+	squash_v_ -= candy_tier(kind) >= 1 ? 1.6f : 0.7f;
 }
 
 void DragonController::_ready() {
@@ -129,6 +139,7 @@ void DragonController::_ready() {
 		return;
 	}
 	add_to_group("player");
+	ledge_enabled_ = !OS::get_singleton()->get_cmdline_user_args().has("--no-ledge"); // review A/B
 	set_collision_mask(1 | 2);
 	set_floor_max_angle(Math::deg_to_rad(46.0f));
 	set_floor_snap_length(0.3f);
@@ -200,6 +211,9 @@ void DragonController::set_visual(Node3D *visual) {
 	if (!visual_root_) {
 		return;
 	}
+	if (wand_ && wand_->get_parent()) {
+		wand_->get_parent()->remove_child(wand_); // keep it when the body is swapped
+	}
 	if (visual_) {
 		visual_->queue_free();
 	}
@@ -216,12 +230,79 @@ void DragonController::set_visual(Node3D *visual) {
 		bucket_light_->set_position(Vector3(-0.35f, 0.45f, 0.1f));
 		visual_root_->add_child(bucket_light_);
 	}
-	// Moonlight rim keeps the teal silhouette readable against the blue night.
+	// Moonlight rim keeps the green silhouette readable against the blue night.
 	set_instance_param_recursive(visual_, "rim_strength", 0.22f);
 	set_layers_recursive(visual_, LAYER_NO_DECALS);
 	set_fill(fill_);
+	attach_wand();
 }
 
+namespace {
+Node3D *find_named(Node *n, const String &name) {
+	if (n->get_name() == StringName(name)) {
+		return Object::cast_to<Node3D>(n);
+	}
+	for (int i = 0; i < n->get_child_count(); ++i) {
+		if (Node3D *f = find_named(n->get_child(i), name)) {
+			return f;
+		}
+	}
+	return nullptr;
+}
+// The wand arm at the top of the flick: up and pointing ahead, the hand drawn in a little.
+const Vector3 CAST_ARM(-1.45f, 0.0f, -0.2f);
+} // namespace
+
+void DragonController::set_wand(Node3D *wand) {
+	if (wand_ && wand_ != wand) {
+		wand_->queue_free();
+	}
+	wand_ = wand;
+	wand_tip_ = wand_ ? find_named(wand_, "socket_tip") : nullptr;
+	attach_wand();
+}
+
+// In the left mitten, held down along the arm and angled forward, so when the arm comes up for a
+// cast the wand points ahead and a little up.
+void DragonController::attach_wand() {
+	if (!wand_ || !visual_root_) {
+		return;
+	}
+	Node3D *hand = arm_l_.node ? arm_l_.node : visual_root_;
+	if (Node *old = wand_->get_parent()) {
+		if (old == hand) {
+			return;
+		}
+		old->remove_child(wand_);
+	}
+	hand->add_child(wand_);
+	const Vector3 dir = Vector3(0.05f, -0.9f, 0.45f).normalized();
+	const Vector3 grip = arm_l_.node ? Vector3(0.096f, -0.216f, 0.036f) : Vector3(0.25f, 0.4f, 0.08f);
+	wand_->set_transform(Transform3D(Basis::looking_at(dir, Vector3(0, 0, 1), true).scaled_local(Vector3(0.85f, 0.85f, 0.85f)), grip)); // 0.43 m asset, kid-sized
+	set_instance_param_recursive(wand_, "rim_strength", 0.22f);
+	set_layers_recursive(wand_, LAYER_NO_DECALS);
+}
+
+void DragonController::pose_cast_arm() {
+	pose(arm_l_, CAST_ARM);
+}
+
+Vector3 DragonController::cast_from() {
+	if (visual_root_) {
+		// Turn the body and raise the arm now, so the shot leaves the tip where it will be drawn.
+		Transform3D t = visual_root_->get_transform();
+		t.basis = Basis(Vector3(0, 1, 0), visual_yaw_);
+		visual_root_->set_transform(t);
+	}
+	pose_cast_arm();
+	if (wand_tip_ && wand_tip_->is_inside_tree()) {
+		return wand_tip_->get_global_position();
+	}
+	if (wand_ && wand_->is_inside_tree()) {
+		return wand_->get_global_transform().xform(Vector3(0, 0, 0.3f));
+	}
+	return get_global_position() + Vector3(0, 0.85f, 0) + facing_dir() * 0.45f;
+}
 void DragonController::set_fill(float fill) {
 	fill_ = Math::clamp(fill, 0.0f, 1.0f);
 	if (bucket_candy_.node) {
@@ -237,6 +318,8 @@ void DragonController::set_fill(float fill) {
 void DragonController::teleport(const Vector3 &pos, float yaw) {
 	set_global_position(pos);
 	set_velocity(Vector3());
+	hanging_ = false;
+	climb_t_ = -1.0f;
 	facing_ = visual_yaw_ = yaw;
 	if (visual_root_) {
 		visual_root_->set_rotation(Vector3(0, yaw, 0));
@@ -282,6 +365,148 @@ void DragonController::assist(const Vector3 &wish) {
 	}
 }
 
+// Ledge grab: a jump that comes up just short of a ledge (its top within arm's reach, a wall or
+// lip right in front, room to stand up there) catches it, Mario 64 / Spyro style. The kid hangs
+// until jump climbs up or drop lets go. Thin rails and fence tops are skipped (no room to stand
+// just inside the lip), and low lips stay with assist() which simply pops the kid up.
+bool DragonController::try_grab(const Vector3 &wish) {
+	constexpr float REACH_LO = 0.65f, REACH_HI = 1.5f, HANG = 1.08f;
+	// The review bot plans its own routes and doesn't use ledges.
+	if (!ledge_enabled_ || (bot_ && !bot_ledges_) || regrab_cd_ > 0.0f || is_on_floor() || pounding_ || knock_t_ > 0.0f || roll_t_ > 0.0f) {
+		return false;
+	}
+	PhysicsDirectSpaceState3D *space = get_world_3d()->get_direct_space_state();
+	if (!space) {
+		return false;
+	}
+	const Vector3 p = get_global_position();
+	Vector3 dir = Vector3(wish.x, 0, wish.z);
+	if (dir.length() < 0.2f) {
+		const Vector3 hv(get_velocity().x, 0, get_velocity().z);
+		dir = hv.length() > 0.5f ? hv : facing_dir();
+	}
+	dir = dir.normalized();
+	TypedArray<RID> self;
+	self.push_back(get_rid());
+	auto ray = [&](const Vector3 &a, const Vector3 &b) {
+		Ref<PhysicsRayQueryParameters3D> q = PhysicsRayQueryParameters3D::create(a, b, 1);
+		q->set_exclude(self);
+		return space->intersect_ray(q);
+	};
+	// A wall (or a slab's edge) in front, somewhere between the chest and the reach of the hands.
+	Dictionary wall;
+	for (float h : { 0.7f, 0.95f, 1.2f, 1.45f }) {
+		wall = ray(p + Vector3(0, h, 0), p + Vector3(0, h, 0) + dir * 0.75f);
+		if (!wall.is_empty()) {
+			break;
+		}
+	}
+	if (wall.is_empty()) {
+		return false;
+	}
+	Vector3 n = wall["normal"];
+	if (std::abs(n.y) > 0.35f) {
+		return false;
+	}
+	n.y = 0.0f;
+	n = n.normalized();
+	if (dir.dot(-n) < 0.45f) {
+		return false;
+	}
+	const Vector3 w = wall["position"];
+	// The top surface, straight down just inside the lip.
+	const Vector3 in = Vector3(w.x, p.y, w.z) - n * 0.22f;
+	const Dictionary top = ray(in + Vector3(0, REACH_HI + 0.45f, 0), in + Vector3(0, REACH_LO - 0.05f, 0));
+	if (top.is_empty()) {
+		return false;
+	}
+	const Vector3 tp = top["position"];
+	const float rise = tp.y - p.y;
+	if (Vector3(top["normal"]).y < 0.75f || rise < REACH_LO || rise > REACH_HI) {
+		return false;
+	}
+	// Still rising fast enough to clear it? Then let the jump land on top by itself.
+	const float vy = get_velocity().y;
+	if (vy > 0.0f && vy * vy / (2.0f * GRAVITY) * 1.15f > rise + 0.15f) {
+		return false;
+	}
+	// Room to stand up there, and to hang below the lip.
+	const Vector3 stand = Vector3(w.x, tp.y + 0.06f, w.z) - n * 0.42f;
+	const Vector3 hang = Vector3(w.x, tp.y - HANG, w.z) + n * 0.33f;
+	if (test_move(Transform3D(Basis(), stand), Vector3(0, 0.3f, 0)) || test_move(Transform3D(Basis(), hang), Vector3(0, 0.05f, 0))) {
+		return false;
+	}
+	// The top has to carry on behind the lip (a roof, a deck, a wall top): thin things like banisters
+	// and fences aren't ledges to hang from (jump at them on the ground to vault them instead).
+	for (float back : { 0.42f, 0.7f }) {
+		const Vector3 behind = Vector3(w.x, tp.y, w.z) - n * back;
+		const Dictionary under = ray(behind + Vector3(0, 0.4f, 0), behind - Vector3(0, 0.3f, 0));
+		if (under.is_empty() || std::abs(Vector3(under["position"]).y - tp.y) > 0.15f) {
+			return false;
+		}
+	}
+	hanging_ = true;
+	hang_t_ = 0.0f;
+	ledge_ = Vector3(w.x, tp.y, w.z);
+	ledge_n_ = n;
+	climb_to_ = stand;
+	set_global_position(hang);
+	set_velocity(Vector3());
+	facing_ = std::atan2(-n.x, -n.z);
+	flap_used_ = false;
+	spin_air_used_ = false;
+	glide_t_ = 0.0f;
+	squash_v_ += 1.4f;
+	puff(ledge_ + Vector3(0, 0.05f, 0), 5, 0.15f, Color(0.78f, 0.8f, 0.95f), 0.8f);
+	++grabs_;
+	emit_signal("grabbed");
+	return true;
+}
+
+// Falling onto a trampoline about to land (within the super-bounce window)?
+bool DragonController::trampoline_below(float vy) {
+	PhysicsDirectSpaceState3D *space = get_world_3d()->get_direct_space_state();
+	if (!space) {
+		return false;
+	}
+	const Vector3 p = get_global_position();
+	const float reach = Math::max(1.2f, -vy * SUPER_WINDOW_BEFORE + 0.4f);
+	TypedArray<RID> self;
+	self.push_back(get_rid());
+	Ref<PhysicsRayQueryParameters3D> q = PhysicsRayQueryParameters3D::create(p + Vector3(0, 0.2f, 0), p - Vector3(0, reach, 0), 1);
+	q->set_exclude(self);
+	const Dictionary hit = space->intersect_ray(q);
+	Object *col = hit.is_empty() ? nullptr : Object::cast_to<Object>(hit["collider"]);
+	return col && col->has_meta("bounce");
+}
+
+void DragonController::super_bounce() {
+	super_done_ = true;
+	buffer_ = 0.0f;
+	bounce_grace_ = 0.5f;
+	flap_used_ = false;
+	squash_v_ -= 3.5f;
+	puff(get_global_position() + Vector3(0, 0.3f, 0), 22, 0.5f, Color(0.85f, 0.6f, 1.0f), 4.0f);
+	emit_signal("bounced");
+}
+
+void DragonController::release_ledge(bool climb) {
+	hanging_ = false;
+	buffer_ = 0.0f;
+	if (climb) {
+		climb_from_ = get_global_position();
+		climb_arc_ = 0.0f;
+		climb_dur_ = 0.3f;
+		climb_t_ = 0.0f;
+		squash_v_ -= 2.0f;
+		emit_signal("jumped");
+	} else {
+		regrab_cd_ = 0.45f;
+		coyote_ = 0.0f;
+		set_velocity(ledge_n_ * 1.2f);
+	}
+}
+
 void DragonController::knockback(const Vector3 &from, float force) {
 	Vector3 away = get_global_position() - from;
 	away.y = 0.0f;
@@ -295,6 +520,8 @@ void DragonController::knockback(const Vector3 &from, float force) {
 
 void DragonController::set_mounted(bool m) {
 	mounted_ = m;
+	hanging_ = false;
+	climb_t_ = -1.0f;
 	set_collision_layer(m ? 0 : 1);
 	set_collision_mask(m ? 0 : (1 | 2));
 	set_velocity(Vector3());
@@ -326,26 +553,124 @@ void DragonController::step_up(const Vector3 &wish) {
 	if (n.length() < 0.5f || dir.dot(-n.normalized()) < 0.3f) {
 		return;
 	}
+	n = n.normalized();
 	const Transform3D gt = get_global_transform();
 	const Vector3 up(0, STEP, 0);
-	const Vector3 fwd = dir * 0.32f;
-	if (test_move(gt, up) || test_move(gt.translated(up), fwd)) {
-		return; // a ceiling above, or the "step" is a wall
+	if (test_move(gt, up)) {
+		return; // a ceiling above
 	}
-	Ref<KinematicCollision3D> hit;
-	hit.instantiate();
-	const Transform3D ahead = gt.translated(up + fwd);
-	if (!test_move(ahead, Vector3(0, -STEP - 0.05f, 0), hit) || hit->get_normal().y < 0.7f) {
+	// Try the way the kid is heading, then straight onto the step (heading diagonally into the corner
+	// where a flight of steps meets the porch would otherwise find the deck and give up).
+	for (const Vector3 &way : { dir, -n }) {
+		const Vector3 fwd = way * 0.32f;
+		if (test_move(gt.translated(up), fwd)) {
+			continue; // the "step" is a wall this way
+		}
+		Ref<KinematicCollision3D> hit;
+		hit.instantiate();
+		const Transform3D ahead = gt.translated(up + fwd);
+		if (!test_move(ahead, Vector3(0, -STEP - 0.05f, 0), hit) || hit->get_normal().y < 0.7f) {
+			continue;
+		}
+		const float rise = STEP - hit->get_travel().length();
+		if (rise < 0.03f || rise > STEP) {
+			continue;
+		}
+		set_global_position(gt.origin + Vector3(0, rise, 0) + fwd * 0.5f);
+		step_smooth_ -= rise;
 		return;
 	}
-	const float rise = STEP - hit->get_travel().length();
-	if (rise < 0.03f || rise > STEP) {
-		return;
-	}
-	set_global_position(gt.origin + Vector3(0, rise, 0) + fwd * 0.5f);
-	step_smooth_ -= rise;
 }
 
+// Mantling: pressing jump at a fence, rail, low wall or crate (0.3 to 1.5 m) just ahead vaults
+// the kid over it if it's thin, or hops them up onto it if there's room to stand on top.
+bool DragonController::try_mantle(const Vector3 &wish) {
+	PhysicsDirectSpaceState3D *space = get_world_3d()->get_direct_space_state();
+	if (!space || pounding_ || knock_t_ > 0.0f) {
+		return false;
+	}
+	// The way the kid is pushing, or with the stick at rest, the way they face.
+	Vector3 dir = Vector3(wish.x, 0, wish.z);
+	dir = dir.length() < 0.3f ? facing_dir() : dir.normalized();
+	const Vector3 p = get_global_position();
+	TypedArray<RID> self;
+	self.push_back(get_rid());
+	auto ray = [&](const Vector3 &a, const Vector3 &b) {
+		Ref<PhysicsRayQueryParameters3D> q = PhysicsRayQueryParameters3D::create(a, b, 1);
+		q->set_exclude(self);
+		return space->intersect_ray(q);
+	};
+	Dictionary wall;
+	for (float h : { 0.2f, 0.45f, 0.75f }) {
+		wall = ray(p + Vector3(0, h, 0), p + Vector3(0, h, 0) + dir * 0.75f);
+		if (!wall.is_empty()) {
+			break;
+		}
+	}
+	if (wall.is_empty()) {
+		return false;
+	}
+	Vector3 n = wall["normal"];
+	if (std::abs(n.y) > 0.4f) {
+		return false;
+	}
+	n.y = 0.0f;
+	n = n.normalized();
+	if (dir.dot(-n) < 0.4f) {
+		return false;
+	}
+	const Vector3 w = wall["position"];
+	// The top of the obstacle just past its face.
+	const Vector3 in = Vector3(w.x, p.y, w.z) - n * 0.08f;
+	const Dictionary top = ray(in + Vector3(0, 1.9f, 0), in);
+	if (top.is_empty()) {
+		return false;
+	}
+	const float top_y = Vector3(top["position"]).y;
+	const float rise = top_y - p.y;
+	if (rise < 0.3f || rise > 1.5f) {
+		return false;
+	}
+	// Thin (a fence): land on the ground beyond it.
+	for (float beyond : { 0.6f, 0.9f, 1.2f }) {
+		const Vector3 far = Vector3(w.x, p.y, w.z) - n * beyond;
+		const Dictionary ground = ray(far + Vector3(0, rise + 0.4f, 0), far - Vector3(0, 1.2f, 0));
+		if (ground.is_empty() || Vector3(ground["normal"]).y < 0.7f) {
+			continue;
+		}
+		const Vector3 g = ground["position"];
+		if (g.y > top_y - 0.25f) {
+			break; // solid all the way: it's a platform, not a fence
+		}
+		const Vector3 land = g + Vector3(0, 0.02f, 0);
+		if (test_move(Transform3D(Basis(), land + Vector3(0, 0.05f, 0)), Vector3(0, 0.1f, 0))) {
+			continue;
+		}
+		begin_climb(land, top_y - Math::max(p.y, land.y) + 0.35f, 0.42f);
+		return true;
+	}
+	// Thick: step up onto the top.
+	const Vector3 stand = Vector3(w.x, top_y + 0.04f, w.z) - n * 0.4f;
+	if (test_move(Transform3D(Basis(), stand), Vector3(0, 0.3f, 0))) {
+		return false;
+	}
+	begin_climb(stand, 0.0f, 0.3f);
+	return true;
+}
+
+void DragonController::begin_climb(const Vector3 &to, float arc, float duration) {
+	climb_from_ = get_global_position();
+	climb_to_ = to;
+	climb_arc_ = arc;
+	climb_dur_ = duration;
+	climb_t_ = 0.0f;
+	buffer_ = 0.0f;
+	coyote_ = 0.0f;
+	facing_ = std::atan2(to.x - climb_from_.x, to.z - climb_from_.z);
+	squash_v_ -= 2.0f;
+	puff(climb_from_ + Vector3(0, 0.05f, 0), 6, 0.2f, Color(0.78f, 0.8f, 0.95f), 1.4f);
+	emit_signal("jumped");
+}
 float DragonController::collect_radius() const {
 	if (shockwave_t_ > 0.0f) {
 		return 2.6f;
@@ -393,11 +718,13 @@ void DragonController::_physics_process(double delta) {
 	bot_jump_ = false;
 	bot_spin_ = false;
 	const bool roll_pressed = input_enabled_ && in->is_action_just_pressed("roll");
+	const bool drop_pressed = input_enabled_ && in->is_action_just_pressed("drop");
 	fire_cd_ = Math::max(0.0f, fire_cd_ - dt);
 	if (((input_enabled_ && in->is_action_just_pressed("attack")) || (bot_ && bot_fire_)) && fire_cd_ <= 0.0f) {
 		fire_cd_ = fire_cooldown_;
 		roar_t_ = 0.3f;
 		squash_v_ -= 1.2f;
+		cast_t_ = CAST_TIME;
 		emit_signal("fired");
 	}
 	bot_fire_ = false;
@@ -405,8 +732,40 @@ void DragonController::_physics_process(double delta) {
 		set_velocity(Vector3());
 		return;
 	}
+	regrab_cd_ = Math::max(0.0f, regrab_cd_ - dt);
+	// Climbing over a ledge: up first, then in, without physics (the lip would snag the capsule).
+	if (climb_t_ >= 0.0f) {
+		climb_t_ = Math::min(1.0f, climb_t_ + dt / climb_dur_);
+		if (climb_arc_ > 0.0f) {
+			// Vault: a hop arc over the top.
+			const float t = climb_t_;
+			set_global_position(climb_from_.lerp(climb_to_, t) + Vector3(0, std::sin(t * Math_PI) * climb_arc_, 0));
+		} else {
+			const float ty = Math::smoothstep(0.0f, 0.6f, climb_t_), tx = Math::smoothstep(0.35f, 1.0f, climb_t_);
+			set_global_position(Vector3(Math::lerp(climb_from_.x, climb_to_.x, tx), Math::lerp(climb_from_.y, climb_to_.y, ty), Math::lerp(climb_from_.z, climb_to_.z, tx)));
+		}
+		set_velocity(Vector3());
+		if (climb_t_ >= 1.0f) {
+			climb_t_ = -1.0f;
+			was_on_floor_ = true;
+			squash_v_ += 1.6f;
+		}
+		return;
+	}
+	if (hanging_) {
+		hang_t_ += dt;
+		set_velocity(Vector3());
+		if (jump_pressed || (bot_ && hang_t_ > 0.25f)) {
+			release_ledge(true);
+		} else if (drop_pressed || roll_pressed) {
+			release_ledge(false);
+		}
+		return;
+	}
 
-	coyote_ = on_floor ? COYOTE : Math::max(0.0f, coyote_ - dt);
+	since_jump_press_ = jump_pressed ? 0.0f : since_jump_press_ + dt;
+	bounce_t_ += dt;
+	coyote_ = on_floor && bounce_t_ > 0.12f ? COYOTE : Math::max(0.0f, coyote_ - dt);
 	buffer_ = jump_pressed ? BUFFER : Math::max(0.0f, buffer_ - dt);
 	roll_cd_ = Math::max(0.0f, roll_cd_ - dt);
 	spin_t_ = Math::max(0.0f, spin_t_ - dt);
@@ -439,6 +798,22 @@ void DragonController::_physics_process(double delta) {
 		spin_air_used_ = false;
 		glide_t_ = 0.0f;
 		jump_cut_ = false;
+		if (bounce_t_ > 0.1f) {
+			bounce_air_ = false;
+		}
+	}
+	// Trampolines: a press just after leaving one (the late side of the window) is the super bounce,
+	// and a press while dropping onto one is saved for it; neither flaps the wings.
+	bool press_used = false;
+	if (jump_pressed && !super_done_ && bounce_t_ < SUPER_WINDOW_AFTER) {
+		v.y = Math::max(v.y, bounce_speed_ * SUPER_BOUNCE - GRAVITY * bounce_t_);
+		super_bounce();
+		press_used = true;
+	} else if (jump_pressed && !on_floor && v.y < 0.0f && trampoline_below(v.y)) {
+		press_used = true;
+	}
+	if (jump_pressed && on_floor && !pounding_ && try_mantle(wish)) {
+		return; // vaulting or climbing this frame instead of jumping
 	}
 	if (buffer_ > 0.0f && coyote_ > 0.0f && !pounding_) {
 		v.y = JUMP_V;
@@ -448,15 +823,17 @@ void DragonController::_physics_process(double delta) {
 		squash_v_ -= 2.6f;
 		puff(get_global_position() + Vector3(0, 0.05f, 0), 7, 0.2f, Color(0.78f, 0.8f, 0.95f), 1.6f);
 		emit_signal("jumped");
-	} else if (jump_pressed && !on_floor && coyote_ <= 0.0f && !flap_used_ && !pounding_) {
+	} else if (jump_pressed && !press_used && !on_floor && coyote_ <= 0.0f && !flap_used_ && !pounding_) {
 		v.y = FLAP_V;
 		flap_used_ = true;
+		bounce_air_ = false; // a fresh press after a launch: the wings (and the floaty hold) are back
 		flap_anim_ = 0.4f;
 		squash_v_ -= 1.8f;
 		puff(get_global_position() + Vector3(0, 0.7f, 0), 12, 0.35f, Color(0.75f, 0.5f, 1.0f), 2.4f);
 		emit_signal("flapped");
 	}
-	if (!jump_held && v.y > 0.0f && !jump_cut_ && !flap_used_) {
+	bounce_grace_ = Math::max(0.0f, bounce_grace_ - dt);
+	if (!jump_held && v.y > 0.0f && !jump_cut_ && !flap_used_ && bounce_grace_ <= 0.0f) {
 		v.y *= JUMP_CUT;
 		jump_cut_ = true;
 	}
@@ -468,17 +845,24 @@ void DragonController::_physics_process(double delta) {
 			v.y = -24.0f;
 		}
 	} else {
-		// Floaty rise, a hang at the apex while jump is held, a heavier fall.
-		v.y = Math::max(v.y - gravity_at(v.y, jump_held) * dt, -MAX_FALL);
+		// Floaty rise, a hang at the apex while jump is held, a heavier fall. After a trampoline launch,
+		// still holding jump doesn't float the kid (only a fresh press does, with the wing flap).
+		v.y = Math::max(v.y - gravity_at(v.y, jump_held && !bounce_air_) * dt, -MAX_FALL);
 		// Glide: after the wing flap, holding jump while falling.
 		if (flap_used_ && jump_held && v.y < -GLIDE_FALL && glide_t_ < 1.4f) {
 			v.y = -GLIDE_FALL;
 			glide_t_ += dt;
 		}
 	}
-	// Tail spin: on the ground a sweep, in the air a little hover once per jump.
+	// Tail spin: on the ground a sweep, in the air a little hover once per jump. Costumes without a
+	// tail do a magic wand spin instead (wand held out, a ring of sparkles).
 	if (spin_pressed && spin_t_ <= 0.0f) {
 		spin_t_ = 0.42f;
+		if (!tail_.node) {
+			if (Vfx *vfx = Vfx::get()) {
+				vfx->ring(get_global_position() + Vector3(0, 0.6f, 0), Color(0.8f, 0.55f, 1.0f), 1.7f, 0.4f);
+			}
+		}
 		if (!on_floor && !spin_air_used_) {
 			v.y = Math::max(v.y, 2.2f);
 			spin_air_used_ = true;
@@ -503,6 +887,10 @@ void DragonController::_physics_process(double delta) {
 	last_vy_ = v.y;
 	set_velocity(v);
 	move_and_slide();
+	if (!pounding_ && try_grab(wish)) {
+		was_on_floor_ = false;
+		return;
+	}
 	if (!pounding_) {
 		assist(wish);
 		if (on_floor && v.y <= 0.5f) {
@@ -534,13 +922,27 @@ void DragonController::_physics_process(double delta) {
 			Object *col = c->get_collider();
 			if (col && col->has_meta("bounce")) {
 				Vector3 nv = get_velocity();
-				// Holding jump on contact springs higher: a timing skill the pad rewards.
-				nv.y = float(col->get_meta("bounce")) * (jump_held ? 1.2f : 1.0f);
+				// Holding jump on contact, or pressing it within a forgiving window either side of the
+				// contact, springs much higher.
+				bounce_speed_ = float(col->get_meta("bounce"));
+				bounce_t_ = 0.0f;
+				bounce_air_ = true;
+				super_done_ = false;
+				buffer_ = 0.0f;
+				coyote_ = 0.0f;
+				nv.y = bounce_speed_;
+				if (jump_held || since_jump_press_ < SUPER_WINDOW_BEFORE) {
+					nv.y = bounce_speed_ * SUPER_BOUNCE;
+					super_bounce();
+				}
 				set_velocity(nv);
+				bounce_grace_ = 0.3f; // a bounce isn't a jump: letting go of jump mustn't cut it short
 				flap_used_ = false;
 				squash_v_ -= 3.0f;
 				puff(get_global_position() + Vector3(0, 0.1f, 0), 14, 0.4f, Color(1.0f, 0.65f, 0.3f), 3.0f);
-				emit_signal("bounced");
+				if (!super_done_) {
+					emit_signal("bounced");
+				}
 				break;
 			}
 		}
@@ -599,9 +1001,36 @@ void DragonController::_process(double delta) {
 	pose(leg_r_, Vector3(-swing + air_tuck, 0, 0));
 	pose(arm_l_, Vector3(-swing * 0.7f + (air ? -0.6f : 0.0f), 0, air ? 0.5f : 0.0f));
 	pose(arm_r_, Vector3(swing * 0.25f, 0, air ? -0.2f : 0.0f));
+	// Wand spin (no tail): the wand arm swings out level and sparkles stream off the tip.
+	if (spin_t_ > 0.0f && !tail_.node) {
+		const float out = Math::smoothstep(0.0f, 0.08f, 0.42f - spin_t_) * Math::smoothstep(0.0f, 0.1f, spin_t_);
+		pose(arm_l_, Vector3(0, 0, 1.45f * out));
+		if (Vfx *vfx = Vfx::get()) {
+			if (wand_tip_ && wand_tip_->is_inside_tree() && out > 0.5f) {
+				vfx->candy_sparkles(wand_tip_->get_global_position(), Color(0.8f, 0.55f, 1.0f), 3, 0.8f, 0.8f, 0.4f);
+			}
+		}
+	}
+	// The wand flick: the arm snaps up with a little overshoot, holds, then eases back down.
+	if (cast_t_ > 0.0f) {
+		const float k = 1.0f - cast_t_ / CAST_TIME;
+		const float raise = Math::smoothstep(0.0f, 0.12f, k) * (1.0f - Math::smoothstep(0.55f, 1.0f, k));
+		const float flick = std::sin(Math::clamp(k / 0.3f, 0.0f, 1.0f) * float(Math_PI)) * 0.35f;
+		const Vector3 rest(-swing * 0.7f + (air ? -0.6f : 0.0f), 0, air ? 0.5f : 0.0f);
+		pose(arm_l_, rest.lerp(CAST_ARM + Vector3(-flick, 0, 0), raise));
+		cast_t_ = Math::max(0.0f, cast_t_ - dt);
+	}
 	pose(head_, Vector3(std::sin(phase_ * 2.0f) * 0.04f * sf + (roar_t_ > 0.0f ? -0.25f : 0.0f), std::sin(time_ * 0.7f) * 0.08f * (1.0f - sf), 0));
 	pose(body_, Vector3(sf * 0.12f, 0, std::sin(phase_) * 0.04f * sf));
 	pose(tail_, Vector3(std::sin(time_ * 2.0f) * 0.05f + (air ? 0.25f : 0.0f), std::sin(time_ * 3.1f + phase_ * 0.5f) * (0.25f + 0.2f * sf), 0));
+	// Hanging from a ledge: both arms up over the lip, legs dangling with a little kick.
+	if (hanging_ || climb_t_ >= 0.0f) {
+		const float kick = std::sin(time_ * 2.4f) * 0.12f;
+		pose(arm_l_, Vector3(-2.7f, 0, 0.25f));
+		pose(arm_r_, Vector3(-2.7f, 0, -0.25f));
+		pose(leg_l_, Vector3(0.15f + kick, 0, 0));
+		pose(leg_r_, Vector3(0.15f - kick, 0, 0));
+	}
 	// Wings: idle flutter, big flaps on the double jump, spread while gliding.
 	float wing = std::sin(time_ * 3.0f) * 0.12f;
 	if (flap_anim_ > 0.0f) {

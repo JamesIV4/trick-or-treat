@@ -20,6 +20,8 @@ uniform float emit_strength = 2.6;
 uniform float ramp_soft = 0.2;
 uniform vec3 shadow_tint : source_color = vec3(0.55, 0.65, 1.0);
 uniform float ao_strength = 0.85;
+uniform vec3 cast_shadow_tint : source_color = vec3(0.42, 0.58, 1.0);
+uniform float cast_shadow_fill = 0.32;
 
 instance uniform float rim_strength = 0.0;
 instance uniform vec3 rim_color : source_color = vec3(0.62, 0.76, 1.0);
@@ -27,6 +29,7 @@ instance uniform float glow_boost = 1.0;
 instance uniform float flash = 0.0;
 instance uniform vec3 hit_flash : source_color = vec3(0.0); // monster hit / telegraph glow
 instance uniform float wind = 0.0;
+instance uniform float keep_visible = 0.0; // 1: never dithered away by the player cutout (monsters)
 
 global uniform vec3 cutout_from;
 global uniform vec3 cutout_to;
@@ -56,7 +59,7 @@ void vertex() {
 
 void fragment() {
 	// Only things standing up above the player's feet can occlude; the ground never cuts out.
-	if (cutout_radius > 0.0 && world_pos.y > cutout_to.y - 0.25) {
+	if (cutout_radius > 0.0 && keep_visible < 0.5 && world_pos.y > cutout_to.y - 0.25) {
 		vec3 seg = cutout_to - cutout_from;
 		float len = length(seg);
 		vec3 dir = seg / max(len, 0.001);
@@ -105,6 +108,11 @@ void light() {
 	float ramp = smoothstep(-ramp_soft, ramp_soft, ndl);
 	float lit = ramp * ATTENUATION;
 	vec3 shade = LIGHT_COLOR * shadow_tint * 0.12 * (1.0 - ramp) * clamp(ATTENUATION + 0.4, 0.0, 1.0);
+	// Cast shadows from the moon stay a soft blue rather than going dark: a cool fill where the surface
+	// faces the light but is shadowed.
+	if (LIGHT_IS_DIRECTIONAL) {
+		shade += LIGHT_COLOR * cast_shadow_tint * cast_shadow_fill * ramp * (1.0 - ATTENUATION);
+	}
 	DIFFUSE_LIGHT += (LIGHT_COLOR * lit + shade) / PI;
 	// Soft painterly highlight.
 	vec3 h = normalize(LIGHT + VIEW);
