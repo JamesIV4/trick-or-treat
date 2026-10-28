@@ -23,3 +23,15 @@ __pycache__/
 # Review renders (sheets, in-engine previews, captures) are local working output, not committed
 art/review/**/*.png
 art/review/**/*.png.log
+
+# Large video files (trailers and captures) stay local.
+*.mp4
+*.m4v
+*.mov
+*.mkv
+*.avi
+*.webm
+*.wmv
+*.mpeg
+*.mpg
+*.ogv
