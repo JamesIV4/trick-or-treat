@@ -611,6 +611,7 @@ func open_travel(destinations: Array) -> void:
 
 # ---------------------------------------------------------------- trailer
 const LOGO_PATH := "res://assets/ui/logo.png"
+const LOGO_HEIGHT := 380.0
 const FONT_PATH := "res://assets/fonts/Fredoka-Variable.ttf"
 var _cine_title: Label
 var _cine_sub: Label
@@ -768,7 +769,7 @@ func show_main_menu(focus_id := "") -> void:
 	title.texture = _logo()
 	title.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	title.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	title.custom_minimum_size = Vector2(0, 380)
+	title.custom_minimum_size = Vector2(0, LOGO_HEIGHT)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(title)
 	var sub := _display_label(32, CREAM)

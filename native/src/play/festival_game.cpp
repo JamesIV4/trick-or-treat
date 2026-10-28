@@ -373,9 +373,9 @@ void FestivalGame::_ready() {
 	if (seed_ == 0) {
 		seed_ = int64_t(Time::get_singleton()->get_ticks_usec() % 1000000) + 1;
 	}
-	// Plain launches open on the main menu over a peaceful night; review runs (any command-line
-	// arguments) go straight into Save the Town.
-	const bool menu = OS::get_singleton()->get_cmdline_user_args().is_empty();
+	// Plain launches open on the main menu over a peaceful night; review runs go straight into Save
+	// the Town unless explicitly capturing the menu.
+	const bool menu = OS::get_singleton()->get_cmdline_user_args().is_empty() || capture_view_ == "menu";
 	mode_ = menu ? 0 : 1;
 	started_ = !menu;
 	in_menu_ = menu; // no area banners under the title

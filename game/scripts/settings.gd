@@ -112,7 +112,9 @@ func _ready() -> void:
 	_apply_display()
 	_apply_audio()
 	_apply_controls()
-	# The main scene's nodes (environment, post effects, camera rig) are ready after this frame.
+	# The loading screen changes to the main scene after this first frame. Apply scene-specific
+	# settings again when the new scene is ready, and on any later scene changes.
+	get_tree().scene_changed.connect(_apply_scene)
 	await get_tree().process_frame
 	_apply_scene()
 

@@ -21,6 +21,18 @@ native\BuildNative.ps1                 # first run clones the pinned godot-cpp a
 & "C:\GameDev\Godot_v4.7-stable_win64\Godot_v4.7-stable_win64.exe" --path game -e       # editor
 ```
 
+### Build a Windows release to share
+
+Run `BuildRelease.bat` (or `tools\build_release.ps1` from PowerShell). It builds the release
+GDExtension, exports the game with the standard Godot 4.7 templates, and checks that the standalone
+build can generate both a neighborhood and a town with all published models. Share the resulting
+`builds\windows\Halloween - Trick or Treat!.exe` by itself. On launch it unpacks the game and native
+library to a temporary folder, removes them when the game closes, and keeps saves in Godot's usual
+user data folder.
+
+Godot's Export button alone produces an EXE **and** a separate native DLL; both are required when
+running that unbundled export. Use the release builder when you want one shareable EXE.
+
 ## Controls
 
 | Action | Keyboard | Gamepad |
@@ -115,6 +127,8 @@ Arguments after `--` are read by `FestivalGame`:
 ```powershell
 Godot --path game -- --seed=101                            # fixed world seed
 Godot --headless --path game -- --sweep=60 --seed=500      # validate 60 settlements (alternating neighborhood / town)
+Godot --path game -- --capture-splash=splash.png           # capture the startup logo
+Godot --path game -- --capture=menu.png --capture-view=menu # capture the main menu
 Godot --path game -- --seed=101 --capture=shot.png --capture-view=play|overview|lot:3|nest:0|gate|shop|"prop:ID#K"|"at:x,z"|"atover:x,z" [--overview-dist=20]
 Godot --path game -- --seed=101 --ledge-test=2 --capture=hang.png --capture-frames=9999   # jump at a roof edge, hang (screenshot), climb
 Godot --path game -- --seed=103 --capture-view=prop:trampoline_large --drop-test --capture=x.png   # bounce height

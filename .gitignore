@@ -5,6 +5,7 @@ game/native/*.so
 game/native/*.a
 game/native/*.exp
 game/native/*.lib
+builds/
 
 # Native build
 native/third_party/
