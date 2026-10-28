@@ -1,4 +1,4 @@
-# Trick or Treat
+# Halloween: Trick or Treat!
 
 A cozy low-poly 3D collect-a-thon. A kid in a teal dragon costume trick-or-treats across an
 endless, procedurally generated Halloween night: neighborhoods and small towns linked by country
