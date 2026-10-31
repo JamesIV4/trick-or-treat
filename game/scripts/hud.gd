@@ -205,7 +205,7 @@ func _refresh_prompts() -> void:
 	_prompt_nodes = keep
 	if _toast_template != "":
 		_toast.text = Settings.prompts(_toast_template)
-	if _menu_kind == "options":
+	if _menu_kind == "options" and _menu:
 		_refresh_option_rows()
 	elif _menu == null:
 		if _candy_panel.visible and bool(Settings.get_value("gameplay", "hint")):
@@ -910,20 +910,20 @@ func _vignette_texture() -> Texture2D:
 
 
 ## The pause menu (Esc / Back): the night stands still underneath.
-func open_pause(focus_id := "resume") -> void:
-	if _menu == null:
+func open_pause(focus_id := "resume", remember_frame := true) -> void:
+	if _menu == null and remember_frame:
 		Saves.remember_frame() # the moment play stopped, for a save's thumbnail
 	var list := _open_menu("Paused", "", Color(0.7, 0.55, 1.0))
 	_menu_kind = "pause"
 	_menu.offset_left = -270
 	_menu.offset_right = 270
 	var focus: Button = null
-	for entry in [["resume", "Resume"], ["save", "Save game"], ["load", "Load game"], ["options", "Options"], ["new_night", "New night"], ["main_menu", "Main menu"], ["quit", "Quit game"]]:
+	for entry in [["resume", "Resume"], ["photo", "Photo mode"], ["save", "Save game"], ["load", "Load game"], ["options", "Options"], ["new_night", "New night"], ["main_menu", "Main menu"], ["quit", "Quit game"]]:
 		var b := _menu_button()
 		b.text = entry[1]
 		b.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var id: String = entry[0]
-		# Save, load and options open over the pause (the night stays paused underneath).
+		# These screens open over the pause (the night stays paused underneath).
 		if id == "save":
 			b.disabled = not Saves.can_save()
 			b.focus_mode = Control.FOCUS_NONE if b.disabled else Control.FOCUS_ALL
@@ -934,6 +934,8 @@ func open_pause(focus_id := "resume") -> void:
 			b.pressed.connect(func(): open_load("pause"))
 		elif id == "options":
 			b.pressed.connect(func(): open_options("pause"))
+		elif id == "photo":
+			b.pressed.connect(_start_photo_mode)
 		elif id == "main_menu" or id == "quit":
 			b.pressed.connect(func():
 				Saves.save_slot("autosave", "Autosave") # leaving the night: keep it
@@ -976,6 +978,7 @@ var _capture := {} # a rebind waiting for its key or button: {action, kind, butt
 var _capture_end_frame := -1
 var _hold_dir := 0
 var _hold_t := 0.0
+var _photo_mode: Node
 
 
 func open_options(from: String) -> void:
@@ -1103,6 +1106,26 @@ func _build_options() -> void:
 	else:
 		back.grab_focus()
 	_menu_opened_frame = Engine.get_process_frames()
+
+
+func _start_photo_mode() -> void:
+	_close_menu(false)
+	_root.hide()
+	_photo_mode = preload("res://scripts/photo_mode.gd").new()
+	add_child(_photo_mode)
+	_photo_mode.finished.connect(_finish_photo_mode)
+	_photo_mode.start()
+
+
+func _set_photo_hud_visible(on: bool) -> void:
+	_root.visible = on
+
+
+func _finish_photo_mode(return_to_pause: bool) -> void:
+	_photo_mode = null
+	_root.show()
+	if return_to_pause:
+		open_pause("photo", false)
 
 
 ## A setting row: its name on the left, the value (with a bar for sliders) between arrows on the right.
@@ -1633,6 +1656,9 @@ func _scroll_gutter(scroll: ScrollContainer, content: Control) -> MarginContaine
 
 # ---------------------------------------------------------------- menus
 func _open_menu(title: String, sub: String, border: Color) -> VBoxContainer:
+	# Live photo mode releases the camera when gameplay opens a shop or travel menu.
+	if _photo_mode:
+		_photo_mode._exit_photo(false)
 	_close_menu(false)
 	_menu_kind = ""
 	_preview_pivot = null
@@ -1725,7 +1751,7 @@ func _close_menu(notify: bool) -> void:
 
 func _process(delta: float) -> void:
 	var typing := get_viewport().gui_get_focus_owner() is LineEdit
-	if Input.is_action_just_pressed("toggle_hud") and not typing:
+	if not _photo_mode and Input.is_action_just_pressed("toggle_hud") and not typing:
 		_root.visible = not _root.visible
 	if Input.is_action_just_pressed("toggle_debug"):
 		_debug.visible = not _debug.visible

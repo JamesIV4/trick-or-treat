@@ -6,6 +6,7 @@ game/native/*.a
 game/native/*.exp
 game/native/*.lib
 builds/
+.itchio-api-key
 
 # Native build
 native/third_party/

@@ -33,6 +33,24 @@ user data folder.
 Godot's Export button alone produces an EXE **and** a separate native DLL; both are required when
 running that unbundled export. Use the release builder when you want one shareable EXE.
 
+### Push a Windows update to itch.io
+
+Run `PushItch.bat`, or `tools\push_itch.ps1` from PowerShell. It builds and smoke-tests the
+standalone Windows release, then uses Butler to push the EXE to the `windows` channel of
+`kalelreturns89/halloween-trick-or-treat`. The upload goes live when it finishes. Subsequent runs
+upload changes to the same channel, and unchanged builds are skipped.
+
+To inspect the upload without publishing, run `tools\push_itch.ps1 -Preview`. Add `-SkipBuild`
+to use the existing EXE instead of building; that EXE may not contain your latest changes. Pass
+`-Version '1.2.3'` to label a push, or `-Channel windows-beta` to target a different channel.
+
+The script reads the API key from the gitignored `.itchio-api-key` file in the project root and
+passes it to Butler for that process. Butler is installed locally at `builds\tools\butler`, which
+is also ignored; on a new machine, install Butler on PATH or extract the Windows archive from the
+[official Butler downloads](https://itch.io/docs/butler/installing.html) into that folder.
+The first push to a new channel creates a new download on itch.io; an existing manually uploaded
+file is separate and can be managed on the game's edit page.
+
 ## Controls
 
 | Action | Keyboard | Gamepad |
@@ -55,6 +73,16 @@ every candy of a house is collected its porch lanterns light up. Getting hit spi
 candy you carry; grab it before it blinks away (it never lowers an area's "candy found" count).
 Step onto a freed area's Lantern Gate pad (beside the side street, inside the lantern arch) to
 travel to any other freed place.
+
+Open **Pause > Photo mode** to freeze the night and frame a picture. Move with
+WASD or the left stick, rise and descend with E/Q or the shoulder buttons, and look with the arrow
+keys, right-mouse drag, or the right stick. Adjust the field of view with Z/X or D-pad left/right.
+Press F6 or click the right stick to play from that fixed view, and press it again to pause and move
+the camera. H or D-pad down toggles the gameplay HUD; G or D-pad up hides or shows the photo
+controls. Save a clean PNG with P (X while paused, D-pad right while playing). Photos are saved in
+the system Pictures folder under `Halloween - Trick or Treat`; the full path appears after saving.
+The camera stays within 70 metres of its starting point, where the scenery is already loaded.
+Escape or Back returns to the pause menu.
 
 Jump at a ledge that's just out of reach (a porch or garage roof, a deck) and the kid catches the
 lip and hangs there. Trampolines are scattered through the neighborhoods: big backyard ones throw
