@@ -32,7 +32,9 @@ try {
         foreach ($view in $Views) {
             $name = "seed$seed`_$($view -replace ':', '')"
             $png = Join-Path (Resolve-Path $Out) "$name.png"
-            & $Godot --path "$root\game" --resolution 1600x900 -- "--seed=$seed" "--capture=$png" "--capture-frames=$Frames" "--capture-view=$view" *> "$Out\$name.log"
+            # Off-screen, muted, no focus taken (tools\godot_bg.ps1).
+            . "$PSScriptRoot\godot_bg.ps1"
+            [void](Start-GodotBackground -Godot $Godot -Log "$Out\$name.log" -Arguments @('--path', "$root\game", '--resolution', '1600x900', '--', "--seed=$seed", "--capture=$png", "--capture-frames=$Frames", "--capture-view=$view"))
             if (Test-Path $png) { Write-Output $png } else { Write-Output "FAILED $name (see $Out\$name.log)" }
         }
     }

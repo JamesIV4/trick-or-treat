@@ -1,0 +1,79 @@
+{
+ "id": "monster_ghost",
+ "height": 1.3,
+ "radius": 0.4,
+ "floating": false,
+ "tree": {
+  "body": null,
+  "head": "body",
+  "eye_l": "head",
+  "pupil_l": "eye_l",
+  "brow_l": "head",
+  "cheek_l": "head",
+  "alt_squint_l": "head",
+  "alt_happy_l": "head",
+  "eye_r": "head",
+  "pupil_r": "eye_r",
+  "brow_r": "head",
+  "cheek_r": "head",
+  "alt_squint_r": "head",
+  "alt_happy_r": "head",
+  "mouth": "head",
+  "arm_l": "head",
+  "arm_r": "head"
+ },
+ "meshless": [
+  "body"
+ ],
+ "balls": {
+  "arm_l": 0.066,
+  "arm_r": 0.066
+ },
+ "soft": {
+  "head": {
+   "dir": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "rigid": 0.04,
+   "loops": 6
+  },
+  "arm_l": {
+   "dir": [
+    1.0,
+    0.0,
+    -0.0
+   ],
+   "rigid": 0.04,
+   "loops": 6
+  },
+  "arm_r": {
+   "dir": [
+    -1.0,
+    0.0,
+    -0.0
+   ],
+   "rigid": 0.04,
+   "loops": 6
+  }
+ },
+ "ik": [],
+ "eyes": {
+  "eye_l": "pupil_l",
+  "eye_r": "pupil_r"
+ },
+ "sockets": {},
+ "rotated": [
+  "eye_l",
+  "pupil_l",
+  "brow_l",
+  "cheek_l",
+  "eye_r",
+  "pupil_r",
+  "brow_r",
+  "cheek_r",
+  "mouth"
+ ],
+ "tris": 7426
+}

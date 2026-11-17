@@ -1,0 +1,98 @@
+{
+ "id": "monster_skeleton",
+ "height": 1.2,
+ "radius": 0.3,
+ "floating": false,
+ "tree": {
+  "body": null,
+  "chest": "body",
+  "leg_l": "body",
+  "shin_l": "leg_l",
+  "foot_l": "shin_l",
+  "leg_r": "body",
+  "shin_r": "leg_r",
+  "foot_r": "shin_r",
+  "arm_l": "chest",
+  "forearm_l": "arm_l",
+  "hand_l": "forearm_l",
+  "arm_r": "chest",
+  "forearm_r": "arm_r",
+  "hand_r": "forearm_r",
+  "bone": "hand_r",
+  "head": "chest",
+  "jaw": "head",
+  "eye_r": "head",
+  "pupil_r": "eye_r",
+  "eye_l": "head",
+  "pupil_l": "eye_l",
+  "bandana": "chest",
+  "bandana_tail": "chest"
+ },
+ "meshless": [],
+ "balls": {
+  "leg_l": 0.056,
+  "shin_l": 0.049,
+  "foot_l": 0.044,
+  "leg_r": 0.056,
+  "shin_r": 0.049,
+  "foot_r": 0.044,
+  "arm_l": 0.051,
+  "forearm_l": 0.04,
+  "hand_l": 0.034,
+  "arm_r": 0.051,
+  "forearm_r": 0.04,
+  "hand_r": 0.034
+ },
+ "soft": {
+  "bandana": {
+   "dir": [
+    0.0,
+    -0.9766,
+    0.2149
+   ],
+   "rigid": 0.012,
+   "loops": 6
+  },
+  "bandana_tail": {
+   "dir": null,
+   "rigid": 0.0,
+   "loops": 6
+  }
+ },
+ "ik": [
+  [
+   "leg_l",
+   "shin_l",
+   "foot_l"
+  ],
+  [
+   "leg_r",
+   "shin_r",
+   "foot_r"
+  ],
+  [
+   "arm_l",
+   "forearm_l",
+   "hand_l"
+  ],
+  [
+   "arm_r",
+   "forearm_r",
+   "hand_r"
+  ]
+ ],
+ "eyes": {
+  "eye_r": "pupil_r",
+  "eye_l": "pupil_l"
+ },
+ "sockets": {
+  "muzzle": "hand_r"
+ },
+ "rotated": [
+  "eye_r",
+  "pupil_r",
+  "eye_l",
+  "pupil_l"
+ ],
+ "tris": 7986
+}

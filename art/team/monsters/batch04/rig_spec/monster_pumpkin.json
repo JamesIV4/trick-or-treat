@@ -1,0 +1,112 @@
+{
+ "id": "monster_pumpkin",
+ "height": 0.9,
+ "radius": 0.42,
+ "floating": false,
+ "tree": {
+  "body": null,
+  "head": "body",
+  "mouth": "head",
+  "mouth_glow": "head",
+  "eye_l": "head",
+  "pupil_l": "eye_l",
+  "brow_l": "head",
+  "eye_r": "head",
+  "pupil_r": "eye_r",
+  "brow_r": "head",
+  "stem": "head",
+  "leaf_a": "head",
+  "leaf_b": "head",
+  "leaf_c": "head",
+  "leaf_d": "head",
+  "tendril_l": "head",
+  "tendril_r": "head",
+  "arm_l": "head",
+  "hand_l": "arm_l",
+  "arm_r": "head",
+  "hand_r": "arm_r",
+  "foot_l": "body",
+  "foot_r": "body"
+ },
+ "meshless": [
+  "body"
+ ],
+ "balls": {
+  "arm_l": 0.044,
+  "hand_l": 0.031,
+  "arm_r": 0.044,
+  "hand_r": 0.031
+ },
+ "soft": {
+  "stem": {
+   "dir": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "rigid": 0.03,
+   "loops": 6
+  },
+  "leaf_a": {
+   "dir": [
+    0.5878,
+    0.0,
+    0.809
+   ],
+   "rigid": 0.02,
+   "loops": 6
+  },
+  "leaf_b": {
+   "dir": [
+    0.788,
+    0.0,
+    -0.6157
+   ],
+   "rigid": 0.02,
+   "loops": 6
+  },
+  "leaf_c": {
+   "dir": [
+    -0.6428,
+    0.0,
+    -0.766
+   ],
+   "rigid": 0.02,
+   "loops": 6
+  },
+  "leaf_d": {
+   "dir": [
+    -0.7431,
+    0.0,
+    0.6691
+   ],
+   "rigid": 0.02,
+   "loops": 6
+  },
+  "tendril_l": {
+   "dir": null,
+   "rigid": 0.015,
+   "loops": 6
+  },
+  "tendril_r": {
+   "dir": null,
+   "rigid": 0.015,
+   "loops": 6
+  }
+ },
+ "ik": [],
+ "eyes": {
+  "eye_l": "pupil_l",
+  "eye_r": "pupil_r"
+ },
+ "sockets": {},
+ "rotated": [
+  "eye_l",
+  "pupil_l",
+  "brow_l",
+  "eye_r",
+  "pupil_r",
+  "brow_r"
+ ],
+ "tris": 7792
+}

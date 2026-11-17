@@ -1,0 +1,66 @@
+{
+ "id": "monster_scarecrow",
+ "height": 1.6,
+ "radius": 0.35,
+ "floating": false,
+ "tree": {
+  "pole": null,
+  "tuft": "pole",
+  "body": "pole",
+  "skirt": "body",
+  "collar": "body",
+  "arm_l": "body",
+  "cuff_l": "arm_l",
+  "arm_r": "body",
+  "cuff_r": "arm_r",
+  "head": "body",
+  "brow_l": "head",
+  "brow_r": "head",
+  "mouth": "head",
+  "alt_mouth_o": "head",
+  "alt_mouth_zig": "head",
+  "eye_l": "head",
+  "pupil_l": "eye_l",
+  "eye_r": "head",
+  "pupil_r": "eye_r",
+  "hair": "head",
+  "hat": "head",
+  "hat_tip": "hat"
+ },
+ "meshless": [],
+ "balls": {
+  "arm_l": 0.09,
+  "arm_r": 0.09
+ },
+ "soft": {
+  "hat_tip": {
+   "dir": [
+    0.1219,
+    0.9541,
+    -0.2736
+   ],
+   "rigid": 0.02,
+   "loops": 6
+  }
+ },
+ "ik": [],
+ "eyes": {
+  "eye_l": "pupil_l",
+  "eye_r": "pupil_r"
+ },
+ "sockets": {},
+ "rotated": [
+  "cuff_l",
+  "cuff_r",
+  "brow_l",
+  "brow_r",
+  "mouth",
+  "alt_mouth_o",
+  "alt_mouth_zig",
+  "eye_l",
+  "pupil_l",
+  "eye_r",
+  "pupil_r"
+ ],
+ "tris": 7746
+}

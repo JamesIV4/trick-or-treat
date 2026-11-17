@@ -164,6 +164,8 @@ Godot --path game -- --seed=101 --autopilot=120            # review bot: chases 
 Godot --path game -- --seed=101 --fly-test=40              # streaming stress test: glide east at car speed, log worst frames
 Godot --path game -- --fx-test | --open-shop --wallet=400 | --give-car | --free-home | --travel-test   # review aids
 tools\review.ps1 -Seeds 101,102 -Views play,overview       # build + capture into art/review/captures
+tools\showcase.ps1 -Ids all -Out art\review\showcase\before   # character showcase: one fixed-timeline clip per costume and monster (--showcase=<id>), for before/after videos
+python tools\showcase_sheets.py art\review\showcase\before    # the middle frame of every beat, tiled per character, plus all_front.png
 ```
 
 ## Layout

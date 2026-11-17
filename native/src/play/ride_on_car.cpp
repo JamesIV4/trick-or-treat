@@ -202,7 +202,9 @@ Vector3 RideOnCar::forward() const {
 }
 
 Transform3D RideOnCar::seat() const {
-	return get_global_transform() * Transform3D(Basis(Vector3(0, 1, 0), yaw_) * tilt_, Vector3()) * Transform3D(Basis(), Vector3(0, 0.62f, -0.3f));
+	Transform3D t = get_global_transform() * Transform3D(Basis(Vector3(0, 1, 0), yaw_) * tilt_, Vector3()) * Transform3D(Basis(), Vector3(0, 0.62f, -0.3f));
+	t.origin += tick_smooth_.offset(get_global_position()); // the seat as drawn: the rider is placed on it every frame
+	return t;
 }
 
 void RideOnCar::_physics_process(double delta) {
@@ -268,6 +270,7 @@ void RideOnCar::_physics_process(double delta) {
 	if (get_global_position().y < -40.0f) {
 		set_global_position(get_global_position() + Vector3(0, 60.0f, 0));
 	}
+	tick_smooth_.tick(get_global_position());
 }
 
 void RideOnCar::_process(double delta) {
@@ -276,7 +279,8 @@ void RideOnCar::_process(double delta) {
 	bounce_ += bounce_v_ * dt;
 	wheel_spin_ += speed_ * dt / 0.33f;
 	const float b = Math::clamp(bounce_, -0.2f, 0.2f);
-	visual_->set_transform(Transform3D(Basis(Vector3(0, 1, 0), yaw_) * tilt_ * Basis().scaled(Vector3(1.0f - b * 0.3f, 1.0f + b, 1.0f - b * 0.3f)), Vector3()));
+	visual_->set_transform(Transform3D(Basis(Vector3(0, 1, 0), yaw_) * tilt_ * Basis().scaled(Vector3(1.0f - b * 0.3f, 1.0f + b, 1.0f - b * 0.3f)),
+			tick_smooth_.offset(get_global_position())));
 	for (int i = 0; i < 4; ++i) {
 		// Left wheels are the right-hand wheel turned around, hub outward.
 		const bool left = i % 2 == 0;

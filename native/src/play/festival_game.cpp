@@ -193,6 +193,10 @@ void FestivalGame::parse_cmdline() {
 		} else if (a == "--cine-play") {
 			cine_play_ = true;
 			cine_clean_ = true;
+		} else if (a.begins_with("--showcase=")) {
+			showcase_id_ = a.substr(11);
+		} else if (a.begins_with("--showcase-out=")) {
+			showcase_out_ = a.substr(15);
 		} else if (a == "--give-car") {
 			up_.car = 1;
 			review_car_ = true;
@@ -365,9 +369,9 @@ void FestivalGame::_ready() {
 	wild_root_->set_name("WildMonsters");
 	add_child(wild_root_);
 	camera_->set_target(player_);
-	if (seed_ == 0 && !cine_mode_.is_empty()) {
+	if (seed_ == 0 && (!cine_mode_.is_empty() || !showcase_id_.is_empty())) {
 		// Trailer and screenshot runs all render the same world, so a single shot re-rendered on its
-		// own matches the reel (--seed= still picks another).
+		// own matches the reel (--seed= still picks another). The character showcase too.
 		seed_ = 101;
 	}
 	if (seed_ == 0) {
@@ -376,7 +380,7 @@ void FestivalGame::_ready() {
 	// Plain launches open on the main menu over a peaceful night; review runs go straight into Save
 	// the Town unless explicitly capturing the menu.
 	const bool menu = OS::get_singleton()->get_cmdline_user_args().is_empty() || capture_view_ == "menu";
-	mode_ = menu ? 0 : 1;
+	mode_ = menu || !showcase_id_.is_empty() ? 0 : 1; // the showcase stage is a peaceful street: no nests, vines or roaming monsters
 	started_ = !menu;
 	in_menu_ = menu; // no area banners under the title
 	start_world(seed_);
@@ -389,6 +393,7 @@ void FestivalGame::_ready() {
 // Children have left the tree but still exist here: let go of everything that points at them
 // before the tree frees them.
 void FestivalGame::_exit_tree() {
+	showcase_free();
 	infest_.clear();
 	for (Monster *m : wild_) {
 		m->on_gone = nullptr;
@@ -2039,6 +2044,316 @@ void FestivalGame::_process(double delta) {
 	if (!cine_mode_.is_empty()) {
 		cine_step(dt);
 	}
+	if (!showcase_id_.is_empty()) {
+		showcase_step(dt);
+	}
+	// Review aid: with the environment variable TOT_JITTER_TEST=<seconds> the kid walks, then runs, in a
+	// straight line across the gameplay camera's view (seen from the side, the camera following as it
+	// does in play), and where the kid is drawn on screen is printed every frame. It measures how
+	// smoothly the kid moves on screen; art/team/characters_candy/batch05/jitter.py reads the lines.
+	// TOT_JITTER_DIR=<degrees> turns the line of travel (0: to the camera's right).
+	static const float jitter_s = OS::get_singleton()->has_environment("TOT_JITTER_TEST") ? float(OS::get_singleton()->get_environment("TOT_JITTER_TEST").to_float()) : 0.0f;
+	if (jitter_s > 0.0f && frame_ > 90) {
+		static float jt = 0.0f;
+		static Vector3 jdir;
+		Camera3D *cam = get_viewport()->get_camera_3d();
+		if (cam) {
+			if (jt == 0.0f) {
+				player_->set_bot(true);
+				camera_->set_auto_follow(false);
+				invuln_ = 1000.0f;
+				const float turn = Math::deg_to_rad(float(OS::get_singleton()->get_environment("TOT_JITTER_DIR").to_float()));
+				Vector3 r = cam->get_global_transform().basis.get_column(0);
+				r.y = 0.0f;
+				jdir = r.normalized().rotated(Vector3(0, 1, 0), turn);
+			}
+			jt += dt;
+			const float mag = jt < 1.0f ? 0.0f : (jt < 1.0f + jitter_s * 0.5f ? 0.45f : 1.0f);
+			player_->bot_input(jdir * mag, false, false, false);
+			// This runs before the kid and the camera are updated for the frame, but after the frame's
+			// physics ticks have moved the body. So the camera and the visual's local placement are
+			// still last frame's, and they are measured against the body as it was last frame: together
+			// that is exactly what was drawn.
+			static Vector3 body_drawn = player_->get_global_position();
+			const Vector3 body_now = player_->get_global_position();
+			const Vector3 body = body_drawn;
+			body_drawn = body_now;
+			const Node3D *vis = Object::cast_to<Node3D>(player_->find_child("VisualRoot", false, false));
+			const Node3D *head = Object::cast_to<Node3D>(player_->find_child("head", true, false));
+			const Vector3 vp = vis ? body + (vis->get_global_position() - body_now) : body;
+			const Vector3 hp = head ? body + (head->get_global_position() - body_now) : body;
+			const Vector2 sb = cam->unproject_position(body + Vector3(0, 0.5f, 0)), sv = cam->unproject_position(vp + Vector3(0, 0.5f, 0)), sh = cam->unproject_position(hp);
+			const Vector3 cp = cam->get_global_position();
+			UtilityFunctions::print(vformat("JIT t=%.5f dt=%.6f mag=%.2f speed=%.3f body=%.3f,%.3f vis=%.3f,%.3f head=%.3f,%.3f along=%.5f cam_along=%.5f", jt, dt, mag,
+					float(Vector2(player_->get_velocity().x, player_->get_velocity().z).length()), sb.x, sb.y, sv.x, sv.y, sh.x, sh.y, float(body.dot(jdir)), float(cp.dot(jdir))));
+			if (jt > 1.0f + jitter_s) {
+				get_tree()->quit();
+				return;
+			}
+		}
+	}
+	// Review aid (Lane M, monsters): TOT_MONSTER_TEST=<type>[,count][,seconds] puts real monsters on the
+	// player in a normal game, seen from a fixed side-on camera: every other monster is cleared (the areas'
+	// nests put to sleep, thorns hidden), the kid stands still (or walks slowly) and nothing hurts them,
+	// and `count` monsters of `type` (pumpkin, bat, skeleton, ghost, gremlin, mummy, slime, scarecrow,
+	// spider, toadstool) rise at their normal engage distance and fight with their own AI. Each monster
+	// prints MTRACE lines (monsters.cpp) and the picture says the test time and the first monster's state.
+	// Optional: TOT_MONSTER_SCENE=street (default) | kerb (the kid on the sidewalk, monsters in the road) |
+	// slope (open hillside) | steps (the kid on a porch) | idle (nobody about: fidgets) | far (camera 40 m
+	// off: the distance LOD); TOT_MONSTER_HIT=windup:<fraction> | attack:<seconds> lands a player hit on
+	// every second wind-up; TOT_MONSTER_LURE=high makes them chase the kid's spot without attacking;
+	// TOT_MONSTER_WALK=<0..1> walks the kid slowly away; TOT_MONSTER_DIST=<m> the spawn distance (9);
+	// TOT_MONSTER_CAM=<distance>,<height>,<fov>[,<aim from the kid toward the spawn, 0..1>[,<aim height>]] (default
+	// -7,0.8,40,0.12,0.45: from the far side of the street); TOT_MONSTER_AT=<0..1> where along the street.
+	// Inert without TOT_MONSTER_TEST. Driven by art/team/monsters/batch04/real_test.ps1.
+	static const String mtest_env = OS::get_singleton()->get_environment("TOT_MONSTER_TEST");
+	if (!mtest_env.is_empty() && showcase_id_.is_empty() && frame_ > 90) {
+		struct MTest {
+			bool init = false, spawned = false, lure_high = false;
+			MonsterType type = MonsterType::PumpkinHopper;
+			int count = 1;
+			float secs = 15.0f, t = 0.0f, walk = 0.0f, dist = 9.0f, hit_at = -1.0f;
+			String scene, hit_state, name;
+			Vector3 P, T, N, spawn, lure, cam_from, cam_at;
+			float fov = 40.0f;
+			std::vector<Monster *> mons;
+			std::vector<int> windups, last, hit_done;
+		};
+		static MTest mt;
+		auto env = [](const char *k) { return OS::get_singleton()->get_environment(k); };
+		if (!mt.init) {
+			mt.init = true;
+			static const char *names[] = { "pumpkin", "bat", "skeleton", "ghost", "gremlin", "mummy", "slime", "scarecrow", "spider", "toadstool" };
+			const PackedStringArray f = mtest_env.split(",");
+			const String want = f[0].strip_edges().replace("monster_", "");
+			for (int k = 0; k < int(MonsterType::Count); ++k) {
+				if (want == names[k]) {
+					mt.type = MonsterType(k);
+				}
+			}
+			mt.name = names[int(mt.type)];
+			mt.count = f.size() > 1 ? Math::clamp(int(f[1].to_int()), 1, 6) : 1;
+			mt.secs = f.size() > 2 ? float(f[2].to_float()) : 15.0f;
+			mt.scene = env("TOT_MONSTER_SCENE").is_empty() ? String("street") : env("TOT_MONSTER_SCENE");
+			mt.lure_high = env("TOT_MONSTER_LURE") == "high";
+			mt.walk = float(env("TOT_MONSTER_WALK").to_float());
+			if (!env("TOT_MONSTER_DIST").is_empty()) {
+				mt.dist = float(env("TOT_MONSTER_DIST").to_float());
+			}
+			const String hit = env("TOT_MONSTER_HIT");
+			if (hit.contains(":")) {
+				mt.hit_state = hit.get_slice(":", 0);
+				mt.hit_at = float(hit.get_slice(":", 1).to_float());
+			}
+			// The place: the home street (along it: T; across it: N), an open hillside, or a porch.
+			Area *home = streamer_->area(WorldStreamer::area_key(0, 0));
+			const StreetPlan &st = home->gen->context()->street;
+			const float at = env("TOT_MONSTER_AT").is_empty() ? 0.3f : float(env("TOT_MONSTER_AT").to_float());
+			const float sx = st.center.front().x + (st.center.back().x - st.center.front().x) * Math::clamp(at, 0.1f, 0.9f);
+			mt.P = home->to_world(st.at(sx));
+			mt.T = (home->to_world(st.at(sx + 1.0f)) - home->to_world(st.at(sx - 1.0f))) * Vector3(1, 0, 1);
+			mt.T = mt.T.normalized();
+			mt.N = Vector3(-mt.T.z, 0, mt.T.x);
+			if (st.left_at(sx).dot(mt.N) < 0.0f) {
+				mt.N = -mt.N;
+			}
+			mt.spawn = mt.P - mt.T * mt.dist;
+			if (mt.scene == "kerb") {
+				// The kid on the sidewalk; the monsters come out of the middle of the road, across the kerb.
+				const float walk_mid = st.half_road + st.curb + st.verge + (st.walk - st.verge) * 0.5f;
+				mt.P = home->to_world(st.at(sx)) + mt.N * walk_mid;
+				mt.spawn = home->to_world(st.at(sx)) - mt.T * (mt.dist * 0.6f) - mt.N * 1.0f;
+			} else if (mt.scene == "steps") {
+				// The kid at a front door up a porch's steps; the monsters come up the front path.
+				PackedVector3Array bells = home->gen->get_doorbells();
+				const int lot = int(env("TOT_MONSTER_LOT").to_int()) % Math::max(1, int(bells.size()));
+				const Lot &l = home->gen->context()->lots[lot];
+				const Vector3 b = home->to_world(bells[lot]);
+				const Vector3 path = home->to_world(l.to_world(Vector3(l.house.door_x, 0, -1.0f)));
+				mt.P = b;
+				mt.T = ((b - path) * Vector3(1, 0, 1)).normalized();
+				mt.N = Vector3(-mt.T.z, 0, mt.T.x);
+				mt.spawn = b - mt.T * mt.dist;
+				UtilityFunctions::print("MTEST steps lot=", lot, " deck_rise=", b.y - streamer_->ground(path.x, path.z));
+			} else if (mt.scene == "slope") {
+				// The steepest open, treeless hillside within reach (about 10 to 20 degrees), seen across the slope.
+				WorldPlan &plan = streamer_->plan();
+				const Vector3 o = home->to_world(st.at(sx));
+				float best = 1.0e9f;
+				for (float r = 40.0f; r <= 260.0f; r += 10.0f) {
+					for (int a = 0; a < 36; ++a) {
+						const float ang = float(a) * float(Math_TAU) / 36.0f;
+						const Vector3 c = o + Vector3(std::cos(ang), 0, std::sin(ang)) * r;
+						if (plan.settlement_mask(c.x, c.z) > 0.01f || plan.forest_density(c.x, c.z) > 0.2f) {
+							continue;
+						}
+						const Vector3 g((plan.height(c.x + 2.0f, c.z) - plan.height(c.x - 2.0f, c.z)) / 4.0f, 0, (plan.height(c.x, c.z + 2.0f) - plan.height(c.x, c.z - 2.0f)) / 4.0f);
+						const float s = g.length();
+						if (s < 0.17f || s > 0.37f) {
+							continue;
+						}
+						const float score = std::abs(s - 0.27f) + r * 0.0005f;
+						if (score < best) {
+							best = score;
+							mt.P = c;
+							mt.T = g / s; // uphill
+						}
+					}
+				}
+				mt.N = Vector3(-mt.T.z, 0, mt.T.x);
+				mt.spawn = mt.P - mt.T * mt.dist;
+				UtilityFunctions::print("MTEST slope at ", mt.P, best < 1.0e8f ? " found" : " NOT FOUND (street instead)");
+			} else if (mt.scene == "idle") {
+				mt.spawn = mt.P - mt.T * 2.0f;
+			}
+			if (mt.scene != "steps") {
+				mt.P.y = streamer_->ground(mt.P.x, mt.P.z); // (a doorbell is already on its porch deck)
+			}
+			// The camera: side-on to the line from the spawn to the kid, framing where the fight happens.
+			float cd = -7.0f, ch = 0.8f; // from the far side of the street (the near sidewalk has lamp posts)
+			float toward = mt.scene == "idle" ? 1.0f : 0.12f; // the aim: from the kid (0) toward the spawn (1)
+			float aim_h = 0.45f; // and its height above the ground
+			const String cam = env("TOT_MONSTER_CAM");
+			if (!cam.is_empty()) {
+				const PackedStringArray c = cam.split(",");
+				cd = float(c[0].to_float());
+				ch = c.size() > 1 ? float(c[1].to_float()) : ch;
+				mt.fov = c.size() > 2 ? float(c[2].to_float()) : mt.fov;
+				toward = c.size() > 3 ? float(c[3].to_float()) : toward;
+				aim_h = c.size() > 4 ? float(c[4].to_float()) : aim_h;
+			}
+			if (mt.scene == "far") {
+				cd = 42.0f;
+				mt.fov = 12.0f;
+			}
+			mt.cam_at = mt.P.lerp(mt.spawn, toward);
+			mt.cam_at.y = Math::max(mt.P.y, streamer_->ground(mt.cam_at.x, mt.cam_at.z)) + aim_h;
+			mt.cam_from = mt.cam_at + mt.N * cd + Vector3(0, ch, 0);
+			if (mt.scene == "far") {
+				mt.cam_from = mt.cam_at + mt.T * 42.0f + Vector3(0, 2.0f, 0); // down the street (the yards have hedges)
+			}
+			// Nothing between the lens and the fight (a tree trunk, a lamp post): slide the camera along the street
+			// (side-on still) to the nearest clear spot.
+			if (PhysicsDirectSpaceState3D *space = mt.scene == "far" ? nullptr : get_world_3d()->get_direct_space_state()) {
+				TypedArray<RID> skip;
+				skip.push_back(player_->get_rid());
+				const Vector3 look[8] = { mt.P + Vector3(0, 0.5f, 0), mt.P.lerp(mt.spawn, 0.15f) + Vector3(0, 0.4f, 0), mt.P.lerp(mt.spawn, 0.3f) + Vector3(0, 0.4f, 0),
+					mt.P.lerp(mt.spawn, 0.45f) + Vector3(0, 0.4f, 0), mt.P.lerp(mt.spawn, 0.6f) + Vector3(0, 0.4f, 0), mt.P.lerp(mt.spawn, 0.75f) + Vector3(0, 0.4f, 0),
+					mt.P.lerp(mt.spawn, 0.9f) + Vector3(0, 0.4f, 0), mt.cam_at };
+				for (int s = 0; s < 13; ++s) {
+					const Vector3 shift = mt.T * (float((s + 1) / 2) * (s % 2 ? 0.75f : -0.75f));
+					bool clear = true;
+					for (const Vector3 &l : look) {
+						Ref<PhysicsRayQueryParameters3D> q = PhysicsRayQueryParameters3D::create(mt.cam_from + shift, l + Vector3(0, 0.0f, 0) + (l == mt.cam_at ? shift : Vector3()));
+						q->set_exclude(skip);
+						if (!space->intersect_ray(q).is_empty()) {
+							clear = false;
+							break;
+						}
+					}
+					if (clear) {
+						mt.cam_from += shift;
+						mt.cam_at += shift;
+						UtilityFunctions::print("MTEST camera slid ", shift.length() * (s % 2 ? 1.0f : -1.0f), " m along the street");
+						break;
+					}
+				}
+			}
+			// Nobody gets hurt, nothing else is about, the picture is clean.
+			mworld_.hurt_player = [](const Vector3 &) {};
+			combat_->on_player_hit = [](const Vector3 &) {};
+			// (idle: the "player" far away across the map, so nobody is chasing; the empty leash keeps them standing)
+			mt.lure = mt.scene == "idle" ? mt.P + Vector3(3000.0f, 0, 3000.0f) : (mt.lure_high ? mt.P + Vector3(0, 40.0f, 0) : Vector3());
+			if (mt.scene == "idle" || mt.lure_high) {
+				mworld_.player_pos = []() { return mt.lure; };
+			}
+			if (hud_) {
+				hud_->set("visible", false);
+			}
+			set_lightning(false);
+			camera_->set_cinematic(true);
+			camera_->set_cinematic_cutout(false);
+			player_->set_bot(true);
+			player_->set_input_enabled(false);
+			player_->teleport(mt.P + Vector3(0, 0.3f, 0), std::atan2(-mt.T.x, -mt.T.z));
+			UtilityFunctions::print("MTEST start ", mt.name, " x", mt.count, " scene=", mt.scene, " secs=", mt.secs, " hit=", mt.hit_state, ":", mt.hit_at, " frame=",
+					int(Engine::get_singleton()->get_process_frames()), " P=", mt.P, " spawn=", mt.spawn);
+		}
+		mt.t += dt;
+		for (auto &kv : infest_) {
+			if (!kv.second->freed()) {
+				kv.second->set_freed(false); // nests asleep, their monsters gone (the gate wakes: a test run)
+				kv.second->set_vines_visible(false);
+			}
+		}
+		clear_wild();
+		if (!mt.spawned && mt.t > 1.0f) {
+			mt.spawned = true;
+			for (int k = 0; k < mt.count; ++k) {
+				const float lat = (float(k) - 0.5f * float(mt.count - 1)) * 1.5f;
+				Vector3 p = mt.spawn + mt.N * lat - mt.T * (0.6f * float(k % 2));
+				p.y = streamer_->ground(p.x, p.z) + (tuning(mt.type).flying ? 1.3f : 0.3f);
+				Monster *m = memnew(Monster);
+				wild_root_->add_child(m);
+				m->set_global_position(p);
+				m->init(mt.type, &mworld_, nullptr, 9100 + uint64_t(k) * 7919u, mt.scene == "idle" ? Rect2() : Rect2(p.x - 60.0f, p.z - 60.0f, 120.0f, 120.0f));
+				m->showcase_face(std::atan2(mt.T.x, mt.T.z));
+				if (mt.scene == "idle") {
+					// standing about, three-quarters to the camera (it never turns by itself while idle)
+					const Vector3 to_cam = ((mt.cam_from - p) * Vector3(1, 0, 1)).normalized().rotated(Vector3(0, 1, 0), 0.5f);
+					m->showcase_face(std::atan2(to_cam.x, to_cam.z));
+				}
+				m->on_gone = [](Monster *gone) {
+					for (Monster *&q : mt.mons) {
+						if (q == gone) {
+							q = nullptr;
+						}
+					}
+				};
+				mt.mons.push_back(m);
+				mt.windups.push_back(0);
+				mt.last.push_back(-1);
+				mt.hit_done.push_back(0);
+				UtilityFunctions::print("MTEST spawn k=", k, " id=", int(m->get_instance_id() % 100000), " at ", p);
+			}
+		}
+		// A player hit at a chosen moment of every second attack (from the kid's side).
+		for (int k = 0; k < int(mt.mons.size()); ++k) {
+			Monster *m = mt.mons[k];
+			if (!m) {
+				continue;
+			}
+			const int s = int(m->review_state());
+			if (s == int(MonsterAnimState::Windup) && mt.last[k] != s) {
+				mt.windups[k]++;
+				mt.hit_done[k] = 0;
+			}
+			mt.last[k] = s;
+			if (mt.hit_at >= 0.0f && !mt.hit_done[k] && mt.windups[k] % 2 == 0 && mt.windups[k] > 0) {
+				const bool w = mt.hit_state == "windup" && s == int(MonsterAnimState::Windup) && m->review_state_time() >= mt.hit_at * tuning(mt.type).windup;
+				const bool a = mt.hit_state == "attack" && s == int(MonsterAnimState::Attack) && m->review_state_time() >= mt.hit_at;
+				if (w || a) {
+					mt.hit_done[k] = 1;
+					m->take_hit(0.01f, player_->get_global_position() + Vector3(0, 0.6f, 0));
+					UtilityFunctions::print("MTEST hit k=", k, " in ", mt.hit_state, " at ", m->review_state_time(), " t=", mt.t);
+				}
+			}
+		}
+		player_->bot_input(mt.T * mt.walk, false, false, false); // away from where the monsters come from
+		camera_->set_cinematic_pose(Transform3D(Basis::looking_at((mt.cam_at - mt.cam_from).normalized(), Vector3(0, 1, 0)), mt.cam_from), mt.fov);
+		{
+			static const char *states[] = { "Rise", "Roam", "Windup", "Attack", "Recover", "Hurt", "Dying" };
+			String line = vformat("%s x%d  %s  t=%.2f  f=%d", mt.name, mt.count, mt.scene, mt.t, int(Engine::get_singleton()->get_process_frames()));
+			if (!mt.mons.empty() && mt.mons[0]) {
+				line += vformat("   #0 %s %.2f s", states[int(mt.mons[0]->review_state())], mt.mons[0]->review_state_time());
+			}
+			monster_review_label(this, line);
+		}
+		if (mt.t > mt.secs + 1.0f) {
+			get_tree()->quit();
+			return;
+		}
+	}
 	if (autopilot_ > 0.0f) {
 		drive_bot(dt);
 	} else if (!capture_path_.is_empty() && frame_ == capture_frames_) {
@@ -2361,6 +2676,7 @@ void FestivalGame::setup_preview() {
 	}
 	Node3D *asset = Object::cast_to<Node3D>(scene->instantiate());
 	apply_material_recursive(asset, gen_->get_toon_material());
+	hide_alternates(asset); // stacked "alt_" parts (mouth shapes, closed-eye lashes)
 	preview_root_->add_child(asset);
 	bool first = true;
 	merge_bounds(asset, Transform3D(), preview_box_, first);

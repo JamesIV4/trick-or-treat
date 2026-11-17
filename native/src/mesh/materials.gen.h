@@ -2,7 +2,7 @@
 #pragma once
 
 namespace tot::mat {
-constexpr int COUNT = 28;
+constexpr int COUNT = 29;
 constexpr int FLAT = 0;
 constexpr int SIDING = 1;
 constexpr int SHINGLES = 2;
@@ -31,6 +31,7 @@ constexpr int LATTICE = 24;
 constexpr int FABRIC = 25;
 constexpr int VINYL = 26;
 constexpr int CLOUD = 27;
-constexpr float SCALE[COUNT] = { 1.000f, 2.000f, 2.000f, 1.600f, 1.000f, 1.500f, 1.600f, 1.500f, 2.000f, 3.000f, 2.500f, 1.200f, 1.200f, 1.000f, 1.000f, 1.000f, 0.600f, 0.500f, 0.500f, 1.000f, 0.600f, 1.500f, 1.500f, 1.500f, 1.000f, 0.500f, 1.000f, 6.000f };
+constexpr int PLUSH = 28;
+constexpr float SCALE[COUNT] = { 1.000f, 2.000f, 2.000f, 1.600f, 1.000f, 1.500f, 1.600f, 1.500f, 2.000f, 3.000f, 2.500f, 1.200f, 1.200f, 1.000f, 1.000f, 1.000f, 0.600f, 0.500f, 0.500f, 1.000f, 0.600f, 1.500f, 1.500f, 1.500f, 1.000f, 0.500f, 1.000f, 6.000f, 0.220f };
 
 } // namespace tot::mat

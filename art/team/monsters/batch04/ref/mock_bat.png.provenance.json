@@ -1,0 +1,17 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-11-14 20:26:19 UTC",
+    "thread_id":  "01a1dbbc-c035-77b1-8cae-11df35e26b20",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a1dbbc-c035-77b1-8cae-11df35e26b20\\exec-7d38eed9-3f04-4fc9-82c4-8b163a1b6333.png",
+    "sha256":  "94ab18f86d7b733828ba1bc8d4577d12c9ca450dde7f47ab4eb8a7e925ec13a3",
+    "prompt":  "Create a character concept sheet for ONE cute Halloween monster from a cozy 3D platformer game.\n\nSTYLE: match the FIRST attached image exactly (five kids in Halloween costumes): a polished, glossy,\ntoy-like stylised 3D render with soft rounded chibi forms, big expressive glossy eyes with highlights,\nsoft subsurface shading, subtle hand-painted surface texture, crisp material detail (stitching, seams,\nfuzz, rims), warm orange rim light against a deep purple-blue Halloween night. Cute and friendly-spooky,\nnever scary or realistic.\n\nDESIGN: the SECOND attached image shows the monster\u0027s current low-detail in-game model (two views).\nKeep its identity: the same creature, the same body shape and proportions, the same colours and the\nsame features. Raise it to the fidelity of the style reference: richer forms and silhouette, expressive\nface, material detail, appealing personality. Do not turn it into a different creature and do not add\nclothing or props it does not have.\n\nLAYOUT: one wide image, the same monster shown twice at the same scale, full body, feet on the ground:\non the left a front three-quarter view, on the right a back three-quarter view. A softly blurred\ncobblestone Halloween street at night behind, like the style reference. No text, no labels, no border,\nno other characters.\n\nTHE MONSTER:Bat: a chubby, round, fuzzy purple bat with big pointed ears (pink-lilac inside), large glowing orange eyes, a cream belly patch, two tiny white fangs, tiny feet, and wide lilac membrane wings with darker finger bones. It hovers; show it flying with wings spread.",
+    "references":  [
+                       {
+                           "path":  "S:\\Repos\\trick-or-treat\\art\\team\\characters_candy\\batch04\\ref\\ref_all.png",
+                           "sha256":  "9b78d1138d1558b537a95dee9a00cb610e1eaec01bb84693be7e0644d77d5918"
+                       }
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

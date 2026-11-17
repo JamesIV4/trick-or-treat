@@ -208,6 +208,21 @@ private:
 	bool cine_clear(const godot::Vector3 &a, const godot::Vector3 &b); // nothing solid between a and b
 	// The first camera offset (side, back) with a clear view of every target from both ends of its move.
 	godot::Vector2 cine_lane(const godot::Vector3 &anchor, const godot::Vector3 &back_dir, std::initializer_list<float> sides, std::initializer_list<float> backs, float push, float height, std::initializer_list<godot::Vector3> targets);
+	// Character showcase recorder (festival_showcase.cpp): --showcase=<id> walks one character (a player
+	// costume or a monster) through a fixed timeline of beats on the home street, for Godot's movie
+	// writer; --showcase-out=<dir> gets <id>.beats.json. Driven by tools/showcase.ps1.
+	struct Showcase;
+	Showcase *showcase_ = nullptr;
+	godot::String showcase_id_, showcase_out_;
+	void showcase_step(float dt);
+	bool showcase_setup();
+	bool showcase_check_size(int attempt);
+	void showcase_player(int beat, int f);
+	void showcase_monster(int beat, int f);
+	void showcase_view(const godot::Vector3 &feet, float look_h, float azimuth, float dist);
+	void showcase_spawn(uint64_t seed);
+	void showcase_finish();
+	void showcase_free();
 	void parse_cmdline();
 	void capture_and_maybe_quit();
 

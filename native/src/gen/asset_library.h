@@ -14,6 +14,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "gen/rig_part.h"
+
 namespace tot {
 
 struct AssetInfo {
@@ -49,6 +51,13 @@ public:
 	// One named part (and everything under it) baked into a mesh centred on the part's origin, which
 	// is returned in origin (asset space). Null when the asset is unpublished or has no such part.
 	godot::Ref<godot::Mesh> part_mesh(const std::string &id, const godot::String &part, godot::Vector3 *origin = nullptr);
+	// The asset as a rig: every named node (found by name at any depth, never by position in the tree)
+	// becomes a RigPart with its own mesh only, in parent-first order; socket_* nodes go to `sockets`
+	// instead and alt_* nodes are flagged RigPart::HIDDEN. Meshless nodes above every part (the scene
+	// root, the asset's root empty) are containers, not parts. Returns 0 when the asset is unpublished or
+	// has no "body" part (out is then left empty), 1 when its parts are just body / part_a / part_b,
+	// 2 when it has any other named part (a v2 rig). See gen/rig_part.h.
+	int part_tree(const std::string &id, std::vector<RigPart> &out, std::vector<RigSocket> *sockets = nullptr);
 	int published_count() const { return published_; }
 	// Every catalog id, sorted (deterministic order).
 	std::vector<std::string> ids() const;
@@ -63,5 +72,10 @@ private:
 };
 
 void apply_material_recursive(godot::Node *node, const godot::Ref<godot::Material> &mat);
+// Nodes named "alt_*" are alternates stacked on one spot (mouth shapes, closed-eye lashes) that only
+// an animator shows, one at a time. is_alternate() tests a node; hide_alternates() hides every one in
+// a tree (instantiate() does this already; call it on scenes loaded any other way).
+bool is_alternate(const godot::Node *node);
+void hide_alternates(godot::Node *node);
 
 } // namespace tot

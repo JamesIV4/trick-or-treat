@@ -1,0 +1,67 @@
+{
+ "id": "monster_toadstool",
+ "height": 1.0,
+ "radius": 0.36,
+ "floating": false,
+ "tree": {
+  "body": null,
+  "head": "body",
+  "cap": "head",
+  "sprout": "cap",
+  "eye_l": "head",
+  "pupil_l": "eye_l",
+  "brow_l": "head",
+  "cheek_l": "head",
+  "alt_squint_l": "head",
+  "eye_r": "head",
+  "pupil_r": "eye_r",
+  "brow_r": "head",
+  "cheek_r": "head",
+  "alt_squint_r": "head",
+  "mouth": "head",
+  "arm_l": "head",
+  "hand_l": "arm_l",
+  "arm_r": "head",
+  "hand_r": "arm_r",
+  "foot_l": "body",
+  "foot_r": "body"
+ },
+ "meshless": [
+  "body"
+ ],
+ "balls": {
+  "arm_l": 0.038,
+  "hand_l": 0.032,
+  "arm_r": 0.038,
+  "hand_r": 0.032
+ },
+ "soft": {
+  "sprout": {
+   "dir": [
+    0.0,
+    0.9781,
+    -0.2079
+   ],
+   "rigid": 0.012,
+   "loops": 6
+  }
+ },
+ "ik": [],
+ "eyes": {
+  "eye_l": "pupil_l",
+  "eye_r": "pupil_r"
+ },
+ "sockets": {},
+ "rotated": [
+  "eye_l",
+  "pupil_l",
+  "brow_l",
+  "cheek_l",
+  "eye_r",
+  "pupil_r",
+  "brow_r",
+  "cheek_r",
+  "mouth"
+ ],
+ "tris": 7399
+}

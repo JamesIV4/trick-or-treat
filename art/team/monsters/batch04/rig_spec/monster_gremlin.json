@@ -1,0 +1,108 @@
+{
+ "id": "monster_gremlin",
+ "height": 0.8,
+ "radius": 0.32,
+ "floating": false,
+ "tree": {
+  "body": null,
+  "head": "body",
+  "mouth": "head",
+  "tip": "head",
+  "ear_l": "head",
+  "ear_r": "head",
+  "brow_l": "head",
+  "brow_r": "head",
+  "eye_l": "head",
+  "pupil_l": "eye_l",
+  "eye_r": "head",
+  "pupil_r": "eye_r",
+  "nose": "head",
+  "jaw": "head",
+  "tongue": "jaw",
+  "arm_l": "head",
+  "forearm_l": "arm_l",
+  "hand_l": "forearm_l",
+  "arm_r": "head",
+  "forearm_r": "arm_r",
+  "hand_r": "forearm_r",
+  "leg_l": "body",
+  "shin_l": "leg_l",
+  "foot_l": "shin_l",
+  "leg_r": "body",
+  "shin_r": "leg_r",
+  "foot_r": "shin_r"
+ },
+ "meshless": [
+  "body"
+ ],
+ "balls": {
+  "arm_l": 0.03,
+  "forearm_l": 0.025,
+  "hand_l": 0.021,
+  "arm_r": 0.03,
+  "forearm_r": 0.025,
+  "hand_r": 0.021,
+  "leg_l": 0.03,
+  "shin_l": 0.024,
+  "foot_l": 0.023,
+  "leg_r": 0.03,
+  "shin_r": 0.024,
+  "foot_r": 0.023
+ },
+ "soft": {
+  "tip": {
+   "dir": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "rigid": 0.03,
+   "loops": 6
+  },
+  "tongue": {
+   "dir": [
+    0.0,
+    -0.9701,
+    0.2425
+   ],
+   "rigid": 0.006,
+   "loops": 6
+  }
+ },
+ "ik": [
+  [
+   "arm_l",
+   "forearm_l",
+   "hand_l"
+  ],
+  [
+   "arm_r",
+   "forearm_r",
+   "hand_r"
+  ],
+  [
+   "leg_l",
+   "shin_l",
+   "foot_l"
+  ],
+  [
+   "leg_r",
+   "shin_r",
+   "foot_r"
+  ]
+ ],
+ "eyes": {
+  "eye_l": "pupil_l",
+  "eye_r": "pupil_r"
+ },
+ "sockets": {},
+ "rotated": [
+  "brow_l",
+  "brow_r",
+  "eye_l",
+  "pupil_l",
+  "eye_r",
+  "pupil_r"
+ ],
+ "tris": 7858
+}

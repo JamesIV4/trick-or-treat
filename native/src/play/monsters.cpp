@@ -4,6 +4,15 @@
 #include "play/vfx.h"
 
 #include <godot_cpp/classes/box_shape3d.hpp>
+#include <godot_cpp/classes/camera3d.hpp>
+#include <godot_cpp/classes/canvas_layer.hpp>
+#include <godot_cpp/classes/engine.hpp>
+#include <godot_cpp/classes/label.hpp>
+#include <godot_cpp/classes/os.hpp>
+#include <godot_cpp/classes/physics_direct_space_state3d.hpp>
+#include <godot_cpp/classes/physics_ray_query_parameters3d.hpp>
+#include <godot_cpp/classes/world3d.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/capsule_shape3d.hpp>
 #include <godot_cpp/classes/label3d.hpp>
 #include <godot_cpp/classes/cylinder_mesh.hpp>
@@ -11,6 +20,8 @@
 #include <godot_cpp/classes/gradient.hpp>
 #include <godot_cpp/classes/gradient_texture2d.hpp>
 #include <godot_cpp/classes/standard_material3d.hpp>
+#include <godot_cpp/classes/surface_tool.hpp>
+#include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/core/math.hpp>
 
@@ -46,9 +57,29 @@ const MonsterTuning &tuning(MonsterType t) {
 	return table[int(t)];
 }
 
+void monster_review_label(Node *parent, const String &text) {
+	static Label *label = nullptr;
+	if (!label) {
+		if (!parent) {
+			return;
+		}
+		CanvasLayer *layer = memnew(CanvasLayer);
+		layer->set_layer(100);
+		parent->add_child(layer);
+		label = memnew(Label);
+		label->set_position(Vector2(16, 12));
+		label->add_theme_font_size_override("font_size", 22);
+		label->add_theme_color_override("font_color", Color(1, 1, 1));
+		label->add_theme_color_override("font_outline_color", Color(0, 0, 0));
+		label->add_theme_constant_override("outline_size", 6);
+		layer->add_child(label);
+	}
+	label->set_text(text);
+}
+
 namespace {
 constexpr float GRAVITY = 22.0f;
-const Color TELEGRAPH(1.0f, 0.75f, 0.35f);
+const Color TELEGRAPH(1.0f, 0.68f, 0.18f); // (final fixes 2) warmer: at the linear body_flash's strength 0.75 / 0.35 read cream
 
 float wrap_angle(float a) {
 	return Math::fmod(a + Math_PI * 3.0f, Math_TAU) - Math_PI;
@@ -129,26 +160,39 @@ void Monster::init(MonsterType type, MonsterWorld *world, MonsterNest *home, uin
 	add_child(cs);
 	visual_ = memnew(Node3D);
 	add_child(visual_);
-	body_ = mesh_node(art.body, world->toon);
-	visual_->add_child(body_);
-	if (art.part_a.is_valid()) {
-		part_a_ = mesh_node(art.part_a, world->toon);
-		part_a_->set_position(art.pivot_a);
-		visual_->add_child(part_a_);
-	}
-	if (art.part_b.is_valid()) {
-		part_b_ = mesh_node(art.part_b, world->toon);
-		part_b_->set_position(art.pivot_b);
-		visual_->add_child(part_b_);
-	}
-	for (MeshInstance3D *m : { body_, part_a_, part_b_ }) {
-		if (m) {
-			m->set_instance_shader_parameter("rim_strength", 0.35f);
-			m->set_instance_shader_parameter("rim_color", t.color);
-			m->set_instance_shader_parameter("keep_visible", 1.0f); // never dithered away by the player cutout
+	// One code path for every monster: the art's part list becomes nodes under visual_ (toon material,
+	// rim light in the monster's colour, never dithered away by the player cutout), and the animator
+	// for this type and rig version poses them.
+	rig_.build(visual_, art.parts, &art.sockets, world->toon, t.color);
+	anim_.reset(make_animator(type, art.rig_version));
+	anim_->bind(rig_);
+	rise_time_ = Math::clamp(anim_->rise_time(), 0.1f, MONSTER_ANIM_TIME_MAX);
+	death_time_ = Math::clamp(anim_->death_time(), 0.1f, MONSTER_ANIM_TIME_MAX);
+	// What a thrower throws looks like what it holds (visual only): the first monster of a kind hands
+	// Combat the held part's mesh, recentred so it tumbles about its middle.
+	if (t.attack == MonsterTuning::THROW && world->combat) {
+		const Combat::ProjectileKind kind = type == MonsterType::Slime ? Combat::GOO : Combat::BONE;
+		const int held = anim_->thrown_part(rig_);
+		if (held >= 0 && rig_.mesh(held) && rig_.mesh(held)->get_mesh().is_valid() && !world->combat->has_projectile_look(kind)) {
+			const Ref<Mesh> src = rig_.mesh(held)->get_mesh();
+			const Transform3D recentre(Basis(), -src->get_aabb().get_center());
+			Ref<SurfaceTool> st;
+			st.instantiate();
+			Ref<ArrayMesh> flying;
+			for (int s = 0; s < src->get_surface_count(); ++s) {
+				st->clear();
+				st->append_from(src, s, recentre);
+				flying = st->commit(flying);
+			}
+			world->combat->set_projectile_look(kind, flying, world->toon);
 		}
 	}
+	// Animation variety only; never drawn from rng_, so the AI's rolls are what they always were.
+	anim_seed_ = uint32_t(seed ^ (seed >> 32)) * 2654435761u + uint32_t(type) * 97u + 1u;
+	lod_frame_ = int(anim_seed_ % 3u);
+	lod_check_ = float(anim_seed_ % 7u) * 0.05f;
 	visual_->set_scale(Vector3(0.01f, 0.01f, 0.01f));
+	anim_root_ = visual_->get_transform();
 	set_state(State::Rise);
 	set_physics_process(true);
 	set_process(true);
@@ -168,9 +212,10 @@ void Monster::set_state(State s) {
 	state_t_ = 0.0f;
 }
 
-void Monster::flash(const Color &c) {
+void Monster::flash(const Color &c, bool peak) {
 	flash_color_ = c;
 	flash_t_ = 1.0f;
+	flash_peak_ = peak;
 }
 
 Vector3 Monster::pick_goal(const Vector3 &player, bool chasing) {
@@ -208,7 +253,11 @@ void Monster::begin_attack() {
 			break;
 		}
 		case MonsterTuning::THROW: {
-			const Vector3 origin = pos + Vector3(0, (*world_->art)[type_].height * 0.9f, 0);
+			Vector3 origin = pos + Vector3(0, (*world_->art)[type_].height * 0.9f, 0);
+			Vector3 muzzle;
+			if (anim_ && anim_->muzzle(rig_, muzzle)) {
+				origin = muzzle; // the throwing hand or the mouth, when the animator has one
+			}
 			const Vector3 aim = player + Vector3(0, 0.6f, 0);
 			const float g = type_ == MonsterType::Slime ? 10.0f : 14.0f;
 			const float tt = Math::clamp(origin.distance_to(aim) / 9.0f, 0.55f, 1.3f);
@@ -299,6 +348,11 @@ void Monster::attack_step(float dt, const Vector3 &player) {
 }
 
 void Monster::_physics_process(double delta) {
+	physics_step(delta);
+	tick_smooth_.tick(get_global_position()); // where this tick left the body, for drawing between ticks
+}
+
+void Monster::physics_step(double delta) {
 	const float dt = float(delta);
 	if (!world_) {
 		return;
@@ -311,13 +365,15 @@ void Monster::_physics_process(double delta) {
 	Vector3 to = player - pos;
 	const float dist = Vector2(to.x, to.z).length();
 	Vector3 v = get_velocity();
+	const Vector3 v_before = v;
 	Vector3 desired;
 	float accel = 18.0f;
 	const bool chasing = dist < t.aggro;
+	chasing_ = chasing;
 
 	switch (state_) {
 		case State::Dying:
-			if (state_t_ > 0.28f) {
+			if (state_t_ > death_time_) {
 				if (on_gone) {
 					on_gone(this);
 				}
@@ -326,7 +382,7 @@ void Monster::_physics_process(double delta) {
 			}
 			return;
 		case State::Rise:
-			if (state_t_ > 0.55f) {
+			if (state_t_ > rise_time_) {
 				set_state(State::Roam);
 			}
 			break;
@@ -341,13 +397,16 @@ void Monster::_physics_process(double delta) {
 			desired = Vector3();
 			accel = 25.0f;
 			if (int(state_t_ * 8.0f) != int((state_t_ - dt) * 8.0f)) {
-				flash(TELEGRAPH);
+				flash(TELEGRAPH * (anim_ ? anim_->telegraph_gain() : 1.0f));
 			}
 			if (to.length() > 0.01f && t.attack != MonsterTuning::CHARGE) {
 				attack_dir_ = Vector3(to.x, 0, to.z).normalized();
 			}
 			if (state_t_ > t.windup) {
 				begin_attack();
+				// Keep the velocity begin_attack set (the HOP and POUNCE leap). Without this the locomotion below
+				// wrote back the velocity from before the attack on this tick, and those attacks never left the ground.
+				v = get_velocity();
 			}
 			break;
 		case State::Attack:
@@ -460,6 +519,10 @@ void Monster::_physics_process(double delta) {
 	knock_ = Vector3();
 	set_velocity(v);
 	move_and_slide();
+	// For the animator only: how hard it is speeding up, stopping or being knocked (smoothed).
+	if (dt > 0.0f) {
+		accel_ = anim::damp(accel_, (get_velocity() - v_before) / dt, 0.05f, dt);
+	}
 	// Stuck against something while trying to move: hop, and pick a new way round.
 	if (!t.flying && state_ == State::Roam && desired.length() > 0.5f && get_real_velocity().length() < 0.4f) {
 		stuck_t_ += dt;
@@ -488,83 +551,131 @@ void Monster::_physics_process(double delta) {
 	}
 }
 
+// Visuals only: gather what the animator needs to know (AnimInput), let it pose the parts and the
+// visual root, then fade the hit / telegraph flash. Nothing here feeds back into the AI or physics.
 void Monster::_process(double delta) {
 	const float dt = float(delta);
-	if (!visual_) {
+	if (!visual_ || !anim_ || !world_) {
 		return;
 	}
 	anim_t_ += dt;
+	since_hit_ += dt;
 	const MonsterTuning &t = tuning(type_);
-	const float speed = Vector2(get_velocity().x, get_velocity().z).length();
-	float s = 1.0f, sy = 1.0f, bob = 0.0f, tilt = 0.0f, spin = 0.0f;
-	if (state_ == State::Rise) {
-		const float k = Math::clamp(state_t_ / 0.55f, 0.0f, 1.0f);
-		s = k < 0.7f ? k / 0.7f * 1.15f : Math::lerp(1.15f, 1.0f, (k - 0.7f) / 0.3f);
-		sy = s;
-	} else if (state_ == State::Dying) {
-		const float k = Math::clamp(state_t_ / 0.28f, 0.0f, 1.0f);
-		s = 1.0f + k * 0.4f;
-		sy = Math::max(0.01f, 1.0f - k);
-		spin = k * 6.0f;
-	} else if (state_ == State::Windup) {
-		const float k = Math::clamp(state_t_ / t.windup, 0.0f, 1.0f);
-		const float shake = std::sin(anim_t_ * 60.0f) * 0.05f * k;
-		s = 1.0f + k * (t.attack == MonsterTuning::PUFF ? 0.35f : 0.12f);
-		sy = 1.0f - k * 0.18f + shake;
-		tilt = t.attack == MonsterTuning::CHARGE ? 0.25f * k : -0.15f * k;
-	} else if (state_ == State::Recover && t.attack == MonsterTuning::CHARGE && cooldown_ > t.cooldown) {
-		spin = anim_t_ * 8.0f; // dizzy after a charge
-	}
-	if (!t.flying && state_ != State::Dying) {
-		bob = is_on_floor() ? std::abs(std::sin(anim_t_ * (6.0f + speed * 2.0f))) * 0.06f * Math::min(speed, 1.0f) : 0.0f;
-		if (t.hops && !is_on_floor()) {
-			sy *= 1.12f;
-			s *= 0.94f;
+	// Far from the camera (checked a few times a second): animators that allow it are posed every
+	// third frame and skip their springs, blinks and look-at.
+	lod_check_ -= dt;
+	if (lod_check_ <= 0.0f) {
+		lod_check_ = 0.3f;
+		far_ = false;
+		if (anim_->distance_lod()) {
+			if (const Viewport *vp = get_viewport()) {
+				if (const Camera3D *cam = vp->get_camera_3d()) {
+					far_ = cam->get_global_position().distance_squared_to(get_global_position()) > MONSTER_LOD_DISTANCE * MONSTER_LOD_DISTANCE;
+				}
+			}
 		}
 	}
-	if (type_ == MonsterType::Ghost) {
-		tilt += std::sin(anim_t_ * 1.7f) * 0.08f;
+	lod_dt_ += dt;
+	// A state "changes" also when it restarts (hit again while already hurt: its clock goes back).
+	const bool state_changed = !anim_started_ || state_ != anim_state_ || state_t_ < anim_state_t_;
+	const bool skip = far_ && !state_changed && (++lod_frame_ % 3) != 0;
+	if (!skip) {
+		if (state_changed) {
+			anim_prev_state_ = anim_started_ ? anim_state_ : state_;
+			anim_state_ = state_;
+			anim_started_ = true;
+		}
+		anim_state_t_ = state_t_;
+		const Vector3 vel = get_velocity();
+		const Basis facing(Vector3(0, 1, 0), yaw_);
+		AnimInput in;
+		in.type = type_;
+		in.tuning = &t;
+		in.state = MonsterAnimState(int(state_));
+		in.prev_state = MonsterAnimState(int(anim_prev_state_));
+		in.entered = state_changed;
+		in.state_t = state_t_;
+		switch (state_) {
+			case State::Rise: in.state_len = rise_time_; break;
+			case State::Dying: in.state_len = death_time_; break;
+			case State::Windup: in.state_len = t.windup; break;
+			case State::Hurt: in.state_len = 0.28f; break;
+			default: break;
+		}
+		in.windup = state_ == State::Windup ? Math::clamp(state_t_ / t.windup, 0.0f, 1.0f) : 0.0f;
+		in.cooldown = cooldown_;
+		in.dizzy = state_ == State::Recover && t.attack == MonsterTuning::CHARGE ? Math::max(0.0f, cooldown_ - t.cooldown) : 0.0f;
+		in.since_hit = since_hit_;
+		in.dt = lod_dt_;
+		in.t = anim_t_;
+		in.yaw = yaw_;
+		in.speed = Vector2(vel.x, vel.z).length();
+		in.vel_local = facing.xform_inv(vel);
+		in.accel_local = facing.xform_inv(accel_);
+		in.player_local = facing.xform_inv(world_->player_pos() - get_global_position());
+		in.attack_dir_local = facing.xform_inv(attack_dir_);
+		in.hit_dir_local = facing.xform_inv(hit_dir_);
+		in.hop_in = t.hops ? Math::max(0.0f, hop_t_) : 0.0f;
+		in.on_floor = is_on_floor();
+		in.chasing = chasing_;
+		in.origin_world = get_global_position();
+		in.ground = world_->ground ? &world_->ground : nullptr;
+		if (!surface_) {
+			surface_ = [this](float x, float z, float y) -> float {
+				const float g = world_->ground ? world_->ground(x, z) : y;
+				const Ref<World3D> w3 = get_world_3d();
+				if (PhysicsDirectSpaceState3D *space = w3.is_valid() ? w3->get_direct_space_state() : nullptr) {
+					// structures (4: kerbs, sidewalks, porches) and the ground mesh (8); never the kid or a monster
+					Ref<PhysicsRayQueryParameters3D> q = PhysicsRayQueryParameters3D::create(Vector3(x, Math::max(y, g) + 0.7f, z), Vector3(x, Math::min(y, g) - 0.7f, z), 4 | 8);
+					const Dictionary hit = space->intersect_ray(q);
+					if (!hit.is_empty()) {
+						return float(Vector3(hit["position"]).y);
+					}
+				}
+				return g;
+			};
+		}
+		in.surface = &surface_;
+		const MonsterArt &art = (*world_->art)[type_];
+		in.height = art.height;
+		in.radius = art.radius;
+		in.seed = anim_seed_;
+		in.lod = far_ ? 1 : 0;
+		lod_dt_ = 0.0f;
+		Transform3D root = anim_root_;
+		anim_->update(in, rig_, root);
+		anim_root_ = root;
 	}
-	visual_->set_transform(Transform3D(Basis(Vector3(0, 1, 0), yaw_ + spin) * Basis(Vector3(1, 0, 0), tilt).scaled(Vector3(s, sy, s)), Vector3(0, bob, 0)));
-	// Limbs.
-	const MonsterArt &art = (*world_->art)[type_];
-	const float swing = std::sin(anim_t_ * (5.0f + speed * 2.2f));
-	auto pose = [&](MeshInstance3D *m, const Vector3 &pivot, const Basis &b) {
-		if (m) {
-			m->set_transform(Transform3D(b, pivot));
+	// Drawn between physics ticks (play/tick_smooth.h), every frame, also on the frames a far-away
+	// monster's animator is skipped: otherwise the monster judders against the camera.
+	{
+		Transform3D drawn = anim_root_;
+		drawn.origin += get_global_transform().basis.xform_inv(tick_smooth_.offset(get_global_position()));
+		visual_->set_transform(drawn);
+	}
+	// Review aid (TOT_MONSTER_TEST, festival_game.cpp): where this monster is drawn on screen this frame,
+	// for measuring how evenly it moves (art/team/monsters/batch04/real_trace.py reads the lines).
+	static const bool review_trace = OS::get_singleton()->has_environment("TOT_MONSTER_TEST");
+	if (review_trace) {
+		if (const Viewport *vp = get_viewport()) {
+			if (const Camera3D *cam = vp->get_camera_3d()) {
+				const Vector3 drawn = visual_->get_global_position(), body = get_global_position();
+				const Vector2 sd = cam->unproject_position(drawn), sb = cam->unproject_position(body);
+				UtilityFunctions::print(vformat("MTRACE id=%d f=%d t=%.5f dt=%.6f st=%d stt=%.3f far=%d floor=%d drawn=%.4f,%.4f,%.4f body=%.4f,%.4f,%.4f sd=%.3f,%.3f sb=%.3f,%.3f vy=%.3f",
+						int(get_instance_id() % 100000), int(Engine::get_singleton()->get_process_frames()), anim_t_, dt, int(state_), state_t_, far_ ? 1 : 0, is_on_floor() ? 1 : 0,
+						drawn.x, drawn.y, drawn.z, body.x, body.y, body.z, sd.x, sd.y, sb.x, sb.y, get_velocity().y));
+			}
 		}
-	};
-	switch (type_) {
-		case MonsterType::Bat: {
-			const float flap = std::sin(anim_t_ * (state_ == State::Attack ? 26.0f : 16.0f)) * 0.8f;
-			pose(part_a_, art.pivot_a, Basis(Vector3(0, 0, 1), -flap));
-			pose(part_b_, art.pivot_b, Basis(Vector3(0, 0, 1), flap));
-			break;
-		}
-		case MonsterType::Spider:
-			pose(part_a_, art.pivot_a, Basis(Vector3(0, 1, 0), swing * 0.25f * Math::min(speed, 1.5f)));
-			pose(part_b_, art.pivot_b, Basis(Vector3(0, 1, 0), -swing * 0.25f * Math::min(speed, 1.5f)));
-			break;
-		case MonsterType::Mummy:
-		case MonsterType::Scarecrow: {
-			const float raise = state_ == State::Windup || state_ == State::Attack ? -0.5f : 0.0f;
-			pose(part_a_, art.pivot_a, Basis(Vector3(1, 0, 0), raise + swing * 0.15f));
-			pose(part_b_, art.pivot_b, Basis(Vector3(1, 0, 0), raise - swing * 0.15f));
-			break;
-		}
-		default:
-			pose(part_a_, art.pivot_a, Basis(Vector3(1, 0, 0), swing * 0.6f * Math::min(speed, 1.0f)));
-			pose(part_b_, art.pivot_b, Basis(Vector3(1, 0, 0), -swing * 0.6f * Math::min(speed, 1.0f)));
 	}
 	// Hit and telegraph flashes.
 	if (flash_t_ > 0.0f) {
 		flash_t_ = Math::max(0.0f, flash_t_ - dt * 6.0f);
-		const Color c = flash_color_ * (flash_t_ * 1.6f);
-		for (MeshInstance3D *m : { body_, part_a_, part_b_ }) {
-			if (m) {
-				m->set_instance_shader_parameter("hit_flash", c);
-			}
-		}
+		// (final fixes 2) A hit starts with the whole body near white for 2 frames (flash_t 0.9, 0.8 at 60 fps; a
+		// full-strength silhouette reads solid), then the body_flash fade carries it. The colour is
+		// linear now (the sRGB hint squared it away: a 0.3 gain was 0.07 of a flash).
+		const float pk = Math::clamp((flash_t_ - 0.68f) / 0.14f, 0.0f, 1.0f);
+		const float peak = flash_peak_ ? pk * pk * (3.0f - 2.0f * pk) : 0.0f;
+		rig_.hit_flash(flash_color_ * flash_t_, peak);
 	}
 }
 
@@ -573,10 +684,12 @@ bool Monster::take_hit(float damage, const Vector3 &from) {
 		return false;
 	}
 	hp_ -= damage;
-	flash(Color(1.0f, 0.95f, 0.85f));
+	flash(Color(1.0f, 0.95f, 0.85f) * (anim_ ? anim_->hit_flash_gain() : 1.0f), true);
 	Vector3 away = get_global_position() - from;
 	away.y = 0.0f;
 	away = away.length() > 0.01f ? away.normalized() : Vector3(0, 0, 1);
+	hit_dir_ = away; // for the animator's flinch
+	since_hit_ = 0.0f;
 	if (hp_ <= 0.0f) {
 		die(true);
 		return true;

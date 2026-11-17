@@ -1,0 +1,79 @@
+{
+ "id": "monster_spider",
+ "height": 0.7,
+ "radius": 0.45,
+ "floating": false,
+ "tree": {
+  "body": null,
+  "abdomen": "body",
+  "alt_silk": "abdomen",
+  "head": "body",
+  "fang_l": "head",
+  "fang_r": "head",
+  "jaw": "head",
+  "eye_l": "head",
+  "pupil_l": "eye_l",
+  "eye_r": "head",
+  "pupil_r": "eye_r",
+  "alt_squint": "head",
+  "eye_s0": "head",
+  "eye_s1": "head",
+  "eye_s2": "head",
+  "tuft": "head",
+  "leg_l0": "body",
+  "shin_l0": "leg_l0",
+  "leg_l1": "body",
+  "shin_l1": "leg_l1",
+  "leg_l2": "body",
+  "shin_l2": "leg_l2",
+  "leg_l3": "body",
+  "shin_l3": "leg_l3",
+  "leg_r0": "body",
+  "shin_r0": "leg_r0",
+  "leg_r1": "body",
+  "shin_r1": "leg_r1",
+  "leg_r2": "body",
+  "shin_r2": "leg_r2",
+  "leg_r3": "body",
+  "shin_r3": "leg_r3"
+ },
+ "meshless": [],
+ "balls": {
+  "shin_l0": 0.056,
+  "shin_l1": 0.056,
+  "shin_l2": 0.056,
+  "shin_l3": 0.056,
+  "shin_r0": 0.056,
+  "shin_r1": 0.056,
+  "shin_r2": 0.056,
+  "shin_r3": 0.056
+ },
+ "soft": {
+  "tuft": {
+   "dir": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "rigid": 0.008,
+   "loops": 4
+  }
+ },
+ "ik": [],
+ "eyes": {
+  "eye_l": "pupil_l",
+  "eye_r": "pupil_r"
+ },
+ "sockets": {},
+ "rotated": [
+  "jaw",
+  "eye_l",
+  "pupil_l",
+  "eye_r",
+  "pupil_r",
+  "eye_s0",
+  "eye_s1",
+  "eye_s2"
+ ],
+ "tris": 7760
+}

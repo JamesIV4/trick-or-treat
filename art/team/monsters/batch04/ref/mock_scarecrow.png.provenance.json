@@ -1,0 +1,17 @@
+﻿{
+    "tool":  "Codex built-in image_gen via codex exec",
+    "codex_version":  "codex-cli 0.160.0",
+    "generated_utc":  "2026-11-14 20:30:15 UTC",
+    "thread_id":  "01a1dbc0-5d56-7c33-bed2-51931dc2fd48",
+    "codex_source_file":  "C:\\Users\\james\\.codex\\generated_images\\01a1dbc0-5d56-7c33-bed2-51931dc2fd48\\exec-32cd1f17-3879-4c53-82c3-938bf2b60b9e.png",
+    "sha256":  "f0d32d409fea087040f9d3f7861663f84cbba651530bac82c785928792fe2946",
+    "prompt":  "Create a character concept sheet for ONE cute Halloween monster from a cozy 3D platformer game.\n\nSTYLE: match the FIRST attached image exactly (five kids in Halloween costumes): a polished, glossy,\ntoy-like stylised 3D render with soft rounded chibi forms, big expressive glossy eyes with highlights,\nsoft subsurface shading, subtle hand-painted surface texture, crisp material detail (stitching, seams,\nfuzz, rims), warm orange rim light against a deep purple-blue Halloween night. Cute and friendly-spooky,\nnever scary or realistic.\n\nDESIGN: the SECOND attached image shows the monster\u0027s current low-detail in-game model (two views).\nKeep its identity: the same creature, the same body shape and proportions, the same colours and the\nsame features. Raise it to the fidelity of the style reference: richer forms and silhouette, expressive\nface, material detail, appealing personality. Do not turn it into a different creature and do not add\nclothing or props it does not have.\n\nLAYOUT: one wide image, the same monster shown twice at the same scale, full body, feet on the ground:\non the left a front three-quarter view, on the right a back three-quarter view. A softly blurred\ncobblestone Halloween street at night behind, like the style reference. No text, no labels, no border,\nno other characters.\n\nTHE MONSTER:Scarecrow: a small scarecrow on a single wooden pole (no legs; it hops on the pole). A round burlap sack head with stitched seams, two mismatched button eyes and a stitched crooked smile, a purple pointed witch hat with an orange band, a red plaid shirt with a blue patch, arms stretched out sideways on a crossbar, and golden straw bursting from the cuffs, collar and shirt hem.",
+    "references":  [
+                       {
+                           "path":  "S:\\Repos\\trick-or-treat\\art\\team\\characters_candy\\batch04\\ref\\ref_all.png",
+                           "sha256":  "9b78d1138d1558b537a95dee9a00cb610e1eaec01bb84693be7e0644d77d5918"
+                       }
+                   ],
+    "transparent_requested":  false,
+    "note":  "AI-generated image. Not original game source art; use as texture/reference material only."
+}

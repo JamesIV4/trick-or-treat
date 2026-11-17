@@ -13,11 +13,15 @@
 #include <godot_cpp/classes/static_body3d.hpp>
 
 #include <functional>
+#include <memory>
 #include <vector>
 
 #include "core/rng.h"
 #include "play/combat.h"
+#include "play/monster_anim.h"
 #include "play/monster_art.h"
+#include "play/monster_rig.h"
+#include "play/tick_smooth.h"
 
 namespace tot {
 
@@ -52,6 +56,10 @@ struct MonsterTuning {
 };
 const MonsterTuning &tuning(MonsterType t);
 
+// Review aid (TOT_MONSTER_TEST in festival_game.cpp): a line of text in the top-left corner of the
+// picture (created under `parent` on the first call), so a recording says what it shows.
+void monster_review_label(godot::Node *parent, const godot::String &text);
+
 class MonsterNest;
 
 class Monster : public godot::CharacterBody3D, public Damageable {
@@ -71,6 +79,29 @@ public:
 	MonsterType type() const { return type_; }
 	MonsterNest *home() const { return home_; }
 	std::function<void(Monster *)> on_gone;
+	// Showcase hooks (festival_showcase.cpp records each monster through a fixed timeline). Additive:
+	// nothing in play calls them, and they only set gameplay state (where it may roam, where it is
+	// heading, which way it faces, start a wind-up), never the art or the animation.
+	void showcase_leash(const godot::Rect2 &r) { leash_ = r; } // an empty rect: stand where it is
+	void showcase_goal(const godot::Vector3 &goal, float seconds) {
+		goal_ = goal;
+		goal_t_ = seconds;
+		path_.clear();
+	}
+	void showcase_face(float yaw) { yaw_ = yaw; }
+	// Review aid (TOT_MONSTER_TEST in festival_game.cpp): read-only, for timing a test hit.
+	MonsterAnimState review_state() const { return MonsterAnimState(int(state_)); }
+	float review_state_time() const { return state_t_; }
+	// Start the wind-up now, whatever the range and the cooldown (the attack follows as in play).
+	void showcase_windup() {
+		if (!dead_) {
+			cooldown_ = 0.0f;
+			set_state(State::Windup);
+			if (world_ && world_->event) {
+				world_->event("telegraph", get_global_position());
+			}
+		}
+	}
 
 protected:
 	static void _bind_methods();
@@ -80,7 +111,7 @@ private:
 	void set_state(State s);
 	void begin_attack();
 	void attack_step(float dt, const godot::Vector3 &player);
-	void flash(const godot::Color &c);
+	void flash(const godot::Color &c, bool peak = false); // peak: a hit (the body near white for its first frames)
 	void die(bool reward);
 	godot::Vector3 pick_goal(const godot::Vector3 &player, bool chasing);
 	godot::Vector3 steer_toward(const godot::Vector3 &pos, const godot::Vector3 &target, float dt);
@@ -94,6 +125,7 @@ private:
 	float state_t_ = 0.0f, cooldown_ = 1.0f, goal_t_ = 0.0f, stuck_t_ = 0.0f, hop_t_ = 0.0f;
 	float hp_ = 1.0f, flash_t_ = 0.0f, anim_t_ = 0.0f, orbit_ = 0.0f;
 	godot::Color flash_color_;
+	bool flash_peak_ = false;
 	godot::Vector3 goal_, attack_dir_, knock_;
 	std::vector<godot::Vector3> path_; // waypoints toward path_goal_
 	godot::Vector3 path_goal_;
@@ -101,7 +133,28 @@ private:
 	bool hit_landed_ = false, dead_ = false, airborne_attack_ = false;
 	float yaw_ = 0.0f;
 	godot::Node3D *visual_ = nullptr;
-	godot::MeshInstance3D *body_ = nullptr, *part_a_ = nullptr, *part_b_ = nullptr;
+	// The look in motion: the parts under visual_ and the animator that poses them (monster_rig.h,
+	// monster_anim.h). Everything below only feeds the animator; none of it steers the AI.
+	MonsterRig rig_;
+	std::unique_ptr<MonsterAnimator> anim_;
+	float rise_time_ = MONSTER_RISE_TIME, death_time_ = MONSTER_DEATH_TIME; // from the animator, read once
+	bool chasing_ = false; // the player is inside the aggro range (as of the last physics tick)
+	godot::Vector3 hit_dir_ = godot::Vector3(0, 0, 1); // the way the last hit pushed it (world, flat, unit)
+	float since_hit_ = 1000.0f;
+	godot::Vector3 accel_; // smoothed acceleration, world
+	State anim_state_ = State::Rise, anim_prev_state_ = State::Rise; // last state the animator saw, and the one before
+	bool anim_started_ = false, far_ = false;
+	uint32_t anim_seed_ = 0;
+	int lod_frame_ = 0;
+	float lod_dt_ = 0.0f, lod_check_ = 0.0f, anim_state_t_ = 0.0f;
+	// Drawn between physics ticks (play/tick_smooth.h): the animator's root transform is kept here and
+	// the visual is placed from it every frame with the tick offset added.
+	void physics_step(double delta);
+	TickSmooth tick_smooth_;
+	godot::Transform3D anim_root_;
+	// For the animator only (AnimInput::surface): the walkable height under (x, z) near y, by a ray down
+	// through the ground and the structures (kerbs, sidewalks, porch steps).
+	std::function<float(float, float, float)> surface_;
 };
 
 class MonsterNest : public godot::Node3D, public Damageable {

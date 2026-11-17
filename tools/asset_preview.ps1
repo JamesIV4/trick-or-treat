@@ -21,7 +21,9 @@ $ErrorActionPreference = 'Continue'
 $lock = Enter-GodotLock
 try {
     & $Godot --headless --import --path "$root\game" *> $null
-    & $Godot --path "$root\game" --resolution 1600x900 -- "--preview=$res" "--capture=$Out" *> "$Out.log"
+    # Off-screen, muted, no focus taken (tools\godot_bg.ps1): the user is working on this machine.
+    . "$PSScriptRoot\godot_bg.ps1"
+    [void](Start-GodotBackground -Godot $Godot -Log "$Out.log" -Arguments @('--path', "$root\game", '--resolution', '1600x900', '--', "--preview=$res", "--capture=$Out"))
 } finally {
     Exit-GodotLock $lock
 }

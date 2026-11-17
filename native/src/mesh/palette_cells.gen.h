@@ -161,6 +161,21 @@ constexpr int BUNTING_CREAM = 160;
 constexpr int GLOW_JACK_SHELL = 161;
 constexpr int GLOW_JACK_FACE = 162;
 constexpr int MUM_ORANGE = 176;
+constexpr int IRIS_BROWN = 177;
+constexpr int HAIR_LIGHT = 178;
+constexpr int HAIR_DARK = 179;
+constexpr int MOUTH_DARK = 180;
+constexpr int TONGUE = 181;
+constexpr int CHEEK_SOFT = 182;
+constexpr int DRAGON_JADE_LIGHT = 183;
+constexpr int GHOST_SHEET = 184;
+constexpr int GHOST_SHADE = 185;
+constexpr int GHOST_DEEP = 186;
+constexpr int GHOST_LEGGING = 187;
+constexpr int GHOST_CLOTH = 188;
+constexpr int SKEL_BONE = 189;
+constexpr int SKEL_SHADE = 190;
+constexpr int HAT_VIOLET_DEEP = 191;
 constexpr int DRAGON_GREEN = 192;
 constexpr int DRAGON_JADE = 193;
 constexpr int DRAGON_GREEN_DARK = 194;
@@ -179,6 +194,19 @@ constexpr int CANDY_MAGENTA = 206;
 constexpr int THORN_BARK = 208;
 constexpr int THORN_SPIKE = 209;
 constexpr int THORN_TIP = 210;
+constexpr int IVORY_SHADE = 211;
+constexpr int IVORY_DEEP = 212;
+constexpr int LINEN_LIGHT = 213;
+constexpr int LINEN = 214;
+constexpr int LINEN_SHADE = 215;
+constexpr int LINEN_DEEP = 216;
+constexpr int LINEN_DARK = 217;
+constexpr int GLOW_AMBER_DIM = 218;
+constexpr int GLOW_AMBER = 219;
+constexpr int HAT_VIOLET = 220;
+constexpr int TOAD_RED = 221;
+constexpr int GOO_LIME = 222;
+constexpr int SPIDER_BERRY = 223;
 constexpr int BAT_FUR = 224;
 constexpr int BAT_WING = 225;
 constexpr int BAT_BELLY = 226;
@@ -191,6 +219,10 @@ constexpr int SPIDER_PLUM = 232;
 constexpr int CROW_BLUE = 233;
 constexpr int GRAVE_SOIL = 234;
 constexpr int SARC_BLUE = 235;
+constexpr int BONE_WARM = 236;
+constexpr int BONE_TAN = 237;
+constexpr int GLOW_TEAL_DIM = 238;
+constexpr int IVORY = 239;
 constexpr int CANDY_AQUA = 240;
 constexpr int CANDY_COBALT = 241;
 constexpr int CANDY_LIME = 242;
@@ -217,10 +249,10 @@ constexpr unsigned RGB[256] = {
 	0xffc56b, 0xffa94d, 0xff8a1f, 0xffd04a, 0xffb347, 0xff6a3d, 0xff7fb0, 0xffd98a, 0xfff2c8, 0xe8ff7a, 0xffd75a, 0xffcf80, 0xffd9a0, 0x6ff5e2, 0xb58bff, 0xffffff,
 	0xc2302a, 0x7a1e22, 0x8a3a16, 0xa8661a, 0x1e3b33, 0x2c5a45, 0x4f7d5a, 0xe44a2e, 0xf7902e, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff,
 	0xf6ead0, 0xa0400c, 0xffd864, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff,
-	0xf08a2a, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff,
+	0xf08a2a, 0x5c3018, 0x9c6844, 0x4a2d20, 0x5b1f2e, 0xff7a8a, 0xffbcae, 0x55c98a, 0xe4e2ec, 0xc3c0d6, 0x9894b6, 0x3d3749, 0xaeaac4, 0xbdb39d, 0x8c826e, 0x3a1c6e,
 	0x4cb04a, 0x30ad6b, 0x1f7a4c, 0xa9d94f, 0xd4e04a, 0xffbd2e, 0xfbe7a2, 0xe9c86e, 0xff6f12, 0xffae3a, 0x2fd04a, 0x9bf26a, 0x9a3cff, 0xcf8cff, 0xff3fa4, 0xff00ff,
-	0x3b2c33, 0x7a3a2c, 0xd8b48c, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff,
-	0x4e3d7c, 0x8d62b4, 0xc3a0e6, 0x5fcf45, 0xbdf76e, 0x2d8f42, 0x8dff52, 0xc4b190, 0x3c2d5e, 0x2e3150, 0x6e4a32, 0x2f63b0, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff,
+	0x3b2c33, 0x7a3a2c, 0xd8b48c, 0xa67c5a, 0x6c4837, 0xd6c4a0, 0xc4ae88, 0xa08663, 0x6f5843, 0x2e201d, 0xa8590f, 0xff9a26, 0x4f2a8e, 0xa5181b, 0x6fac1e, 0x6c2a62,
+	0x4e3d7c, 0x8d62b4, 0xc3a0e6, 0x5fcf45, 0xbdf76e, 0x2d8f42, 0x8dff52, 0xc4b190, 0x3c2d5e, 0x2e3150, 0x6e4a32, 0x2f63b0, 0xf4dcb2, 0xd7a877, 0x1f7f7a, 0xd0b086,
 	0x2fe6e0, 0x3d6bff, 0xb6f22e, 0xe8245f, 0xffab7a, 0xffc4de, 0xe0202e, 0x3a2a4a, 0xdba05a, 0xa6e4ff, 0xb8f5dc, 0xd99418, 0xff00ff, 0xff00ff, 0xff00ff, 0xff00ff,
 };
 

@@ -9,6 +9,7 @@
 #include <godot_cpp/classes/shader_material.hpp>
 #include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/classes/gradient.hpp>
+#include <godot_cpp/classes/gradient_texture2d.hpp>
 #include <godot_cpp/classes/physics_direct_space_state3d.hpp>
 #include <godot_cpp/classes/physics_ray_query_parameters3d.hpp>
 #include <godot_cpp/classes/quad_mesh.hpp>
@@ -197,6 +198,37 @@ void Combat::_ready() {
 		bone->set_height(0.5f);
 		bone->set_material(glow_material(Color(0.95f, 0.92f, 0.82f), Color(0.6f, 0.58f, 0.5f), 0.6f));
 		bone_mesh_ = bone;
+		// The bone's glow (user, 2026-11-16: thrown bones were too hard to see; a white glow round them, no real
+		// light): a camera-facing quad with a soft radial falloff, added over the scene. It sits on the bone's
+		// centre, so the bone covers its middle and the glow shows as a halo round it. Fog off, so it carries.
+		Ref<Gradient> g;
+		g.instantiate();
+		// Hot near the bone and falling off fast (a 1.15 m quad with a slow falloff read as a hazy disc of fog
+		// round a dark bone).
+		g->set_offsets(PackedFloat32Array({ 0.0f, 0.12f, 0.3f, 0.55f, 1.0f }));
+		g->set_colors(PackedColorArray({ Color(1, 1, 1, 0.95f), Color(1, 1, 1, 0.62f), Color(1, 1, 1, 0.22f), Color(1, 1, 1, 0.05f), Color(1, 1, 1, 0.0f) }));
+		Ref<GradientTexture2D> tex;
+		tex.instantiate();
+		tex->set_gradient(g);
+		tex->set_width(64);
+		tex->set_height(64);
+		tex->set_fill(GradientTexture2D::FILL_RADIAL);
+		tex->set_fill_from(Vector2(0.5f, 0.5f));
+		tex->set_fill_to(Vector2(0.5f, 0.0f));
+		Ref<StandardMaterial3D> m;
+		m.instantiate();
+		m->set_shading_mode(BaseMaterial3D::SHADING_MODE_UNSHADED);
+		m->set_billboard_mode(BaseMaterial3D::BILLBOARD_ENABLED);
+		m->set_transparency(BaseMaterial3D::TRANSPARENCY_ALPHA);
+		m->set_blend_mode(BaseMaterial3D::BLEND_MODE_ADD);
+		m->set_texture(BaseMaterial3D::TEXTURE_ALBEDO, tex);
+		m->set_albedo(Color(1.0f, 0.98f, 0.94f));
+		m->set_flag(BaseMaterial3D::FLAG_DISABLE_FOG, true);
+		Ref<QuadMesh> q;
+		q.instantiate();
+		q->set_size(Vector2(0.85f, 0.85f));
+		q->set_material(m);
+		halo_mesh_ = q;
 	}
 	for (int i = 0; i < 10; ++i) {
 		Thrown t;
@@ -204,6 +236,11 @@ void Combat::_ready() {
 		t.node->set_visible(false);
 		t.node->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
 		add_child(t.node);
+		t.halo = memnew(MeshInstance3D);
+		t.halo->set_mesh(halo_mesh_);
+		t.halo->set_visible(false);
+		t.halo->set_cast_shadows_setting(GeometryInstance3D::SHADOW_CASTING_SETTING_OFF);
+		add_child(t.halo);
 		thrown_.push_back(t);
 	}
 	Ref<QuadMesh> spark = spark_quad(0.2f);
@@ -236,6 +273,7 @@ void Combat::clear() {
 	for (Thrown &t : thrown_) {
 		t.active = false;
 		t.node->set_visible(false);
+		t.halo->set_visible(false);
 	}
 }
 
@@ -349,10 +387,37 @@ void Combat::throw_projectile(const Vector3 &origin, const Vector3 &velocity, Pr
 			t.life = 0.0f;
 			t.kind = kind;
 			t.node->set_mesh(kind == BONE ? bone_mesh_ : goo_mesh_);
+			t.node->set_material_override(look_mat_[kind]); // null for the stand-in meshes, which carry their own
 			t.node->set_global_position(origin);
 			t.node->set_visible(true);
+			t.halo->set_global_position(origin);
+			t.halo->set_visible(kind == BONE);
+			if (look_mat_[kind].is_valid()) {
+				// The toon look per kind: a bone white-rimmed and lit a little from within, goo as set_projectile_look left it.
+				const bool bone = kind == BONE;
+				t.node->set_instance_shader_parameter("rim_strength", bone ? 1.0f : 0.7f);
+				t.node->set_instance_shader_parameter("rim_color", bone ? Color(1.0f, 1.0f, 1.0f) : Color(1.0f, 0.92f, 0.75f));
+				t.node->set_instance_shader_parameter("hit_flash", bone ? Color(0.55f, 0.54f, 0.5f) : Color(0.2f, 0.17f, 0.11f));
+			}
 			return;
 		}
+	}
+}
+
+void Combat::set_projectile_look(ProjectileKind kind, const Ref<Mesh> &mesh, const Ref<Material> &material) {
+	if (mesh.is_null() || material.is_null()) {
+		return;
+	}
+	(kind == BONE ? bone_mesh_ : goo_mesh_) = mesh;
+	look_mat_[kind] = material;
+	// The toon material's per-instance look for something flying at the player at night: a strong
+	// rim and a faint warm glow of its own (the stand-in mesh glowed too), never cut out. A bone gets a white
+	// rim instead when it is thrown (throw_projectile), to go with its halo.
+	for (Thrown &t : thrown_) {
+		t.node->set_instance_shader_parameter("rim_strength", 0.7f);
+		t.node->set_instance_shader_parameter("rim_color", Color(1.0f, 0.92f, 0.75f));
+		t.node->set_instance_shader_parameter("hit_flash", Color(0.2f, 0.17f, 0.11f));
+		t.node->set_instance_shader_parameter("keep_visible", 1.0f);
 	}
 }
 
@@ -642,10 +707,12 @@ void Combat::_process(double delta) {
 		if (end) {
 			t.active = false;
 			t.node->set_visible(false);
+			t.halo->set_visible(false);
 			puff(t.pos, t.kind == BONE ? Color(0.9f, 0.88f, 0.8f) : Color(0.5f, 1.0f, 0.4f), 10, 2.0f);
 			continue;
 		}
 		t.node->set_global_transform(Transform3D(Basis(Vector3(1, 0, 0), t.life * 14.0f) * Basis(Vector3(0, 0, 1), t.life * 9.0f), t.pos));
+		t.halo->set_global_position(t.pos);
 	}
 }
 

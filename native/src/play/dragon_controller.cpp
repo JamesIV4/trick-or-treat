@@ -15,6 +15,11 @@
 #include <godot_cpp/classes/physics_ray_query_parameters3d.hpp>
 #include <godot_cpp/classes/world3d.hpp>
 #include <godot_cpp/classes/sphere_mesh.hpp>
+#include <godot_cpp/classes/input_event_action.hpp>
+#include <godot_cpp/classes/camera_attributes_practical.hpp>
+#include <godot_cpp/classes/world_environment.hpp>
+#include <godot_cpp/classes/scene_tree.hpp>
+#include <godot_cpp/classes/scene_tree_timer.hpp>
 #include <godot_cpp/classes/standard_material3d.hpp>
 #include <godot_cpp/classes/viewport.hpp>
 #include <godot_cpp/core/class_db.hpp>
@@ -27,10 +32,342 @@
 #include "play/drop_shadow.h"
 #include "play/vfx.h"
 #include "gen/neighborhood_generator.h"
+#include "play/ride_on_car.h"
 
 using namespace godot;
 
 namespace tot {
+
+// ------------------------------------------------------------------------------------------------
+// Review aids (Lane P, art/team/characters_candy/batch05/real_play.ps1). Each is read once from the
+// environment and does nothing unless it is set; a normal game never sees them.
+//   TOT_RIG_COSTUME=<id>   the game's first costume is this one instead of the dragon (the first
+//                          set_visual() wears it), so every review mode (--ledge-test, --mantle-test,
+//                          --drop-test, --autopilot, TOT_JITTER_TEST) runs with any costume.
+//   TOT_RIG_REVIEW=<scene>[,<seconds>]   quits after <seconds> (0: the game's own end). Scenes:
+//     cam    only the review camera below;
+//     car    (with --give-car) mounted idle, drive ahead, turn, hop, stop, dismount, walk off;
+//     swap   the costume change in play: 12 changes through all six while standing, walking, in
+//            the air and mid-spin (the same as FestivalGame::cycle_costume: set_visual + tail style);
+//     misc   walk, a 1 s pause of the whole game (photo mode freezes the game the same way), walk on,
+//            then a fall out of the world (the controller's own respawn above the ground).
+//     rolls  (final fixes 2) the roll's ground guard on uneven ground: a roll off the nearest kerb (found with
+//            rays), then on the nearest slope of 8-30 degrees within 150 m: downhill, uphill and across.
+//            Prints RIGREVIEW roll lines (where, the ground's height step / slope).
+//   TOT_RIG_CAM=<dist>,<height>,<azimuth deg from the kid's front, + = the kid's left>,<fov>,<follow 0|1>,<aim height>
+//          a fixed camera round the kid (default 3.4,1.0,35,40,1,0.55). Its yaw is taken from the kid's
+//          facing at the start and again after every teleport in the first 5 s; follow 1 moves it with
+//          smooth_position() (orientation unchanged), 0 leaves it where it was placed.
+namespace {
+struct Review {
+	bool read = false;
+	String scene, costume;
+	float secs = 0.0f;
+	float dist = 3.4f, height = 1.0f, az = 35.0f, fov = 40.0f, aim = 0.55f;
+	bool follow = true;
+	float t = 0.0f;
+	bool latched = false, relatch = false, worn = false;
+	Vector3 anchor, dir0;
+	float yaw = 0.0f;
+	Camera3D *cam = nullptr;
+	int swaps = 0, cur = 0;
+	bool paused = false, fell = false, swap_report = false;
+	int roll_step = 0; // rolls: the next roll to set up
+	Vector3 slope_at, slope_down; // rolls: the slope found (its downhill direction, horizontal)
+	bool slope_found = false;
+};
+Review &review() {
+	static Review r;
+	if (!r.read) {
+		r.read = true;
+		OS *os = OS::get_singleton();
+		r.costume = os->get_environment("TOT_RIG_COSTUME");
+		const PackedStringArray s = os->get_environment("TOT_RIG_REVIEW").split(",");
+		if (s.size() > 0) {
+			r.scene = s[0];
+		}
+		if (s.size() > 1) {
+			r.secs = float(s[1].to_float());
+		}
+		const PackedStringArray c = os->get_environment("TOT_RIG_CAM").split(",");
+		float *f[] = { &r.dist, &r.height, &r.az, &r.fov };
+		for (int i = 0; i < 4 && i < c.size(); ++i) {
+			if (!c[i].is_empty()) {
+				*f[i] = float(c[i].to_float());
+			}
+		}
+		if (c.size() > 4 && !c[4].is_empty()) {
+			r.follow = c[4].to_int() != 0;
+		}
+		if (c.size() > 5 && !c[5].is_empty()) {
+			r.aim = float(c[5].to_float());
+		}
+	}
+	return r;
+}
+const char *REVIEW_COSTUMES[] = { "dragon_kid", "kid_ghost", "kid_cat", "kid_witch", "kid_skeleton", "kid_pumpkin" };
+void review_press(const char *action, bool on) {
+	Ref<InputEventAction> e;
+	e.instantiate();
+	e->set_action(action);
+	e->set_pressed(on);
+	e->set_strength(on ? 1.0f : 0.0f);
+	Input::get_singleton()->parse_input_event(e);
+}
+} // namespace
+
+Node3D *DragonController::review_asset(const String &id) {
+	Node *game = get_parent();
+	NeighborhoodGenerator *gen = game ? Object::cast_to<NeighborhoodGenerator>(game->get_node_or_null(NodePath("Generator"))) : nullptr;
+	return gen ? gen->instantiate_asset(id) : nullptr;
+}
+
+void DragonController::review_step(float dt) {
+	Review &r = review();
+	if (r.scene.is_empty()) {
+		return;
+	}
+	r.t += dt;
+	const float t = r.t, t0 = t - dt;
+	auto at = [&](float k) { return t0 < k && t >= k; };
+	if (r.secs > 0.0f && t > r.secs) {
+		UtilityFunctions::print("RIGREVIEW done t=", t);
+		r.scene = String();
+		get_tree()->quit();
+		return;
+	}
+	const Vector3 f = facing_dir();
+	if (r.scene == "car") {
+		RideOnCar *car = get_parent() ? Object::cast_to<RideOnCar>(get_parent()->find_child("PumpkinCruiser", false, false)) : nullptr;
+		if (car) {
+			if (at(2.5f)) {
+				r.dir0 = car->forward();
+			}
+			if (t >= 2.5f && t < 6.6f) {
+				// A slow tight circle round where it stood (stays on the street, in view).
+				car->set_auto(true, r.dir0.rotated(Vector3(0, 1, 0), (t - 2.5f) * 1.3f) * 0.35f);
+			} else if (t >= 6.6f && t < 9.0f) {
+				car->set_auto(true, Vector3());
+			} else if (at(9.0f)) {
+				car->set_auto(false);
+			}
+		}
+		if (at(5.6f)) {
+			review_press("jump", true);
+		} else if (at(5.7f)) {
+			review_press("jump", false);
+		}
+		if (at(9.0f)) {
+			review_press("summon_car", true); // the game's own dismount (FestivalGame::toggle_car)
+		} else if (at(9.1f)) {
+			review_press("summon_car", false);
+		}
+		if (t >= 10.0f) {
+			set_bot(true);
+			bot_input(t < 12.0f ? f * 0.5f : Vector3(), false, false, false);
+		}
+		if (at(1.0f) || at(4.0f) || at(8.0f) || at(9.5f) || at(11.0f)) {
+			UtilityFunctions::print("RIGREVIEW car t=", t, " mounted=", mounted_, " car=", car != nullptr, " state=", rig_.debug_state());
+		}
+	} else if (r.scene == "swap") {
+		// Slots of 2.5 s from t 1.5: stand 0..0.8, walk 0.8..2.5 (a slow circle), a jump at 1.6;
+		// one costume change per slot, standing (0.4), walking (1.2), in the air (1.85) or mid-spin (1.2).
+		set_bot(true);
+		const float u0 = t - 1.5f;
+		if (u0 >= 0.0f && r.swaps < 12) {
+			const int k = int(u0 / 2.5f);
+			const float u = u0 - 2.5f * float(k), up = u - dt;
+			const Vector3 dir = Vector3(std::sin(t * 0.5f), 0, std::cos(t * 0.5f));
+			const bool jump = up < 1.6f && u >= 1.6f;
+			const bool spin = k % 4 == 3 && up < 1.08f && u >= 1.08f;
+			bot_input(u >= 0.8f ? dir * 0.5f : Vector3(), jump, u >= 1.6f && u < 1.9f, spin);
+			static const float OFFSET[4] = { 0.4f, 1.2f, 1.85f, 1.2f };
+			static const char *LABEL[4] = { "standing", "walking", "in the air", "mid-spin" };
+			if (k == r.swaps && up < OFFSET[k % 4] && u >= OFFSET[k % 4]) {
+				r.cur = (r.cur + 1) % 6;
+				const String id = REVIEW_COSTUMES[r.cur];
+				if (Node3D *v = review_asset(id)) {
+					set_visual(v);
+					set_tail_style(id == "kid_cat" ? 1 : 0);
+					UtilityFunctions::print("RIGSWAP n=", r.swaps + 1, " t=", t, " to=", id, " while ", LABEL[k % 4], " floor=", is_on_floor(), " spin=", spin_t_ > 0.0f);
+					r.swap_report = true;
+				}
+				++r.swaps;
+			}
+		} else {
+			bot_input(Vector3(), false, false, false);
+		}
+	} else if (r.scene == "misc") {
+		set_bot(true);
+		bot_input((t >= 1.5f && t < 4.8f) ? f * 0.5f : Vector3(), false, false, false);
+		if (at(3.0f) && !r.paused) {
+			// Photo mode pauses the whole tree (and plays on through a fixed camera): freeze 1 s and resume.
+			r.paused = true;
+			UtilityFunctions::print("RIGREVIEW pause t=", t, " state=", rig_.debug_state());
+			get_tree()->create_timer(1.0, true)->connect("timeout", Callable(get_tree(), "set_pause").bind(false));
+			get_tree()->set_pause(true);
+		}
+		if (at(6.0f) && !r.fell) {
+			// Fall out of the world: the controller puts the kid back above the ground by itself.
+			r.fell = true;
+			const Vector3 p = get_global_position();
+			UtilityFunctions::print("RIGREVIEW fall-out t=", t, " from=", p);
+			set_global_position(Vector3(p.x, -10.5f, p.z));
+		}
+	} else if (r.scene == "rolls") {
+		set_bot(true);
+		PhysicsDirectSpaceState3D *space = get_world_3d()->get_direct_space_state();
+		TypedArray<RID> self;
+		self.push_back(get_rid());
+		auto ground = [&](const Vector3 &p, float *y) {
+			Ref<PhysicsRayQueryParameters3D> q = PhysicsRayQueryParameters3D::create(Vector3(p.x, p.y + 4.0f, p.z), Vector3(p.x, p.y - 6.0f, p.z), 1);
+			q->set_exclude(self);
+			const Dictionary hit = space ? space->intersect_ray(q) : Dictionary();
+			if (hit.is_empty()) {
+				return false;
+			}
+			*y = float(Vector3(hit["position"]).y);
+			return true;
+		};
+		auto roll_from = [&](const Vector3 &start, const Vector3 &dir, const char *what) {
+			float y = float(start.y);
+			ground(start, &y);
+			teleport(Vector3(start.x, y + 0.05f, start.z), std::atan2(float(dir.x), float(dir.z)));
+			UtilityFunctions::print("RIGREVIEW roll setup ", what, " t=", t, " at=", Vector3(start.x, y, start.z), " dir=", dir);
+		};
+		bot_input(Vector3(), false, false, false);
+		// 0: a kerb. 1-3: a slope (down, up, across). Each: set up at T, roll at T + 0.7.
+		static const float T[4] = { 0.6f, 3.2f, 5.8f, 8.4f };
+		if (r.roll_step < 4 && at(T[r.roll_step])) {
+			const Vector3 p = get_global_position();
+			if (r.roll_step == 0) {
+				// The nearest place where the ground steps down 7-30 cm within 20 cm (a kerb into the road).
+				float best = 1.0e9f;
+				Vector3 e, d;
+				for (int a = 0; a < 48; ++a) {
+					const Vector3 dir(std::sin(a * Math_TAU / 48.0f), 0, std::cos(a * Math_TAU / 48.0f));
+					float prev = 0.0f;
+					bool have = false;
+					for (float s = 0.5f; s < 14.0f; s += 0.1f) {
+						float y;
+						if (!ground(p + dir * s, &y)) {
+							have = false;
+							continue;
+						}
+						if (have && prev - y > 0.07f && prev - y < 0.3f && s < best) {
+							best = s;
+							e = p + dir * (s - 0.1f);
+							d = dir;
+						}
+						prev = y;
+						have = true;
+					}
+				}
+				if (best < 1.0e8f) {
+					roll_from(e - d * 2.4f, d, "kerb");
+				} else {
+					UtilityFunctions::print("RIGREVIEW roll kerb: none found");
+				}
+			} else {
+				if (!r.slope_found) {
+					float best = 1.0e9f;
+					for (float gx = -150.0f; gx <= 150.0f; gx += 3.0f) {
+						for (float gz = -150.0f; gz <= 150.0f; gz += 3.0f) {
+							const Vector3 c = p + Vector3(gx, 0, gz);
+							float y0, y1, y2, y3;
+							if (!ground(c, &y0) || !ground(c + Vector3(1.5f, 0, 0), &y1) || !ground(c + Vector3(0, 0, 1.5f), &y2) || !ground(c - Vector3(1.5f, 0, 1.5f), &y3)) {
+								continue;
+							}
+							const Vector3 g((y1 - y0) / 1.5f, 0, (y2 - y0) / 1.5f);
+							const float ang = std::atan(float(g.length()));
+							// y3: the fourth point lies on the same plane (within 6 cm), so it is a slope and not a step
+							if (ang < Math::deg_to_rad(8.0f) || ang > Math::deg_to_rad(30.0f) || std::fabs(y3 - (y0 - 1.5f * float(g.x) - 1.5f * float(g.z))) > 0.06f) {
+								continue;
+							}
+								const float dist = gx * gx + gz * gz;
+							if (dist < best) {
+								best = dist;
+								r.slope_at = Vector3(c.x, y0, c.z);
+								r.slope_down = -g.normalized();
+								r.slope_found = true;
+							}
+						}
+					}
+					if (r.slope_found) {
+						UtilityFunctions::print("RIGREVIEW roll slope found at=", r.slope_at, " down=", r.slope_down, " dist=", std::sqrt(best));
+					} else {
+						UtilityFunctions::print("RIGREVIEW roll slope: none found within 150 m");
+					}
+				}
+				if (r.slope_found) {
+					const Vector3 down = r.slope_down;
+					const Vector3 across(down.z, 0, -down.x);
+					if (r.roll_step == 1) {
+						roll_from(r.slope_at - down * 2.4f, down, "slope down");
+					} else if (r.roll_step == 2) {
+						roll_from(r.slope_at + down * 2.4f, -down, "slope up");
+					} else {
+						roll_from(r.slope_at - across * 2.4f, across, "slope across");
+					}
+				}
+			}
+			++r.roll_step;
+		}
+		for (int i = 0; i < 4; ++i) {
+			if (at(T[i] + 0.7f)) {
+				bot_roll();
+				UtilityFunctions::print("RIGREVIEW roll go t=", t, " floor=", is_on_floor(), " pos=", get_global_position());
+			}
+		}
+	}
+}
+
+void DragonController::review_camera() {
+	Review &r = review();
+	if (r.scene.is_empty() || r.t < 0.2f || !get_parent()) {
+		return;
+	}
+	if (r.swap_report) {
+		r.swap_report = false;
+		UtilityFunctions::print("RIGSWAP bound=", String(rig_.id()), " state=", rig_.debug_state(), " visible=", visual_ ? visual_->is_visible() : false);
+	}
+	if (!r.cam) {
+		r.cam = memnew(Camera3D);
+		r.cam->set_name("ReviewCamera");
+		r.cam->set_fov(r.fov);
+		r.cam->set_near(0.05f);
+		r.cam->set_far(400.0f);
+		if (Camera3D *prev = get_viewport()->get_camera_3d()) {
+			r.cam->set_cull_mask(prev->get_cull_mask());
+		}
+		// The environment's lens, without its near blur (the kid stays sharp up close; as the showcase does).
+		if (WorldEnvironment *env = Object::cast_to<WorldEnvironment>(get_parent()->get_node_or_null(NodePath("WorldEnvironment")))) {
+			Ref<CameraAttributesPractical> lens = env->get_camera_attributes();
+			if (lens.is_valid()) {
+				Ref<CameraAttributesPractical> mine = lens->duplicate();
+				mine->set_dof_blur_near_enabled(false);
+				r.cam->set_attributes(mine);
+			}
+		}
+		get_parent()->add_child(r.cam);
+	}
+	const Vector3 p = smooth_position();
+	if (!r.latched || (r.relatch && (r.t < 5.0f || r.scene == "rolls"))) {
+		r.latched = true;
+		r.relatch = false;
+		r.anchor = p;
+		r.yaw = std::atan2(facing_dir().x, facing_dir().z);
+	}
+	if (r.follow) {
+		r.anchor = p;
+	}
+	const float a = r.yaw + Math::deg_to_rad(r.az);
+	const Vector3 eye = r.anchor + Vector3(std::sin(a) * r.dist, r.height, std::cos(a) * r.dist);
+	r.cam->look_at_from_position(eye, r.anchor + Vector3(0, r.aim, 0), Vector3(0, 1, 0));
+	if (!r.cam->is_current()) {
+		r.cam->make_current();
+	}
+}
 
 namespace {
 using namespace move;
@@ -168,7 +505,13 @@ void DragonController::swish_tail(float sf, bool air) {
 }
 void DragonController::celebrate(int kind) {
 	bucket_punch_ = candy_tier(kind) >= 1 ? 1.4f : 1.0f;
-	squash_v_ -= candy_tier(kind) >= 1 ? 1.6f : 0.7f;
+	// The squash kick is full for a lone pickup and fades for candy landing in quick succession (a
+	// trail gives several a second), so the whole kid does not pump up and down along a trail.
+	const float fresh = Math::clamp((time_ - cele_last_) / 0.6f, 0.15f, 1.0f);
+	cele_last_ = time_;
+	squash_v_ -= (candy_tier(kind) >= 1 ? 1.6f : 0.7f) * fresh;
+	anim_events_ |= KID_EV_CELEBRATE;
+	ev_celebrate_tier_ = candy_tier(kind);
 }
 
 void DragonController::_ready() {
@@ -177,6 +520,7 @@ void DragonController::_ready() {
 	}
 	add_to_group("player");
 	ledge_enabled_ = !OS::get_singleton()->get_cmdline_user_args().has("--no-ledge"); // review A/B
+	anim_v1_ = OS::get_singleton()->get_cmdline_user_args().has("--anim-v1"); // the animation before KidRig
 	set_collision_mask(1 | 2);
 	set_floor_max_angle(Math::deg_to_rad(46.0f));
 	set_floor_snap_length(0.3f);
@@ -204,6 +548,8 @@ void DragonController::_ready() {
 	shadow->set_name("DropShadow");
 	shadow->set_position(Vector3(0, 0.25f - 6.0f, 0));
 	add_child(shadow);
+	shadow_ = shadow;
+	shadow_rest_ = shadow->get_position();
 	set_physics_process(true);
 	set_process(true);
 }
@@ -248,9 +594,25 @@ void DragonController::set_visual(Node3D *visual) {
 	if (!visual_root_) {
 		return;
 	}
+	{
+		// Review aid TOT_RIG_COSTUME (see the top of this file): the first costume is the one asked for.
+		Review &r = review();
+		if (!r.costume.is_empty() && !r.worn && visual) {
+			r.worn = true;
+			if (String(visual->get_name()) != r.costume) {
+				if (Node3D *v = review_asset(r.costume)) {
+					memdelete(visual);
+					visual = v;
+					tail_style_ = r.costume == "kid_cat" ? 1 : 0;
+					UtilityFunctions::print("RIGREVIEW costume ", r.costume);
+				}
+			}
+		}
+	}
 	if (wand_ && wand_->get_parent()) {
 		wand_->get_parent()->remove_child(wand_); // keep it when the body is swapped
 	}
+	rig_.unbind();
 	if (visual_) {
 		visual_->queue_free();
 	}
@@ -291,6 +653,12 @@ void DragonController::set_visual(Node3D *visual) {
 	set_instance_param_recursive(visual_, "rim_strength", 0.22f);
 	set_layers_recursive(visual_, LAYER_NO_DECALS);
 	set_fill(fill_ > 0.0f ? fill_ : 0.45f);
+	if (!anim_v1_) {
+		// The rig takes over the parts (it hangs the head, arms, wings and tail from the body). The
+		// costume id is the visual's name; the tail style still comes from set_tail_style().
+		rig_.bind(visual_root_, visual_);
+		rig_.set_tail_style(tail_style_);
+	}
 	attach_wand();
 }
 
@@ -325,7 +693,10 @@ void DragonController::attach_wand() {
 	if (!wand_ || !visual_root_) {
 		return;
 	}
-	Node3D *hand = arm_l_.node ? arm_l_.node : visual_root_;
+	// A v2 model says where the wand is held (socket_wand, its +Z along the wand); otherwise it goes
+	// in the left mitten at a fixed grip.
+	Node3D *socket = anim_v1_ ? nullptr : rig_.wand_socket();
+	Node3D *hand = socket ? socket : (arm_l_.node ? arm_l_.node : visual_root_);
 	if (Node *old = wand_->get_parent()) {
 		if (old == hand) {
 			return;
@@ -336,6 +707,9 @@ void DragonController::attach_wand() {
 	const Vector3 dir = Vector3(0.05f, -0.9f, 0.45f).normalized();
 	const Vector3 grip = arm_l_.node ? Vector3(0.096f, -0.216f, 0.036f) : Vector3(0.25f, 0.4f, 0.08f);
 	wand_->set_transform(Transform3D(Basis::looking_at(dir, Vector3(0, 0, 1), true).scaled_local(Vector3(0.85f, 0.85f, 0.85f)), grip)); // 0.43 m asset, kid-sized
+	if (socket) {
+		wand_->set_transform(Transform3D(Basis().scaled(Vector3(0.85f, 0.85f, 0.85f)), Vector3()));
+	}
 	set_instance_param_recursive(wand_, "rim_strength", 0.22f);
 	set_layers_recursive(wand_, LAYER_NO_DECALS);
 }
@@ -351,7 +725,11 @@ Vector3 DragonController::cast_from() {
 		t.basis = Basis(Vector3(0, 1, 0), visual_yaw_);
 		visual_root_->set_transform(t);
 	}
-	pose_cast_arm();
+	if (anim_v1_ || !rig_.bound()) {
+		pose_cast_arm();
+	} else {
+		rig_.cast_now();
+	}
 	if (wand_tip_ && wand_tip_->is_inside_tree()) {
 		return wand_tip_->get_global_position();
 	}
@@ -381,6 +759,8 @@ void DragonController::teleport(const Vector3 &pos, float yaw) {
 	if (visual_root_) {
 		visual_root_->set_rotation(Vector3(0, yaw, 0));
 	}
+	anim_events_ |= KID_EV_TELEPORT;
+	review().relatch = true; // review camera only (inert without TOT_RIG_REVIEW)
 }
 
 // Forgiveness in the player's favour (Thorson, "Celeste & Forgiveness"): bonking the edge of a
@@ -516,6 +896,7 @@ bool DragonController::try_grab(const Vector3 &wish) {
 	squash_v_ += 1.4f;
 	puff(ledge_ + Vector3(0, 0.05f, 0), 5, 0.15f, Color(0.78f, 0.8f, 0.95f), 0.8f);
 	++grabs_;
+	anim_events_ |= KID_EV_GRAB;
 	emit_signal("grabbed");
 	return true;
 }
@@ -544,6 +925,7 @@ void DragonController::super_bounce() {
 	flap_used_ = false;
 	squash_v_ -= 3.5f;
 	puff(get_global_position() + Vector3(0, 0.3f, 0), 22, 0.5f, Color(0.85f, 0.6f, 1.0f), 4.0f);
+	anim_events_ |= KID_EV_BOUNCE;
 	emit_signal("bounced");
 }
 
@@ -556,6 +938,7 @@ void DragonController::release_ledge(bool climb) {
 		climb_dur_ = 0.3f;
 		climb_t_ = 0.0f;
 		squash_v_ -= 2.0f;
+		anim_events_ |= KID_EV_JUMP;
 		emit_signal("jumped");
 	} else {
 		regrab_cd_ = 0.45f;
@@ -572,6 +955,8 @@ void DragonController::knockback(const Vector3 &from, float force) {
 	roll_t_ = 0.0f;
 	knock_t_ = 0.35f;
 	set_velocity(away * force + Vector3(0, force * 0.75f, 0));
+	anim_events_ |= KID_EV_HURT;
+	ev_hurt_dir_ = away;
 	squash_v_ += 2.0f;
 }
 
@@ -726,6 +1111,7 @@ void DragonController::begin_climb(const Vector3 &to, float arc, float duration)
 	facing_ = std::atan2(to.x - climb_from_.x, to.z - climb_from_.z);
 	squash_v_ -= 2.0f;
 	puff(climb_from_ + Vector3(0, 0.05f, 0), 6, 0.2f, Color(0.78f, 0.8f, 0.95f), 1.4f);
+	anim_events_ |= KID_EV_JUMP;
 	emit_signal("jumped");
 }
 float DragonController::collect_radius() const {
@@ -744,6 +1130,11 @@ void DragonController::_physics_process(double delta) {
 	if (Engine::get_singleton()->is_editor_hint()) {
 		return;
 	}
+	physics_step(delta);
+	tick_smooth_.tick(get_global_position()); // where this tick left the body, for drawing between ticks
+}
+
+void DragonController::physics_step(double delta) {
 	const float dt = float(delta);
 	Input *in = Input::get_singleton();
 	Vector3 v = get_velocity();
@@ -774,7 +1165,8 @@ void DragonController::_physics_process(double delta) {
 	const bool spin_pressed = (input_enabled_ && in->is_action_just_pressed("spin")) || (bot_ && bot_spin_);
 	bot_jump_ = false;
 	bot_spin_ = false;
-	const bool roll_pressed = input_enabled_ && in->is_action_just_pressed("roll");
+	const bool roll_pressed = (input_enabled_ && in->is_action_just_pressed("roll")) || (bot_ && bot_roll_);
+	bot_roll_ = false;
 	const bool drop_pressed = input_enabled_ && in->is_action_just_pressed("drop");
 	fire_cd_ = Math::max(0.0f, fire_cd_ - dt);
 	if (((input_enabled_ && in->is_action_just_pressed("attack")) || (bot_ && bot_fire_)) && fire_cd_ <= 0.0f) {
@@ -782,6 +1174,7 @@ void DragonController::_physics_process(double delta) {
 		roar_t_ = 0.3f;
 		squash_v_ -= 1.2f;
 		cast_t_ = CAST_TIME;
+		anim_events_ |= KID_EV_CAST;
 		emit_signal("fired");
 	}
 	bot_fire_ = false;
@@ -806,6 +1199,7 @@ void DragonController::_physics_process(double delta) {
 			climb_t_ = -1.0f;
 			was_on_floor_ = true;
 			squash_v_ += 1.6f;
+			anim_events_ |= KID_EV_CLIMB_DONE;
 		}
 		return;
 	}
@@ -885,12 +1279,14 @@ void DragonController::_physics_process(double delta) {
 		jump_cut_ = false;
 		squash_v_ -= 2.6f;
 		puff(get_global_position() + Vector3(0, 0.05f, 0), 7, 0.2f, Color(0.78f, 0.8f, 0.95f), 1.6f);
+		anim_events_ |= KID_EV_JUMP;
 		emit_signal("jumped");
 	} else if (jump_pressed && !press_used && !on_floor && coyote_ <= 0.0f && !flap_used_ && !pounding_) {
 		v.y = FLAP_V;
 		flap_used_ = true;
 		bounce_air_ = false; // a fresh press after a launch: the wings (and the floaty hold) are back
 		flap_anim_ = 0.4f;
+		anim_events_ |= KID_EV_FLAP;
 		squash_v_ -= 1.8f;
 		if (wing_l_.node || wing_r_.node) {
 			puff(get_global_position() + Vector3(0, 0.7f, 0), 12, 0.35f, Color(0.75f, 0.5f, 1.0f), 2.4f);
@@ -925,6 +1321,7 @@ void DragonController::_physics_process(double delta) {
 	// tail do a magic wand spin instead (wand held out, sparkles streaming off its tip).
 	if (spin_pressed && spin_t_ <= 0.0f) {
 		spin_t_ = SPIN_TIME;
+		anim_events_ |= KID_EV_SPIN;
 		if (!on_floor && !spin_air_used_) {
 			v.y = Math::max(v.y, 2.2f);
 			spin_air_used_ = true;
@@ -936,6 +1333,7 @@ void DragonController::_physics_process(double delta) {
 		if (on_floor && roll_cd_ <= 0.0f) {
 			roll_t_ = ROLL_TIME;
 			roll_cd_ = 0.55f;
+			anim_events_ |= KID_EV_ROLL;
 			// A dodge roll: straight off in whichever direction the stick / keys point (or ahead with
 			// no input), the body snapping round to it at once so the tumble rolls that way.
 			if (wish.length() > 0.1f) {
@@ -949,6 +1347,7 @@ void DragonController::_physics_process(double delta) {
 		} else if (!on_floor && !pounding_) {
 			pounding_ = true;
 			pound_stall_ = 0.14f;
+			anim_events_ |= KID_EV_POUND;
 		}
 	}
 	v.x = hv.x;
@@ -975,10 +1374,13 @@ void DragonController::_physics_process(double delta) {
 		if (impact > 4.0f) {
 			puff(get_global_position() + Vector3(0, 0.05f, 0), int(Math::clamp(impact * 1.2f, 6.0f, 18.0f)), 0.3f, Color(0.78f, 0.8f, 0.95f), 1.8f);
 		}
+		anim_events_ |= KID_EV_LAND;
+		ev_land_impact_ = impact;
 		emit_signal("landed", impact);
 		if (pounding_) {
 			pounding_ = false;
 			shockwave_t_ = 0.12f;
+			anim_events_ |= KID_EV_POUND_LAND;
 			squash_v_ += 3.0f;
 			puff(get_global_position() + Vector3(0, 0.1f, 0), 24, 0.6f, Color(1.0f, 0.75f, 0.45f), 4.5f);
 			emit_signal("pounded", get_global_position());
@@ -996,6 +1398,7 @@ void DragonController::_physics_process(double delta) {
 				bounce_speed_ = float(col->get_meta("bounce"));
 				bounce_t_ = 0.0f;
 				bounce_air_ = true;
+				anim_events_ |= KID_EV_BOUNCE;
 				super_done_ = false;
 				buffer_ = 0.0f;
 				coyote_ = 0.0f;
@@ -1035,6 +1438,149 @@ void DragonController::_process(double delta) {
 	if (Engine::get_singleton()->is_editor_hint() || !visual_root_) {
 		return;
 	}
+	review_step(float(delta)); // review aids only (inert without TOT_RIG_REVIEW)
+	if (!visual_root_ || !is_inside_tree()) {
+		return;
+	}
+	// Draw the kid between physics ticks (play/tick_smooth.h): the visual and the drop shadow are
+	// shifted by this much, and the camera aims at smooth_position().
+	smooth_off_ = tick_smooth_.offset(get_global_position());
+	if (shadow_) {
+		shadow_->set_position(shadow_rest_ + smooth_off_);
+	}
+	if (anim_v1_ || !rig_.bound()) {
+		animate_legacy(delta);
+		anim_events_ = 0;
+	} else {
+		animate_rig(float(delta));
+	}
+	review_camera();
+}
+
+// The rig path: the same clocks, springs and effects as animate_legacy(), with the posing handed to
+// KidRig. Nothing here changes how the kid moves.
+void DragonController::animate_rig(float dt) {
+	time_ += dt;
+	// Review aid: with the environment variable TOT_RIG_CANDY=<per second>, candy lands in the bucket
+	// at that rate (kinds cycle), to check the celebration while walking and running in a recording.
+	static const float candy_rate = OS::get_singleton()->has_environment("TOT_RIG_CANDY") ? float(OS::get_singleton()->get_environment("TOT_RIG_CANDY").to_float()) : 0.0f;
+	if (candy_rate > 0.0f) {
+		static float wait = 0.0f;
+		static int n = 0;
+		wait += dt;
+		if (wait >= 1.0f / candy_rate) {
+			wait = 0.0f;
+			celebrate(n++ % 8);
+		}
+	}
+	const float speed = get_speed();
+	const bool air = !is_on_floor() && !mounted_;
+	phase_ += dt * (4.0f + speed * 1.7f);
+
+	// Spring-damped squash/stretch (the same spring as before; the jump, land and pickup kicks feed it).
+	squash_v_ += (-squash_ * 120.0f - squash_v_ * 11.0f) * dt;
+	squash_ += squash_v_ * dt;
+	visual_yaw_ = angle_lerp(visual_yaw_, facing_, 1.0f - std::exp(-dt * 14.0f));
+	const float roar = roar_t_ > 0.0f ? std::sin(roar_t_ * 30.0f) * 0.06f * roar_t_ : 0.0f;
+	roar_t_ = Math::max(0.0f, roar_t_ - dt);
+	step_smooth_ = Math::lerp(step_smooth_, 0.0f, 1.0f - std::exp(-dt * 18.0f));
+
+	KidAnimInput in;
+	in.dt = dt;
+	in.time = time_;
+	in.phase = phase_;
+	in.velocity = mounted_ ? Vector3() : get_velocity();
+	in.run_speed = RUN_SPEED;
+	in.yaw = visual_yaw_;
+	in.squash = Math::clamp(squash_, -0.25f, 0.3f);
+	in.roar = roar;
+	in.step_offset = step_smooth_;
+	in.smooth_offset = smooth_off_;
+	in.on_floor = is_on_floor();
+	in.mounted = mounted_;
+	in.hanging = hanging_;
+	in.pounding = pounding_;
+	in.pound_stall = pounding_ && pound_stall_ > 0.0f;
+	in.flap_used = flap_used_;
+	in.gliding = air && flap_used_ && glide_t_ > 0.0f;
+	in.knocked = knock_t_ > 0.0f;
+	in.spin_k = spin_t_ > 0.0f ? 1.0f - spin_t_ / SPIN_TIME : -1.0f;
+	in.roll_k = roll_t_ > 0.0f ? 1.0f - roll_t_ / ROLL_TIME : -1.0f;
+	in.climb_k = climb_t_;
+	in.vault = climb_arc_ > 0.0f;
+	in.cast_k = cast_t_ > 0.0f ? 1.0f - cast_t_ / CAST_TIME : -1.0f;
+	in.flap_k = flap_anim_ > 0.0f ? 1.0f - flap_anim_ / 0.4f : -1.0f;
+	in.ledge = ledge_;
+	in.ledge_n = ledge_n_;
+	in.events = anim_events_;
+	in.land_impact = ev_land_impact_;
+	in.hurt_dir = ev_hurt_dir_;
+	in.celebrate_tier = ev_celebrate_tier_;
+	if (Camera3D *cam = get_viewport()->get_camera_3d()) {
+		in.has_camera = true;
+		in.camera_pos = cam->get_global_position();
+	}
+	// The floor under each foot, so a kid standing on a step or a kerb puts a foot on each level
+	// (visual only; read when standing or creeping).
+	if (is_on_floor() && !mounted_ && speed < 2.0f && is_inside_tree()) {
+		if (PhysicsDirectSpaceState3D *space = get_world_3d()->get_direct_space_state()) {
+			const Vector3 p = get_global_position();
+			const Vector3 side(std::cos(visual_yaw_), 0, -std::sin(visual_yaw_)); // the kid's left
+			TypedArray<RID> self;
+			self.push_back(get_rid());
+			in.ground_ok = true;
+			for (int i = 0; i < 2; ++i) {
+				const Vector3 at = p + side * (i == 0 ? 0.085f : -0.085f);
+				Ref<PhysicsRayQueryParameters3D> q = PhysicsRayQueryParameters3D::create(at + Vector3(0, 0.3f, 0), at - Vector3(0, 0.35f, 0), 1);
+				q->set_exclude(self);
+				const Dictionary hit = space->intersect_ray(q);
+				in.ground[i] = hit.is_empty() ? -0.3f : float(Vector3(hit["position"]).y - p.y);
+			}
+		}
+	}
+	anim_events_ = 0;
+	rig_.update(in);
+	cast_t_ = Math::max(0.0f, cast_t_ - dt);
+	bucket_punch_ = 0.0f; // the rig bounces the bucket
+
+	// Wand spin (costumes without a tail): sparkles stream off the tip while the arm is out.
+	if (spin_t_ > 0.0f && !rig_.has_tail()) {
+		const float out = Math::smoothstep(0.0f, 0.055f, SPIN_TIME - spin_t_) * Math::smoothstep(0.0f, 0.065f, spin_t_);
+		if (Vfx *vfx = Vfx::get()) {
+			if (wand_tip_ && wand_tip_->is_inside_tree() && out > 0.5f) {
+				vfx->candy_sparkles(wand_tip_->get_global_position(), Color(0.8f, 0.55f, 1.0f), 3, 0.8f, 0.8f, 0.4f);
+			}
+		}
+	}
+	// Footsteps: a blip and a little dust puff every half stride.
+	const float step_phase = std::sin(phase_);
+	if (!air && speed > 1.5f && roll_t_ <= 0.0f && ((step_phase_prev_ < 0.0f) != (step_phase < 0.0f))) {
+		step_parity_ ^= 1;
+		emit_signal("stepped", step_parity_);
+		if (speed > 4.0f) {
+			puff(get_global_position() + Vector3(0, 0.04f, 0), 3, 0.08f, Color(0.78f, 0.8f, 0.95f), 0.8f);
+		}
+	}
+	step_phase_prev_ = step_phase;
+	// Gliding leaves a faint purple sparkle trail; costumes without wings hover on a stream of magic
+	// dust sifting down from under their feet instead.
+	const bool gliding = air && flap_used_ && glide_t_ > 0.0f;
+	if (gliding && rig_.has_wings() && int(time_ * 12.0f) != int((time_ - dt) * 12.0f)) {
+		puff(get_global_position() + Vector3(0, 0.6f, 0), 3, 0.2f, Color(0.78f, 0.55f, 1.0f), 0.6f);
+	} else if (gliding && int(time_ * 20.0f) != int((time_ - dt) * 20.0f)) {
+		if (Vfx *vfx = Vfx::get()) {
+			const float a = time_ * 9.0f;
+			const Vector3 under = get_global_position() + Vector3(std::cos(a) * 0.18f, 0.05f, std::sin(a) * 0.18f);
+			vfx->candy_sparkles(under, Color(1.0f, 0.82f, 0.45f), 5, 0.6f, 0.85f, -1.4f);
+			if (int(time_ * 5.0f) != int((time_ - dt) * 5.0f)) {
+				vfx->sparkles(get_global_position() + Vector3(0, 0.35f, 0), Color(0.8f, 0.6f, 1.0f), 2, 0.4f, 0.7f, -0.6f);
+			}
+		}
+	}
+}
+
+// The animation as it was before KidRig, unchanged: runs with --anim-v1.
+void DragonController::animate_legacy(double delta) {
 	const float dt = float(delta);
 	time_ += dt;
 	const float speed = get_speed();
@@ -1063,7 +1609,7 @@ void DragonController::_process(double delta) {
 	step_smooth_ = Math::lerp(step_smooth_, 0.0f, 1.0f - std::exp(-dt * 18.0f));
 	// Rolling tumbles around the curled-up kid's middle (not the feet), so the body turns in place
 	// instead of swinging round in a big circle and dipping into the ground.
-	Vector3 origin(0, bob + step_smooth_, 0);
+	Vector3 origin = Vector3(0, bob + step_smooth_, 0) + smooth_off_;
 	if (roll_t_ > 0.0f) {
 		const Vector3 c(0, ROLL_CENTER, 0);
 		origin += c - b.xform(c);

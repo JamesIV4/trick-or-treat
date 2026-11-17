@@ -12,8 +12,14 @@
 
 #include <vector>
 
+#include "play/kid_rig.h"
+#include "play/tick_smooth.h"
+
 namespace tot {
 
+// Animation: KidRig (play/kid_rig.h) poses the costume from a KidAnimInput filled here each frame.
+// The previous hand-written animation is kept as animate_legacy() and runs instead when the game is
+// started with --anim-v1 (a before/after reference and a kill switch).
 class DragonController : public godot::CharacterBody3D {
 	GDCLASS(DragonController, godot::CharacterBody3D)
 
@@ -24,7 +30,13 @@ public:
 
 	void set_visual(godot::Node3D *visual);
 	// How the tail moves: 0 the dragon's heavy sway, 1 a cat's swish (quick S-curve swings and flicks).
-	void set_tail_style(int s) { tail_style_ = s; }
+	void set_tail_style(int s) {
+		tail_style_ = s;
+		rig_.set_tail_style(s);
+	}
+	// Where the kid's head should look (world position); weight 0 hands it back to the default (the
+	// head leads turns and glances at the camera when standing about). No effect with --anim-v1.
+	void set_look_target(const godot::Vector3 &pos, float weight) { rig_.set_look_target(pos, weight); }
 	// The fire wand held in the left hand (asset fire_wand, with socket_tip); fireballs leave its tip.
 	void set_wand(godot::Node3D *wand);
 	// Raises the wand arm to the cast pose now (facing already set) and returns where the shot leaves.
@@ -47,6 +59,8 @@ public:
 		bot_spin_ = bot_spin_ || spin_pressed;
 		bot_fire_ = bot_fire_ || fire;
 	}
+	// The bot's roll button (on the ground: roll; in the air: ground pound), for the character showcase.
+	void bot_roll() { bot_roll_ = true; }
 	// Combat hooks.
 	void knockback(const godot::Vector3 &from, float force);
 	void set_fire_cooldown(float s) { fire_cooldown_ = s; }
@@ -55,10 +69,19 @@ public:
 	void set_blink(bool hidden);
 	godot::Vector3 facing_dir() const;
 	void set_facing(float yaw) { facing_ = visual_yaw_ = yaw; }
+	const KidRig &rig() const { return rig_; }
 	bool is_pounding() const { return pounding_; }
 	int grab_count() const { return grabs_; }
 	void set_bot_ledges(bool on) { bot_ledges_ = on; } // review: let the bot grab ledges (ledge test)
 	bool is_hanging() const { return hanging_ || climb_t_ >= 0.0f; }
+	// Where the kid is drawn on the current frame: the body's position eased between physics ticks
+	// (see play/tick_smooth.h). Cameras aim at this, not at get_global_position(), or the kid judders
+	// on screen. Computed for the frame being drawn whenever it is asked for, so it does not matter
+	// whether the camera or the kid is processed first.
+	godot::Vector3 smooth_position() const {
+		const godot::Vector3 p = get_global_position();
+		return p + tick_smooth_.offset(p);
+	}
 
 protected:
 	static void _bind_methods();
@@ -98,7 +121,7 @@ private:
 	void swish_tail(float sf, bool air);
 
 	bool input_enabled_ = true;
-	bool bot_ = false, bot_jump_ = false, bot_hold_ = false, bot_spin_ = false, bot_fire_ = false;
+	bool bot_ = false, bot_jump_ = false, bot_hold_ = false, bot_spin_ = false, bot_fire_ = false, bot_roll_ = false;
 	float fire_cd_ = 0.0f, fire_cooldown_ = 0.45f, knock_t_ = 0.0f;
 	bool mounted_ = false;
 	float step_smooth_ = 0.0f;
@@ -117,10 +140,30 @@ private:
 	int tail_style_ = 0;
 	float phase_ = 0.0f, squash_ = 0.0f, squash_v_ = 0.0f;
 	float roar_t_ = 0.0f, time_ = 0.0f;
+	float cele_last_ = -10.0f; // time_ of the last candy pickup (fades the squash kick along a trail)
+	// Drawing between physics ticks: the visual (and the drop shadow) are shifted by smooth_off_.
+	void physics_step(double delta);
+	TickSmooth tick_smooth_;
+	godot::Vector3 smooth_off_;
+	godot::Node3D *shadow_ = nullptr;
+	godot::Vector3 shadow_rest_;
 	godot::Node3D *wand_ = nullptr, *wand_tip_ = nullptr;
 	float cast_t_ = 0.0f; // the wand-flick animation
 	void attach_wand();
 	void pose_cast_arm();
+	// Animation: the rig (default), or the legacy path with --anim-v1.
+	KidRig rig_;
+	bool anim_v1_ = false;
+	uint32_t anim_events_ = 0; // KidEvent bits latched since the last _process
+	float ev_land_impact_ = 0.0f;
+	godot::Vector3 ev_hurt_dir_;
+	int ev_celebrate_tier_ = 0;
+	void animate_legacy(double delta);
+	void animate_rig(float dt);
+	// Review aids (TOT_RIG_COSTUME, TOT_RIG_REVIEW, TOT_RIG_CAM; see dragon_controller.cpp): inert without them.
+	void review_step(float dt);
+	void review_camera();
+	godot::Node3D *review_asset(const godot::String &id);
 	bool was_on_floor_ = true;
 	float last_vy_ = 0.0f;
 	float fill_ = 0.0f;

@@ -1,0 +1,84 @@
+{
+ "id": "monster_bat",
+ "height": 0.5,
+ "radius": 0.3,
+ "floating": true,
+ "tree": {
+  "body": null,
+  "head": "body",
+  "jaw": "head",
+  "eye_l": "head",
+  "pupil_l": "eye_l",
+  "brow_l": "head",
+  "alt_squint_l": "head",
+  "eye_r": "head",
+  "pupil_r": "eye_r",
+  "brow_r": "head",
+  "alt_squint_r": "head",
+  "ear_l": "head",
+  "ear_r": "head",
+  "tuft": "head",
+  "wing_l": "body",
+  "wingtip_l": "wing_l",
+  "wing_r": "body",
+  "wingtip_r": "wing_r",
+  "foot_l": "body",
+  "foot_r": "body"
+ },
+ "meshless": [],
+ "balls": {
+  "wing_l": 0.038,
+  "wingtip_l": 0.025,
+  "wing_r": 0.038,
+  "wingtip_r": 0.025,
+  "foot_l": 0.02,
+  "foot_r": 0.02
+ },
+ "soft": {
+  "ear_l": {
+   "dir": [
+    0.4999,
+    0.8618,
+    -0.0862
+   ],
+   "rigid": 0.02,
+   "loops": 6
+  },
+  "ear_r": {
+   "dir": [
+    -0.4999,
+    0.8618,
+    -0.0862
+   ],
+   "rigid": 0.02,
+   "loops": 6
+  },
+  "tuft": {
+   "dir": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "rigid": 0.008,
+   "loops": 4
+  }
+ },
+ "ik": [],
+ "eyes": {
+  "eye_l": "pupil_l",
+  "eye_r": "pupil_r"
+ },
+ "sockets": {},
+ "rotated": [
+  "jaw",
+  "eye_l",
+  "pupil_l",
+  "brow_l",
+  "eye_r",
+  "pupil_r",
+  "brow_r",
+  "wingtip_l",
+  "wingtip_r"
+ ],
+ "tris": 7858
+}

@@ -1,5 +1,7 @@
 #include "play/festival_camera.h"
 
+#include "play/dragon_controller.h"
+
 #include <godot_cpp/classes/character_body3d.hpp>
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/input.hpp>
@@ -21,6 +23,16 @@ float wrap(float a) {
 	return Math::fmod(a + Math_PI * 3.0f, Math_TAU) - Math_PI;
 }
 constexpr float DIAGONAL = 0.5f; // radians off the street axis: "looking diagonally down the street"
+
+// Where the target is DRAWN this frame. The kid is drawn between physics ticks (play/tick_smooth.h),
+// so the camera must follow that point: following the raw body, which only moves on ticks, made the
+// kid judder against the view.
+Vector3 drawn_position(const Node3D *target) {
+	if (const DragonController *kid = Object::cast_to<DragonController>(target)) {
+		return kid->smooth_position();
+	}
+	return target->get_global_position();
+}
 } // namespace
 
 void FestivalCamera::_bind_methods() {
@@ -56,7 +68,7 @@ void FestivalCamera::snap() {
 	if (!target_) {
 		return;
 	}
-	focus_ = target_->get_global_position();
+	focus_ = drawn_position(target_);
 	user_ = 0.0f;
 	yaw_ = (heading_sign_ > 0 ? guide_ : guide_ + Math_PI) + DIAGONAL;
 	_process(0.0);
@@ -81,7 +93,7 @@ void FestivalCamera::_process(double delta) {
 	}
 	cam_->set_fov(base_fov_);
 	Input *in = Input::get_singleton();
-	const Vector3 tp = target_->get_global_position();
+	const Vector3 tp = drawn_position(target_);
 
 	// The player's orbit input turns the camera, and it stays where they leave it.
 	float orbit = in->get_axis("cam_left", "cam_right");

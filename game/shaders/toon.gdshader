@@ -28,11 +28,36 @@ instance uniform vec3 rim_color : source_color = vec3(0.62, 0.76, 1.0);
 instance uniform float glow_boost = 1.0;
 instance uniform float flash = 0.0;
 instance uniform vec3 hit_flash : source_color = vec3(0.0); // monster hit / telegraph glow
+// Monster rig hit / telegraph flash (Lane M): brightens the surface in proportion to its OWN colour, plus a floor
+// shaded by AO and a soft top light (dark surfaces flash too) and a strong rim, so dark stripes, ink eyes and parts
+// in front keep their contrast. A flat added glow (hit_flash) at partial strength is a uniform veil: parts in front
+// of others read as seen through frosted glass. rgb = flash colour * strength (linear, no sRGB hint), a = the peak
+// at the start of a hit: the whole body near white for 2 or 3 frames (a full-strength silhouette reads solid).
+instance uniform vec4 body_flash = vec4(0.0);
 instance uniform float wind = 0.0;
 instance uniform float keep_visible = 0.0; // 1: never dithered away by the player cutout (monsters)
 // A tail's swish (DragonController, the cat): x amplitude at the tip (m), y phase, z wavenumber (rad/m),
 // w tail length (m); 0 length = off.
 instance uniform vec4 tail_wave = vec4(0.0);
+// Soft parts (kid rig and monster rig): one continuous mesh bent about its own origin (the pin).
+// All four default to off. (13 of Godot's 16 per-instance uniform slots are used, with body_flash.)
+//   soft_pin  xyz = direction in mesh space along which the part runs away from the pin (zero vector
+//             = use the distance from the mesh origin), w = length over which the bend ramps to full
+//             (0 = off).
+//   soft_bend xyz = rotation vector (axis * radians, mesh space) reached at the tip, w = distance from
+//             the pin that stays rigid. Vertices and normals rotate about the pin by bend * k, k
+//             easing 0..1 along the part, so the part keeps its length.
+instance uniform vec4 soft_pin = vec4(0.0);
+instance uniform vec4 soft_bend = vec4(0.0);
+// Cloth ripple: a wave running round the mesh's local Y axis, pushed out along the normal.
+//   x amplitude (m, 0 = off), y phase (radians), z lobes round the axis, w = local height below which
+//   it applies, reaching full strength 0.2 below that (0 = the whole mesh, growing with the distance
+//   from the origin and full at soft_pin.w, or at 0.25 if that is unset). A negative z pushes the cloth
+//   straight out from the Y axis instead of along the normal (|z| lobes).
+instance uniform vec4 cloth_wave = vec4(0.0);
+// 0 off; 1 = tight strong highlight (eyes, slime, vinyl). Negative = matte: -1 also removes the soft
+// painterly highlight (chalky bone, the inside of a socket).
+instance uniform float gloss = 0.0;
 
 global uniform vec3 cutout_from;
 global uniform vec3 cutout_to;
@@ -63,6 +88,43 @@ void vertex() {
 		float s = length(VERTEX);
 		float k = clamp(s / tail_wave.w, 0.0, 1.0);
 		VERTEX.x += tail_wave.x * k * k * sin(tail_wave.y - tail_wave.z * s);
+	}
+	// Cloth ripple (before the bend, so a bent hem still ripples along its own surface).
+	if (cloth_wave.x != 0.0) {
+		float m;
+		if (cloth_wave.w != 0.0) {
+			m = clamp((cloth_wave.w - VERTEX.y) * 5.0, 0.0, 1.0);
+		} else {
+			m = clamp(length(VERTEX) / (soft_pin.w > 0.0 ? soft_pin.w : 0.25), 0.0, 1.0);
+		}
+		float ang = atan(VERTEX.x, VERTEX.z);
+		// z < 0 (Lane P sheets with an inside wall): |z| lobes, pushed straight out from the Y axis
+		// instead of along the normal, so both faces of a thick cloth move together.
+		vec3 dir = NORMAL;
+		float lobes = abs(cloth_wave.z);
+		if (cloth_wave.z < 0.0) {
+			float rh = length(VERTEX.xz);
+			dir = rh > 0.0001 ? vec3(VERTEX.x / rh, 0.0, VERTEX.z / rh) : vec3(0.0);
+			// tilt the normal with the slope of the wave round the axis, so the moving folds shade
+			float slope = cloth_wave.x * m * lobes * cos(cloth_wave.y + lobes * ang) / max(rh, 0.05);
+			NORMAL = normalize(NORMAL - vec3(cos(ang), 0.0, -sin(ang)) * slope * sign(dot(NORMAL, dir)));
+		}
+		VERTEX += dir * (cloth_wave.x * m * sin(cloth_wave.y + lobes * ang));
+	}
+	// Soft bend: rotate about the pin (the mesh origin) by a fraction of soft_bend that grows along
+	// the part. The depth and shadow passes run this too, so the shadow bends with the mesh.
+	if (soft_pin.w > 0.0) {
+		float ang = length(soft_bend.xyz);
+		if (ang > 0.0001) {
+			float along = dot(soft_pin.xyz, soft_pin.xyz) > 0.000001 ? dot(VERTEX, normalize(soft_pin.xyz)) : length(VERTEX);
+			float k = clamp((along - soft_bend.w) / soft_pin.w, 0.0, 1.0);
+			k = k * k * (3.0 - 2.0 * k);
+			vec3 ax = soft_bend.xyz / ang;
+			float sn = sin(ang * k);
+			float cs = cos(ang * k);
+			VERTEX = VERTEX * cs + cross(ax, VERTEX) * sn + ax * (dot(ax, VERTEX) * (1.0 - cs));
+			NORMAL = NORMAL * cs + cross(ax, NORMAL) * sn + ax * (dot(ax, NORMAL) * (1.0 - cs));
+		}
 	}
 	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }
@@ -109,8 +171,18 @@ void fragment() {
 	EMISSION += hit_flash;
 	float rim = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
 	EMISSION += rim_color * rim * rim_strength;
+	// own colour plus a share of its own brightness (whitens toward the flash without lifting dark parts); AO keeps
+	// creases and joints darker, so the form reads through the flash
+	float flash_top = 0.55 + 0.45 * clamp((INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).y, -1.0, 1.0); // a soft top light: form kept
+	float flash_edge = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 2.0);
+	// (mostly the surface's brightness, not its hue: the flash reads in its own colour, warm for the telegraph)
+	EMISSION += body_flash.rgb * ((ALBEDO * 1.2 + vec3(dot(ALBEDO, vec3(0.3, 0.59, 0.11)) * 2.6 + 0.35)) * AO * flash_top + flash_edge * 2.0);
+	ALBEDO = mix(ALBEDO, vec3(1.0), body_flash.a);
+	EMISSION += body_flash.a * vec3(2.4, 2.3, 2.1);
 	ROUGHNESS = 0.8;
-	SPECULAR = 0.3;
+	// gloss <= -2 (Lane P: the kid's eyes): no sky / environment sheen either, so a dark iris and lash
+	// line stay dark in a bright close-up. gloss -1 keeps it (unchanged for everything else).
+	SPECULAR = 0.3 * clamp(2.0 + min(gloss, 0.0), 0.0, 1.0);
 }
 
 void light() {
@@ -127,5 +199,10 @@ void light() {
 	// Soft painterly highlight.
 	vec3 h = normalize(LIGHT + VIEW);
 	float spec = pow(max(dot(NORMAL, h), 0.0), 24.0) * 0.18 * ATTENUATION;
-	SPECULAR_LIGHT += LIGHT_COLOR * spec;
+	SPECULAR_LIGHT += LIGHT_COLOR * spec * clamp(1.0 + min(gloss, 0.0), 0.0, 1.0); // gloss < 0: matte (bone, chalk)
+	// Gloss: a small bright catchlight on top (wet eyes, slime, vinyl).
+	if (gloss > 0.0) {
+		float g = pow(max(dot(NORMAL, h), 0.0), 160.0) * 1.6 * gloss * ATTENUATION;
+		SPECULAR_LIGHT += LIGHT_COLOR * g;
+	}
 }

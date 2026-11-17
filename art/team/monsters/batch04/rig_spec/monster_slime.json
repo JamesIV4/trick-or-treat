@@ -1,0 +1,65 @@
+{
+ "id": "monster_slime",
+ "height": 0.7,
+ "radius": 0.42,
+ "floating": false,
+ "tree": {
+  "body": null,
+  "head": "body",
+  "skirt": "head",
+  "curl": "head",
+  "eye_l": "head",
+  "pupil_l": "eye_l",
+  "brow_l": "head",
+  "cheek_l": "head",
+  "alt_squint_l": "head",
+  "alt_happy_l": "head",
+  "eye_r": "head",
+  "pupil_r": "eye_r",
+  "brow_r": "head",
+  "cheek_r": "head",
+  "alt_squint_r": "head",
+  "alt_happy_r": "head",
+  "mouth": "head",
+  "bubble_a": "head",
+  "bubble_b": "head",
+  "bubble_c": "head",
+  "bubble_d": "head",
+  "alt_goo": "head"
+ },
+ "meshless": [
+  "body"
+ ],
+ "balls": {},
+ "soft": {
+  "curl": {
+   "dir": null,
+   "rigid": 0.04,
+   "loops": 6
+  }
+ },
+ "ik": [],
+ "eyes": {
+  "eye_l": "pupil_l",
+  "eye_r": "pupil_r"
+ },
+ "sockets": {
+  "muzzle": "head"
+ },
+ "rotated": [
+  "eye_l",
+  "pupil_l",
+  "brow_l",
+  "cheek_l",
+  "eye_r",
+  "pupil_r",
+  "brow_r",
+  "cheek_r",
+  "mouth",
+  "bubble_a",
+  "bubble_b",
+  "bubble_c",
+  "bubble_d"
+ ],
+ "tris": 7414
+}

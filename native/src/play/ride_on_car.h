@@ -8,6 +8,8 @@
 #include <godot_cpp/classes/mesh_instance3d.hpp>
 #include <godot_cpp/classes/spot_light3d.hpp>
 
+#include "play/tick_smooth.h"
+
 namespace tot {
 
 class RideOnCar : public godot::CharacterBody3D {
@@ -27,7 +29,7 @@ public:
 	void place(const godot::Vector3 &pos, float yaw);
 	void set_driving(bool on);
 	bool driving() const { return driving_; }
-	godot::Transform3D seat() const;
+	godot::Transform3D seat() const; // where the rider sits as drawn this frame (eased between physics ticks)
 	float speed() const { return speed_; }
 	float yaw() const { return yaw_; }
 	godot::Vector3 forward() const;
@@ -50,6 +52,7 @@ private:
 	float yaw_ = 0.0f, speed_ = 0.0f, wheel_spin_ = 0.0f, bounce_ = 0.0f, bounce_v_ = 0.0f;
 	godot::Basis tilt_;
 	bool was_floor_ = true;
+	TickSmooth tick_smooth_; // the car is drawn between physics ticks, like the kid (play/tick_smooth.h)
 };
 
 } // namespace tot

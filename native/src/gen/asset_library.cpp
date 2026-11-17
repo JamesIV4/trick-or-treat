@@ -33,6 +33,25 @@ void apply_material_recursive(Node *node, const Ref<Material> &mat) {
 	}
 }
 
+// "alt_" nodes are alternates stacked on the same spot (alt_mouth_open, alt_lash_l ...): only an
+// animator that knows them shows one at a time. Everything else sees the asset without them:
+// instantiate() hides them, and the mesh bakes (merged_mesh, part_mesh) leave them out.
+bool is_alternate(const Node *n) {
+	return String(n->get_name()).begins_with("alt_");
+}
+
+void hide_alternates(Node *n) {
+	if (is_alternate(n)) {
+		if (Node3D *n3 = Object::cast_to<Node3D>(n)) {
+			n3->set_visible(false);
+		}
+		return; // hiding a node hides everything under it
+	}
+	for (int i = 0; i < n->get_child_count(); ++i) {
+		hide_alternates(n->get_child(i));
+	}
+}
+
 void AssetLibrary::load(const String &catalog_path, const Ref<Material> &material) {
 	material_ = material;
 	assets_.clear();
@@ -159,6 +178,7 @@ Node3D *AssetLibrary::instantiate(const std::string &id) {
 	}
 	root->set_name(String(id.c_str()));
 	apply_material_recursive(root, material_);
+	hide_alternates(root);
 	return root;
 }
 
@@ -167,6 +187,9 @@ Ref<Mesh> AssetLibrary::mesh(const std::string &id) {
 }
 
 static void merge_into(Node *n, const Transform3D &parent, Ref<SurfaceTool> &st, bool &any) {
+	if (is_alternate(n)) {
+		return; // stacked alternates (mouth shapes, closed-eye lashes) never go into a baked mesh
+	}
 	Transform3D xf = parent;
 	if (Node3D *n3 = Object::cast_to<Node3D>(n)) {
 		xf = parent * n3->get_transform();
@@ -243,6 +266,122 @@ Ref<Mesh> AssetLibrary::part_mesh(const std::string &id, const String &part, Vec
 	}
 	memdelete(inst);
 	return out;
+}
+
+// part_tree: one RigPart per named node. `carry` is the transform of the containers (the scene root,
+// the asset's root empty) between the parent part and this node.
+static void rig_walk(Node *n, int parent, const Transform3D &carry, std::vector<RigPart> &out, std::vector<RigSocket> *sockets) {
+	int self = parent;
+	Transform3D next = carry;
+	if (Node3D *n3 = Object::cast_to<Node3D>(n)) {
+		const String name = n3->get_name();
+		const Transform3D local = carry * n3->get_transform();
+		if (name.begins_with("socket_")) {
+			if (sockets) {
+				RigSocket s;
+				s.name = StringName(name.substr(7));
+				s.parent = parent;
+				s.local = local;
+				sockets->push_back(s);
+			}
+			return; // a socket is a point, not a joint: nothing under it is rigged
+		}
+		const MeshInstance3D *as_mesh = Object::cast_to<MeshInstance3D>(n);
+		if (parent < 0 && name != "body" && !(as_mesh && as_mesh->get_mesh().is_valid())) {
+			// A meshless node above every part is a container (the importer's scene root, the asset's
+			// own root empty), not a joint: only its transform is carried down.
+			for (int i = 0; i < n->get_child_count(); ++i) {
+				rig_walk(n->get_child(i), -1, local, out, sockets);
+			}
+			return;
+		}
+		RigPart p;
+		p.name = n3->get_name();
+		p.parent = parent;
+		p.rest = local;
+		const Vector3 sc = local.basis.get_scale();
+		if (std::abs(sc.x - 1.0f) > 0.01f || std::abs(sc.y - 1.0f) > 0.01f || std::abs(sc.z - 1.0f) > 0.01f) {
+			UtilityFunctions::push_warning("Trick or Treat: rig part '", name, "' has a rest scale (", sc, "); rigs allow rest rotation only.");
+		}
+		p.rest.basis = local.basis.orthonormalized();
+		if (is_alternate(n)) {
+			p.flags |= RigPart::HIDDEN;
+		}
+		if (MeshInstance3D *mi = Object::cast_to<MeshInstance3D>(n)) {
+			const Ref<Mesh> m = mi->get_mesh();
+			if (m.is_valid() && m->get_surface_count() > 0) {
+				// Baked through a SurfaceTool like part_mesh, so parts render exactly as the baked
+				// monsters always have (no importer LODs or shadow meshes).
+				Ref<SurfaceTool> st;
+				st.instantiate();
+				float far2 = 0.0f;
+				for (int s = 0; s < m->get_surface_count(); ++s) {
+					st->append_from(m, s, Transform3D());
+					const Array arrays = m->surface_get_arrays(s);
+					const PackedVector3Array verts = arrays[Mesh::ARRAY_VERTEX];
+					for (int v = 0; v < verts.size(); ++v) {
+						const float d2 = verts[v].length_squared();
+						if (d2 > far2) {
+							far2 = d2;
+							p.tip = verts[v];
+						}
+					}
+				}
+				p.mesh = st->commit();
+				p.reach = std::sqrt(far2);
+				if (p.reach < 0.1f) {
+					p.flags |= RigPart::TINY;
+				}
+			}
+		}
+		for (const RigPart &q : out) {
+			if (q.name == p.name) {
+				UtilityFunctions::push_warning("Trick or Treat: rig part name '", name, "' is used twice; slot lookups find the first.");
+			}
+		}
+		out.push_back(p);
+		self = int(out.size()) - 1;
+		next = Transform3D();
+	}
+	for (int i = 0; i < n->get_child_count(); ++i) {
+		rig_walk(n->get_child(i), self, next, out, sockets);
+	}
+}
+
+int AssetLibrary::part_tree(const std::string &id, std::vector<RigPart> &out, std::vector<RigSocket> *sockets) {
+	out.clear();
+	if (sockets) {
+		sockets->clear();
+	}
+	const AssetInfo *a = get(id);
+	if (a->scene.is_null()) {
+		return 0;
+	}
+	Node *inst = a->scene->instantiate();
+	// Godot wraps the glTF in a scene root named after the file, and the glTF's own root empty
+	// (monster_<key>) sits under it: both are containers, see rig_walk.
+	rig_walk(inst, -1, Transform3D(), out, sockets);
+	memdelete(inst);
+	static const StringName body("body"), part_a("part_a"), part_b("part_b");
+	bool has_body = false, extra = false;
+	for (const RigPart &p : out) {
+		has_body = has_body || p.name == body;
+		extra = extra || (p.name != body && p.name != part_a && p.name != part_b);
+	}
+	if (!has_body) {
+		out.clear();
+		if (sockets) {
+			sockets->clear();
+		}
+		return 0;
+	}
+	if (!extra) {
+		// A v1 model (body / part_a / part_b): its big limbs have always cast shadows.
+		for (RigPart &p : out) {
+			p.flags &= uint8_t(~RigPart::TINY);
+		}
+	}
+	return extra ? 2 : 1;
 }
 
 // Rough stand-ins so the generator runs before the art batches are published.

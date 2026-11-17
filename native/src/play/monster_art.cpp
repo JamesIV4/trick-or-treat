@@ -3,6 +3,7 @@
 #include "gen/asset_library.h"
 
 #include <godot_cpp/core/math.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 #include <cmath>
 
@@ -707,6 +708,38 @@ Ref<ArrayMesh> build_tendril_mesh(const std::vector<Vector3> &pts, float width, 
 	}
 	return m.build();
 }
+
+void MonsterArt::set_legacy_parts() {
+	parts.clear();
+	sockets.clear();
+	rig_version = 1;
+	const auto add = [this](const char *name, const Ref<ArrayMesh> &mesh, const Vector3 &pivot) {
+		if (mesh.is_null()) {
+			return;
+		}
+		RigPart p;
+		p.name = StringName(name);
+		p.rest = Transform3D(Basis(), pivot);
+		p.mesh = mesh;
+		float far2 = 0.0f;
+		for (int s = 0; s < mesh->get_surface_count(); ++s) {
+			const Array arrays = mesh->surface_get_arrays(s);
+			const PackedVector3Array verts = arrays[Mesh::ARRAY_VERTEX];
+			for (int v = 0; v < verts.size(); ++v) {
+				if (verts[v].length_squared() > far2) {
+					far2 = verts[v].length_squared();
+					p.tip = verts[v];
+				}
+			}
+		}
+		p.reach = std::sqrt(far2);
+		parts.push_back(p);
+	};
+	add("body", body, Vector3());
+	add("part_a", part_a, pivot_a);
+	add("part_b", part_b, pivot_b);
+}
+
 void MonsterArtKit::build() {
 	build_pumpkin(art[int(MonsterType::PumpkinHopper)]);
 	build_bat(art[int(MonsterType::Bat)]);
@@ -718,6 +751,9 @@ void MonsterArtKit::build() {
 	build_scarecrow(art[int(MonsterType::Scarecrow)]);
 	build_spider(art[int(MonsterType::Spider)]);
 	build_toadstool(art[int(MonsterType::Toadstool)]);
+	for (MonsterArt &a : art) {
+		a.set_legacy_parts(); // the procedural models go through the same rig as the published ones
+	}
 	for (int v = 0; v < 3; ++v) {
 		vine[v] = build_vine(101 + v * 7);
 	}
@@ -791,19 +827,26 @@ void MonsterArtKit::build() {
 
 void MonsterArtKit::apply_assets(AssetLibrary &lib) {
 	static const char *kinds[] = { "pumpkin", "bat", "skeleton", "ghost", "gremlin", "mummy", "slime", "scarecrow", "spider", "toadstool" };
+	String rigs;
 	for (int i = 0; i < int(MonsterType::Count); ++i) {
 		MonsterArt &a = art[i];
-		// The bouncing pumpkin keeps its original procedural look (the user preferred it).
-		const std::string mid = i == int(MonsterType::PumpkinHopper) ? std::string() : std::string("monster_") + kinds[i];
-		Vector3 origin;
-		const Ref<ArrayMesh> body = mid.empty() ? Ref<Mesh>() : lib.part_mesh(mid, "body", &origin);
-		if (body.is_valid()) {
-			a.body = body;
-			const Ref<ArrayMesh> pa = lib.part_mesh(mid, "part_a", &a.pivot_a);
-			const Ref<ArrayMesh> pb = lib.part_mesh(mid, "part_b", &a.pivot_b);
-			a.part_a = pa;
-			a.part_b = pb;
+		// The published model as a part tree: version 1 = body / part_a / part_b, 2 = a full rig.
+		// Collision height and radius stay as the procedural builder set them.
+		std::vector<RigPart> parts;
+		std::vector<RigSocket> sockets;
+		const int version = lib.part_tree(std::string("monster_") + kinds[i], parts, &sockets);
+		bool use = version > 0;
+		if (i == int(MonsterType::PumpkinHopper)) {
+			// The bouncing pumpkin keeps its original procedural look (the user preferred it to the
+			// v1 Blender model) until a v2 model is published; see PUMPKIN_HOPPER_USES_V2_MODEL.
+			use = version == 2 && PUMPKIN_HOPPER_USES_V2_MODEL;
 		}
+		if (use) {
+			a.parts = std::move(parts);
+			a.sockets = std::move(sockets);
+			a.rig_version = version;
+		}
+		rigs += vformat(" %s=%s%d(%d)", kinds[i], use ? "v" : "procedural v", a.rig_version, int(a.parts.size()));
 		const std::string nid = std::string("nest_") + kinds[i];
 		if (lib.get(nid)->published) {
 			const Ref<ArrayMesh> nest = lib.merged_mesh(nid);
@@ -812,6 +855,8 @@ void MonsterArtKit::apply_assets(AssetLibrary &lib) {
 			}
 		}
 	}
+	// One line in the log: which model and rig version each monster ended up with, and its part count.
+	UtilityFunctions::print("Trick or Treat: monster rigs:", rigs);
 	// Thorn knots and the thorn nest's root mass with its heart.
 	const char *knots[3] = { "thorn_knot_a", "thorn_knot_b", "thorn_knot_c" };
 	for (int k = 0; k < 3; ++k) {

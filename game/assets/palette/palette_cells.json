@@ -1098,6 +1098,111 @@
   "v": 0.71875,
   "glow": false
  },
+ "iris_brown": {
+  "col": 1,
+  "row": 11,
+  "u": 0.09375,
+  "v": 0.71875,
+  "glow": false
+ },
+ "hair_light": {
+  "col": 2,
+  "row": 11,
+  "u": 0.15625,
+  "v": 0.71875,
+  "glow": false
+ },
+ "hair_dark": {
+  "col": 3,
+  "row": 11,
+  "u": 0.21875,
+  "v": 0.71875,
+  "glow": false
+ },
+ "mouth_dark": {
+  "col": 4,
+  "row": 11,
+  "u": 0.28125,
+  "v": 0.71875,
+  "glow": false
+ },
+ "tongue": {
+  "col": 5,
+  "row": 11,
+  "u": 0.34375,
+  "v": 0.71875,
+  "glow": false
+ },
+ "cheek_soft": {
+  "col": 6,
+  "row": 11,
+  "u": 0.40625,
+  "v": 0.71875,
+  "glow": false
+ },
+ "dragon_jade_light": {
+  "col": 7,
+  "row": 11,
+  "u": 0.46875,
+  "v": 0.71875,
+  "glow": false
+ },
+ "ghost_sheet": {
+  "col": 8,
+  "row": 11,
+  "u": 0.53125,
+  "v": 0.71875,
+  "glow": false
+ },
+ "ghost_shade": {
+  "col": 9,
+  "row": 11,
+  "u": 0.59375,
+  "v": 0.71875,
+  "glow": false
+ },
+ "ghost_deep": {
+  "col": 10,
+  "row": 11,
+  "u": 0.65625,
+  "v": 0.71875,
+  "glow": false
+ },
+ "ghost_legging": {
+  "col": 11,
+  "row": 11,
+  "u": 0.71875,
+  "v": 0.71875,
+  "glow": false
+ },
+ "ghost_cloth": {
+  "col": 12,
+  "row": 11,
+  "u": 0.78125,
+  "v": 0.71875,
+  "glow": false
+ },
+ "skel_bone": {
+  "col": 13,
+  "row": 11,
+  "u": 0.84375,
+  "v": 0.71875,
+  "glow": false
+ },
+ "skel_shade": {
+  "col": 14,
+  "row": 11,
+  "u": 0.90625,
+  "v": 0.71875,
+  "glow": false
+ },
+ "hat_violet_deep": {
+  "col": 15,
+  "row": 11,
+  "u": 0.96875,
+  "v": 0.71875,
+  "glow": false
+ },
  "dragon_green": {
   "col": 0,
   "row": 12,
@@ -1224,6 +1329,97 @@
   "v": 0.84375,
   "glow": false
  },
+ "ivory_shade": {
+  "col": 3,
+  "row": 13,
+  "u": 0.21875,
+  "v": 0.84375,
+  "glow": false
+ },
+ "ivory_deep": {
+  "col": 4,
+  "row": 13,
+  "u": 0.28125,
+  "v": 0.84375,
+  "glow": false
+ },
+ "linen_light": {
+  "col": 5,
+  "row": 13,
+  "u": 0.34375,
+  "v": 0.84375,
+  "glow": false
+ },
+ "linen": {
+  "col": 6,
+  "row": 13,
+  "u": 0.40625,
+  "v": 0.84375,
+  "glow": false
+ },
+ "linen_shade": {
+  "col": 7,
+  "row": 13,
+  "u": 0.46875,
+  "v": 0.84375,
+  "glow": false
+ },
+ "linen_deep": {
+  "col": 8,
+  "row": 13,
+  "u": 0.53125,
+  "v": 0.84375,
+  "glow": false
+ },
+ "linen_dark": {
+  "col": 9,
+  "row": 13,
+  "u": 0.59375,
+  "v": 0.84375,
+  "glow": false
+ },
+ "glow_amber_dim": {
+  "col": 10,
+  "row": 13,
+  "u": 0.65625,
+  "v": 0.84375,
+  "glow": true
+ },
+ "glow_amber": {
+  "col": 11,
+  "row": 13,
+  "u": 0.71875,
+  "v": 0.84375,
+  "glow": true
+ },
+ "hat_violet": {
+  "col": 12,
+  "row": 13,
+  "u": 0.78125,
+  "v": 0.84375,
+  "glow": false
+ },
+ "toad_red": {
+  "col": 13,
+  "row": 13,
+  "u": 0.84375,
+  "v": 0.84375,
+  "glow": false
+ },
+ "goo_lime": {
+  "col": 14,
+  "row": 13,
+  "u": 0.90625,
+  "v": 0.84375,
+  "glow": false
+ },
+ "spider_berry": {
+  "col": 15,
+  "row": 13,
+  "u": 0.96875,
+  "v": 0.84375,
+  "glow": false
+ },
  "bat_fur": {
   "col": 0,
   "row": 14,
@@ -1305,6 +1501,34 @@
   "col": 11,
   "row": 14,
   "u": 0.71875,
+  "v": 0.90625,
+  "glow": false
+ },
+ "bone_warm": {
+  "col": 12,
+  "row": 14,
+  "u": 0.78125,
+  "v": 0.90625,
+  "glow": false
+ },
+ "bone_tan": {
+  "col": 13,
+  "row": 14,
+  "u": 0.84375,
+  "v": 0.90625,
+  "glow": false
+ },
+ "glow_teal_dim": {
+  "col": 14,
+  "row": 14,
+  "u": 0.90625,
+  "v": 0.90625,
+  "glow": true
+ },
+ "ivory": {
+  "col": 15,
+  "row": 14,
+  "u": 0.96875,
   "v": 0.90625,
   "glow": false
  },

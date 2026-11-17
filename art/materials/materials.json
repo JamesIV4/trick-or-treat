@@ -29,6 +29,7 @@
     {"name": "lattice", "scale": 1.0, "strength": 0.95, "normal": 0.9, "subject": "diagonal wooden garden lattice, criss-cross slats with dark gaps between them"},
     {"name": "fabric", "scale": 0.5, "strength": 0.6, "normal": 0.45, "subject": "soft cotton flannel with a faint plaid check pattern"},
     {"name": "vinyl", "scale": 1.0, "strength": 0.45, "normal": 0.5, "subject": "smooth glossy inflatable vinyl with soft seams and gentle wrinkles"},
-    {"name": "cloud", "scale": 6.0, "strength": 0.6, "normal": 0.5, "subject": "soft painterly billowing cloud puffs, rounded brush strokes"}
+    {"name": "cloud", "scale": 6.0, "strength": 0.6, "normal": 0.5, "subject": "soft painterly billowing cloud puffs, rounded brush strokes"},
+    {"name": "plush", "scale": 0.22, "strength": 0.34, "normal": 0.38, "subject": "short-pile plush velour, fine fuzzy fibres with a faint nap (procedural: art/team/characters_candy/batch05/make_plush_source.py)"}
   ]
 }

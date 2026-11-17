@@ -1,0 +1,104 @@
+{
+ "id": "monster_mummy",
+ "height": 1.4,
+ "radius": 0.32,
+ "floating": false,
+ "tree": {
+  "body": null,
+  "waist_tail": "body",
+  "chest": "body",
+  "leg_l": "body",
+  "shin_l": "leg_l",
+  "foot_l": "shin_l",
+  "leg_r": "body",
+  "shin_r": "leg_r",
+  "foot_r": "shin_r",
+  "arm_l": "chest",
+  "forearm_l": "arm_l",
+  "hand_l": "forearm_l",
+  "wrist_strip": "forearm_l",
+  "arm_r": "chest",
+  "forearm_r": "arm_r",
+  "hand_r": "forearm_r",
+  "head": "chest",
+  "eye": "head",
+  "pupil": "eye",
+  "eye_s0": "head",
+  "pupil_s0": "eye_s0",
+  "knot_tail_a": "head",
+  "knot_tail_b": "head",
+  "alt_unwind_a": "body",
+  "alt_unwind_b": "body"
+ },
+ "meshless": [],
+ "balls": {
+  "leg_l": 0.106,
+  "shin_l": 0.097,
+  "foot_l": 0.096,
+  "leg_r": 0.106,
+  "shin_r": 0.097,
+  "foot_r": 0.096,
+  "arm_l": 0.09,
+  "forearm_l": 0.078,
+  "hand_l": 0.072,
+  "arm_r": 0.09,
+  "forearm_r": 0.078,
+  "hand_r": 0.072
+ },
+ "soft": {
+  "waist_tail": {
+   "dir": null,
+   "rigid": 0.0,
+   "loops": 6
+  },
+  "wrist_strip": {
+   "dir": null,
+   "rigid": 0.0,
+   "loops": 6
+  },
+  "knot_tail_a": {
+   "dir": null,
+   "rigid": 0.0,
+   "loops": 6
+  },
+  "knot_tail_b": {
+   "dir": null,
+   "rigid": 0.0,
+   "loops": 6
+  }
+ },
+ "ik": [
+  [
+   "leg_l",
+   "shin_l",
+   "foot_l"
+  ],
+  [
+   "leg_r",
+   "shin_r",
+   "foot_r"
+  ],
+  [
+   "arm_l",
+   "forearm_l",
+   "hand_l"
+  ],
+  [
+   "arm_r",
+   "forearm_r",
+   "hand_r"
+  ]
+ ],
+ "eyes": {
+  "eye": "pupil",
+  "eye_s0": "pupil_s0"
+ },
+ "sockets": {},
+ "rotated": [
+  "eye",
+  "pupil",
+  "eye_s0",
+  "pupil_s0"
+ ],
+ "tris": 7982
+}

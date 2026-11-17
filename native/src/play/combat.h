@@ -46,6 +46,10 @@ public:
 	void fire_ring(const godot::Vector3 &center, float radius, float damage);
 	// Monster attacks.
 	void throw_projectile(const godot::Vector3 &origin, const godot::Vector3 &velocity, ProjectileKind kind);
+	// Visual only: replaces a projectile's stand-in mesh with a real one (the bone the skeleton
+	// holds) drawn with `material` (the toon material). Its path, spin and hit test do not change.
+	void set_projectile_look(ProjectileKind kind, const godot::Ref<godot::Mesh> &mesh, const godot::Ref<godot::Material> &material);
+	bool has_projectile_look(ProjectileKind kind) const { return look_mat_[kind].is_valid(); }
 	void puff(const godot::Vector3 &pos, const godot::Color &color, int amount = 18, float speed = 3.0f);
 	// Best auto-aim target within a cone in front of the player.
 	Damageable *aim_assist(const godot::Vector3 &origin, const godot::Vector3 &facing, float range, float cone_cos);
@@ -82,6 +86,7 @@ private:
 	};
 	struct Thrown {
 		godot::MeshInstance3D *node = nullptr;
+		godot::MeshInstance3D *halo = nullptr; // a soft white glow round a thrown bone (no light)
 		godot::Vector3 pos, vel;
 		float life = 0.0f;
 		ProjectileKind kind = BONE;
@@ -98,7 +103,8 @@ private:
 	std::vector<Thrown> thrown_;
 	std::vector<godot::CPUParticles3D *> puffs_;
 	int next_puff_ = 0;
-	godot::Ref<godot::Mesh> ball_mesh_, ring_mesh_, bone_mesh_, goo_mesh_;
+	godot::Ref<godot::Mesh> ball_mesh_, ring_mesh_, bone_mesh_, goo_mesh_, halo_mesh_;
+	godot::Ref<godot::Material> look_mat_[2]; // per ProjectileKind: set by set_projectile_look
 	godot::Ref<godot::StandardMaterial3D> ring_mat_;
 };
 
