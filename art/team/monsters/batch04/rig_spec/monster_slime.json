@@ -34,7 +34,7 @@
  "soft": {
   "curl": {
    "dir": null,
-   "rigid": 0.04,
+   "rigid": 0.03,
    "loops": 6
   }
  },
@@ -61,5 +61,5 @@
   "bubble_c",
   "bubble_d"
  ],
- "tris": 7414
+ "tris": 7048
 }

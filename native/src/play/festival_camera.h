@@ -37,6 +37,7 @@ public:
 		cine_fov_ = fov;
 	}
 	void set_overview_distance(float d) { overview_dist_ = d; } // review aid
+	void set_overview_pitch(float p) { overview_pitch_ = p; } // review aid (radians above the horizon)
 	void set_heading_sign(float s) { heading_sign_ = s >= 0.0f ? 1.0f : -1.0f; }
 	// Points the camera's look direction (yaw) at a world direction, e.g. a house for review shots.
 	void face_direction(const godot::Vector3 &dir);
@@ -66,6 +67,7 @@ private:
 	godot::Transform3D cine_xf_;
 	float cine_fov_ = 45.0f;
 	float overview_dist_ = 46.0f;
+	float overview_pitch_ = 0.95f;
 	float orbit_speed_ = 1.0f, shake_scale_ = 1.0f, base_fov_ = 56.0f;
 	bool invert_orbit_ = false, auto_follow_ = true;
 };

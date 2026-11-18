@@ -55,8 +55,11 @@ instance uniform vec4 soft_bend = vec4(0.0);
 //   from the origin and full at soft_pin.w, or at 0.25 if that is unset). A negative z pushes the cloth
 //   straight out from the Y axis instead of along the normal (|z| lobes).
 instance uniform vec4 cloth_wave = vec4(0.0);
-// 0 off; 1 = tight strong highlight (eyes, slime, vinyl). Negative = matte: -1 also removes the soft
-// painterly highlight (chalky bone, the inside of a socket).
+// Only gloss <= -2 does anything now: no highlight and no sky sheen (eyes, mouth cavities, sockets), so dark
+// features stay dark. Every other value gets the original look: the soft painterly highlight plus the sky
+// sheen. (User, 2026-11-17: "The sheen or specular response of the models was better before. It was less
+// realistic but that fit the art style better." The tight catchlight for gloss > 0 and the dimmer highlight
+// for gloss between -2 and 0 are gone; the rigs still pass their old values.)
 instance uniform float gloss = 0.0;
 
 global uniform vec3 cutout_from;
@@ -180,9 +183,8 @@ void fragment() {
 	ALBEDO = mix(ALBEDO, vec3(1.0), body_flash.a);
 	EMISSION += body_flash.a * vec3(2.4, 2.3, 2.1);
 	ROUGHNESS = 0.8;
-	// gloss <= -2 (Lane P: the kid's eyes): no sky / environment sheen either, so a dark iris and lash
-	// line stay dark in a bright close-up. gloss -1 keeps it (unchanged for everything else).
-	SPECULAR = 0.3 * clamp(2.0 + min(gloss, 0.0), 0.0, 1.0);
+	// gloss <= -2 (eyes, cavities): no sky / environment sheen, so a dark iris or mouth stays dark.
+	SPECULAR = gloss <= -1.99 ? 0.0 : 0.3;
 }
 
 void light() {
@@ -199,10 +201,5 @@ void light() {
 	// Soft painterly highlight.
 	vec3 h = normalize(LIGHT + VIEW);
 	float spec = pow(max(dot(NORMAL, h), 0.0), 24.0) * 0.18 * ATTENUATION;
-	SPECULAR_LIGHT += LIGHT_COLOR * spec * clamp(1.0 + min(gloss, 0.0), 0.0, 1.0); // gloss < 0: matte (bone, chalk)
-	// Gloss: a small bright catchlight on top (wet eyes, slime, vinyl).
-	if (gloss > 0.0) {
-		float g = pow(max(dot(NORMAL, h), 0.0), 160.0) * 1.6 * gloss * ATTENUATION;
-		SPECULAR_LIGHT += LIGHT_COLOR * g;
-	}
+	SPECULAR_LIGHT += LIGHT_COLOR * spec * (gloss <= -1.99 ? 0.0 : 1.0); // gloss <= -2: eyes and cavities stay dark
 }

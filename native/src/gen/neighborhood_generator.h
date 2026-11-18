@@ -6,15 +6,50 @@
 #include <godot_cpp/classes/omni_light3d.hpp>
 #include <godot_cpp/variant/dictionary.hpp>
 
+#include <map>
 #include <memory>
 #include <vector>
 
 #include "gen/asset_library.h"
 #include "gen/context.h"
 
+namespace godot {
+class StaticBody3D;
+}
+
 namespace tot {
 
 class CandyField;
+
+// One magic-trail mesh piece (a house's branch, or ~10 m of the street spine), its surface arrays
+// made ahead of the node.
+struct MagicPiece {
+	int lot = -1; // -1: a spine piece
+	godot::Array arrays;
+	std::vector<int> lots; // spine pieces: the houses near it
+};
+
+// The strung lights: wire mesh arrays and the hanging items per kind (bulbs, jacks, 3 pennant colours).
+struct StringsData {
+	godot::Array wire;
+	std::vector<Transform3D> items[5];
+};
+StringsData strings_data(const GenContext &ctx);
+
+// A settlement planned off the scene tree: every data stage of the generator (street, lots, houses,
+// yards, props, candy, magic, scatter) and, with `pack`, the mesh surface arrays. No node, resource or
+// engine-singleton work, so WorldStreamer runs it on a worker thread; `assets` is only read.
+// Anything a later stage adds to the plan belongs in plan_settlement (neighborhood_generator.cpp).
+struct SettlementPlan {
+	std::unique_ptr<GenContext> ctx;
+	bool packed = false;
+	std::vector<godot::Array> meshes; // packed: street, boundary, each lot, each spring (in that order)
+	std::vector<MagicPiece> magic;    // packed: the magic trail pieces in build order
+	StringsData strings;              // packed: the strung lights
+	godot::Dictionary stage_ms;
+	double plan_ms = 0.0, pack_ms = 0.0;
+};
+SettlementPlan plan_settlement(AssetLibrary *assets, int64_t seed, SettlementKind kind, bool embedded, bool lane_open, int port_side, bool pack);
 
 // Runs the ten generation stages for a seed and builds the playable neighborhood under itself.
 class NeighborhoodGenerator : public godot::Node3D {
@@ -24,7 +59,33 @@ public:
 	godot::Dictionary generate(int64_t seed);
 	// Open-world use: a neighborhood or town that is one piece of the streamed world (no ground
 	// plane of its own, open street ends; `lane_open` when a road continues past the side lane).
-	godot::Dictionary generate_settlement(int64_t seed, SettlementKind kind, bool lane_open);
+	// port_side: a neighbourhood's N/S port road (GenContext::port_side; WorldPlan's RegionPlan::hood_port).
+	godot::Dictionary generate_settlement(int64_t seed, SettlementKind kind, bool lane_open, int port_side = GenContext::PORT_FROM_SEED);
+	// Two-phase generation (area preloading): plan_settlement() on any thread, then on the main thread
+	// begin_build() and build_step() until it returns true. build_step() stops once `deadline_us`
+	// (build_clock_us() time; 0 = no deadline) has passed, after at least one piece of work, so the nodes
+	// go up over several frames in exactly the order build_nodes() makes them. run() is the two together.
+	// hidden: every node the build adds directly to the settlement's root (and every prop) starts hidden,
+	// so the build can run in the tree unseen; reveal_step() then shows them, in build order, under the
+	// same deadline rule (one set_visible each: the cost is spread, never one whole-tree toggle).
+	void begin_build(SettlementPlan &&plan, bool hidden = false);
+	~NeighborhoodGenerator();
+	bool build_step(uint64_t deadline_us);
+	bool reveal_step(uint64_t deadline_us);
+	// The reverse, for a built settlement kept for later (WorldStreamer's cache): hides what is showing,
+	// sliced the same way; a later reveal_step() shows exactly that again.
+	bool conceal_step(uint64_t deadline_us);
+	bool building() const { return build_stage_ >= 0; }
+	int build_stage() const { return build_stage_; } // for timing reports
+	// Per build stage: total ms / the longest single piece of work (timing reports).
+	godot::String build_report() const;
+	// For WorldStreamer's --stream-state-test: a house's door open (rung) / done for the night.
+	bool door_open(int lot) const { return lot >= 0 && lot < int(doors_.size()) && doors_[lot].target < -1.0f; }
+	bool house_closed(int lot) const { return lot >= 0 && lot < int(glow_.size()) && glow_[lot].closed; }
+	static uint64_t build_clock_us();
+	// The candy filter changed after the build (WorldStreamer: state moved between a preload and its
+	// attach): rebuild the candy field with it.
+	void rebuild_candy(const std::vector<char> &taken);
 	// Share one loaded asset library between all the settlements of the world.
 	void share_assets(AssetLibrary *lib) {
 		assets_ = lib;
@@ -79,17 +140,51 @@ protected:
 	static void _bind_methods();
 
 private:
+	// Time-sliced build: the step build_step() is in (-1: none), the item within it, and the deadline.
+	struct BuildBudget {
+		uint64_t deadline = 0;
+		bool did = false; // at least one piece of work is always done per build_step()
+		bool over() const { return did && deadline != 0 && build_clock_us() >= deadline; }
+	};
+	int build_stage_ = -1;
+	size_t build_i_ = 0;
+	float build_ms_[13] = {}, build_max_ms_[13] = {};
+	BuildBudget budget_;
+	bool packed_ = false;
+	std::vector<godot::Array> packed_meshes_;
+	std::vector<MagicPiece> packed_magic_;
+	StringsData packed_strings_;
+	struct CollisionBodies {
+		godot::StaticBody3D *solids = nullptr, *structures = nullptr, *boundary = nullptr, *fences = nullptr;
+		std::map<int, godot::StaticBody3D *> bouncy;
+	} coll_;
+	godot::Node3D *props_root_ = nullptr;
+	std::vector<std::pair<int64_t, std::vector<const ScatterItem *>>> scatter_groups_;
+	godot::Ref<godot::ArrayMesh> scatter_clump_;
+	bool hide_new_ = false;
+	std::vector<godot::Node3D *> hidden_;
+	std::vector<godot::Node3D *> shown_; // every node put() added (conceal_step hides the visible ones)
+	size_t reveal_i_ = 0;
+	bool concealing_ = false;
+	std::vector<godot::Node3D *> conceal_list_;
+	size_t conceal_i_ = 0;
+	// add_child for the nodes a hidden build shows later (see begin_build).
+	void put(godot::Node *parent, godot::Node *child);
+	godot::MeshInstance3D *add_mesh(MeshBuilder &b, const godot::String &name, int packed_index);
 	void build_nodes();
-	void build_collision(godot::Node3D *world);
-	void build_props(godot::Node3D *world);
-	void build_lights(godot::Node3D *world);
-	void build_doors(godot::Node3D *world);
-	void build_strings(godot::Node3D *world);
-	void build_scatter(godot::Node3D *world);
+	bool build_collision(godot::Node3D *world);
+	bool build_props(godot::Node3D *world);
+	bool build_lights(godot::Node3D *world);
+	bool build_light_nodes();
+	godot::Node3D *lights_root_ = nullptr;
+	std::vector<LightSpec> light_list_;
+	bool build_doors(godot::Node3D *world);
+	bool build_strings(godot::Node3D *world);
+	bool build_scatter(godot::Node3D *world);
 	void build_candy(godot::Node3D *world);
 	void build_fireflies(godot::Node3D *world);
 
-	godot::Dictionary run(int64_t seed, SettlementKind kind, bool embedded, bool lane_open);
+	godot::Dictionary run(int64_t seed, SettlementKind kind, bool embedded, bool lane_open, int port_side = GenContext::PORT_FROM_SEED);
 	void build_signs(godot::Node3D *world);
 	std::unique_ptr<GenContext> ctx_;
 	AssetLibrary own_assets_;
@@ -135,7 +230,7 @@ private:
 	};
 	std::vector<SpineChunk> spine_;
 	godot::Ref<godot::Material> magic_mat_;
-	void build_magic(godot::Node3D *world);
+	bool build_magic(godot::Node3D *world);
 
 	enum SquishMode { SQUISH_WOBBLE, SQUISH_HOOD, SQUISH_DIP };
 	struct Squishy {

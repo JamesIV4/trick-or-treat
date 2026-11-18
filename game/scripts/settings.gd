@@ -105,7 +105,12 @@ func _ready() -> void:
 			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 			var size := Vector2i(int(ProjectSettings.get_setting("display/window/size/window_width_override", 1600)),
 				int(ProjectSettings.get_setting("display/window/size/window_height_override", 900)))
-			_place_window(size)
+			if args.has("--position"):
+				# A background run (tools/godot_bg.ps1) put the window off-screen: keep it there. Centring
+				# it brought every capture onto the user's screen for a moment.
+				DisplayServer.window_set_size(size)
+			else:
+				_place_window(size)
 		return
 	_cfg.load(PATH) # missing on a first run: everything stays at its default
 	_apply_bindings()

@@ -36,3 +36,17 @@ art/review/**/*.png.log
 *.mpeg
 *.mpg
 *.ogv
+
+# Native build logs from parallel builds (build_lead.log, build_m.log, ...)
+native/build*.log
+
+# World rework working output: sweep dumps, run logs, diagnostic captures. Scripts, notes and the
+# final ship captures (art/team/world/final/*.png, final/cine/*.png) are committed.
+art/team/world/**/*.log
+art/team/world/**/*.jsonl
+art/team/world/**/*.txt
+art/team/world/**/*.err
+art/team/world/**/*.out
+art/team/world/stage0/**/*.png
+art/team/world/stage0/geo*/
+art/team/world/houses/*.png

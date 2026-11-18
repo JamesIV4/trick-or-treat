@@ -271,11 +271,19 @@ void MeshBuilder::ribbon(const std::vector<Vector3> &centers, const std::vector<
 	}
 }
 
-Ref<ArrayMesh> MeshBuilder::build() const {
-	Ref<ArrayMesh> mesh;
-	mesh.instantiate();
+void MeshBuilder::ribbon_lift(const std::vector<Vector3> &centers, const std::vector<Vector3> &lefts, float off_a, float off_b, float lift, int cell) {
+	const Vector3 up(0, lift, 0);
+	for (size_t i = 0; i + 1 < centers.size(); ++i) {
+		const Vector3 a0 = centers[i] + lefts[i] * off_a + up, b0 = centers[i] + lefts[i] * off_b + up;
+		const Vector3 a1 = centers[i + 1] + lefts[i + 1] * off_a + up, b1 = centers[i + 1] + lefts[i + 1] * off_b + up;
+		quad_out(a0, a1, b1, b0, cell, (a0 + b1) * 0.5f - Vector3(0, 1, 0));
+	}
+}
+
+Array MeshBuilder::arrays() const {
+	Array arrays;
 	if (verts_.empty()) {
-		return mesh;
+		return arrays;
 	}
 	const int64_t count = int64_t(verts_.size());
 	PackedVector3Array v, n;
@@ -288,18 +296,22 @@ Ref<ArrayMesh> MeshBuilder::build() const {
 	uv2.resize(count);
 	tan.resize(count * 4);
 	col.resize(count);
+	// Direct writes (one engine call per array, not per element): the same values as set() would store.
+	Vector3 *pv = v.ptrw(), *pn = n.ptrw();
+	Vector2 *puv = uv.ptrw(), *puv2 = uv2.ptrw();
+	float *pt = tan.ptrw();
+	godot::Color *pc = col.ptrw();
 	for (int64_t i = 0; i < count; ++i) {
-		v.set(i, verts_[i]);
-		n.set(i, normals_[i]);
-		uv.set(i, uvs_[i]);
-		uv2.set(i, uv2s_[i]);
+		pv[i] = verts_[i];
+		pn[i] = normals_[i];
+		puv[i] = uvs_[i];
+		puv2[i] = uv2s_[i];
 		for (int k = 0; k < 4; ++k) {
-			tan.set(i * 4 + k, tangents_[i * 4 + k]);
+			pt[i * 4 + k] = tangents_[i * 4 + k];
 		}
 		const float ao = ao_values_[i];
-		col.set(i, Color(ao, ao, ao, 1.0f));
+		pc[i] = godot::Color(ao, ao, ao, 1.0f);
 	}
-	Array arrays;
 	arrays.resize(Mesh::ARRAY_MAX);
 	arrays[Mesh::ARRAY_VERTEX] = v;
 	arrays[Mesh::ARRAY_NORMAL] = n;
@@ -307,8 +319,20 @@ Ref<ArrayMesh> MeshBuilder::build() const {
 	arrays[Mesh::ARRAY_COLOR] = col;
 	arrays[Mesh::ARRAY_TEX_UV] = uv;
 	arrays[Mesh::ARRAY_TEX_UV2] = uv2;
-	mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
+	return arrays;
+}
+
+Ref<ArrayMesh> MeshBuilder::mesh_from_arrays(const Array &arrays) {
+	Ref<ArrayMesh> mesh;
+	mesh.instantiate();
+	if (!arrays.is_empty()) {
+		mesh->add_surface_from_arrays(Mesh::PRIMITIVE_TRIANGLES, arrays);
+	}
 	return mesh;
+}
+
+Ref<ArrayMesh> MeshBuilder::build() const {
+	return mesh_from_arrays(arrays());
 }
 
 void MeshBuilder::clear() {

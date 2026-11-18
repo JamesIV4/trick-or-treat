@@ -36,21 +36,28 @@ function Start-GodotBackground {
     $before = [TotBg.Win]::GetForegroundWindow()
     $p = Start-Process -FilePath $Godot -ArgumentList $quoted -RedirectStandardOutput $tmpOut -RedirectStandardError $tmpErr -PassThru -WindowStyle Hidden
     try {
-        # As soon as the game window exists: make sure it is off-screen, and give focus back.
+        # As soon as the game window exists: make sure it is off-screen, and give focus back. Keep doing it
+        # for the first 20 s, not just once: the game may move or resize its window after it first appears
+        # (settings.gd centred scripted windows, which put captures on the user's screen for a moment).
         $deadline = (Get-Date).AddSeconds(20)
         $handled = $false
-        while (-not $p.HasExited -and -not $handled -and (Get-Date) -lt $deadline) {
+        while (-not $p.HasExited -and (Get-Date) -lt $deadline) {
             Start-Sleep -Milliseconds 40
             # Only the process we started and its children (the console exe starts the real one): never
             # a game or editor the user opened themselves.
             $ids = @($p.Id) + @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$($p.Id)" -ErrorAction SilentlyContinue | ForEach-Object { $_.ProcessId })
             $wins = @(Get-Process -Id $ids -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne [IntPtr]::Zero })
             foreach ($w in $wins) {
+                # (a window can close between the lookup and here: skip it)
+                $h = $w.MainWindowHandle
+                if ($null -eq $h -or $h -eq [IntPtr]::Zero) { continue }
                 # SWP_NOSIZE 0x1 | SWP_NOZORDER 0x4 | SWP_NOACTIVATE 0x10
-                [void][TotBg.Win]::SetWindowPos($w.MainWindowHandle, [IntPtr]::Zero, $offX, $offY, 0, 0, 0x15)
+                try { [void][TotBg.Win]::SetWindowPos($h, [IntPtr]::Zero, $offX, $offY, 0, 0, 0x15) } catch {}
                 $handled = $true
             }
-            if ($handled -and $before -ne [IntPtr]::Zero -and [TotBg.Win]::IsWindow($before) -and [TotBg.Win]::GetForegroundWindow() -ne $before) {
+            $fg = [TotBg.Win]::GetForegroundWindow()
+            $ours = @($wins | Where-Object { $_.MainWindowHandle -eq $fg }).Count -gt 0
+            if ($handled -and $ours -and $before -ne [IntPtr]::Zero -and [TotBg.Win]::IsWindow($before)) {
                 # Windows only lets a background process hand focus over right after an input event:
                 # a tap of a key no application uses (F15) counts.
                 [TotBg.Win]::keybd_event(0x7E, 0, 0, [UIntPtr]::Zero); [TotBg.Win]::keybd_event(0x7E, 0, 2, [UIntPtr]::Zero)

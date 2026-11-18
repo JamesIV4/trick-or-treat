@@ -11,6 +11,7 @@ const THUMB := Vector2i(320, 180)
 const MODE_NAMES := ["Trick or Treat", "Save the Town"]
 
 var play_time := 0.0 # seconds played in the current game
+var last_error := "" # why the last load_slot failed: "outdated" (an older version's save), "" otherwise
 var _auto_t := 0.0
 var _shot: Image # the last frame of play, taken as the pause menu opens (not the menu itself)
 
@@ -68,18 +69,43 @@ func has_save(id: String) -> bool:
 	return FileAccess.file_exists(DIR + id + ".save")
 
 
+## Any slot with a save in it, older versions' included (the Load screen lists them, marked).
+func any_save() -> bool:
+	for id: String in slot_ids():
+		if has_save(id):
+			return true
+	return false
+
+
+## The save format the running game writes and loads (FestivalGame.save_version), or -1 when unknown.
+func current_version() -> int:
+	var g := game()
+	return int(g.save_version()) if g and g.has_method("save_version") else -1
+
+
+## A slot written by an older version of the game (its summary has no or another "version"): the game refuses it.
+func is_outdated(id: String) -> bool:
+	var v := current_version()
+	if v < 0 or not has_save(id):
+		return false
+	var cfg := ConfigFile.new()
+	cfg.load(DIR + id + ".cfg")
+	return int(cfg.get_value("save", "version", 1)) != v
+
+
 ## The slot's summary: {id, empty} plus, when there is a save, {name, time, mode, candy, area,
-## play_time, houses, freed, costumes, thumb (Texture2D or null)}.
+## play_time, houses, freed, complete (areas all clear), costumes, thumb (Texture2D or null)}.
 func info(id: String) -> Dictionary:
 	var d := {"id": id, "empty": not has_save(id)}
 	if d["empty"]:
 		return d
 	var cfg := ConfigFile.new()
 	cfg.load(DIR + id + ".cfg")
-	for key: String in ["name", "time", "mode", "candy", "area", "play_time", "houses", "freed", "costumes"]:
+	for key: String in ["name", "time", "mode", "candy", "area", "play_time", "houses", "freed", "complete", "costumes"]:
 		d[key] = cfg.get_value("save", key, null)
 	if d["name"] == null:
 		d["name"] = slot_label(id)
+	d["outdated"] = is_outdated(id)
 	var img := Image.load_from_file(ProjectSettings.globalize_path(DIR + id + ".png")) if FileAccess.file_exists(DIR + id + ".png") else null
 	d["thumb"] = ImageTexture.create_from_image(img) if img else null
 	return d
@@ -90,7 +116,7 @@ func latest() -> String:
 	var best := ""
 	var best_t := -1.0
 	for id: String in slot_ids():
-		if has_save(id):
+		if has_save(id) and not is_outdated(id): # (an older version's save is no use to Continue)
 			var cfg := ConfigFile.new()
 			cfg.load(DIR + id + ".cfg")
 			var t := float(cfg.get_value("save", "time", 0.0))
@@ -130,7 +156,9 @@ func save_slot(id: String, name: String) -> bool:
 	cfg.set_value("save", "play_time", play_time)
 	cfg.set_value("save", "houses", int(state.get("houses", 0)))
 	cfg.set_value("save", "freed", int(state.get("areas_freed", 0)))
+	cfg.set_value("save", "complete", int(state.get("areas_complete", 0)))
 	cfg.set_value("save", "costumes", int(state.get("costumes_found", 1)))
+	cfg.set_value("save", "version", int(state.get("version", 0)))
 	cfg.save(DIR + id + ".cfg")
 	if id != "autosave":
 		_auto_t = 0.0
@@ -138,6 +166,7 @@ func save_slot(id: String, name: String) -> bool:
 
 
 func load_slot(id: String) -> bool:
+	last_error = ""
 	var g := game()
 	if g == null or not has_save(id):
 		return false
@@ -146,6 +175,9 @@ func load_slot(id: String) -> bool:
 		return false
 	var state: Variant = f.get_var()
 	f.close()
+	if state is Dictionary and g.has_method("save_version") and int(state.get("version", 0)) != int(g.save_version()):
+		last_error = "outdated" # (the game would refuse it too, before touching anything)
+		return false
 	if not state is Dictionary or not g.load_state(state):
 		return false
 	var cfg := ConfigFile.new()

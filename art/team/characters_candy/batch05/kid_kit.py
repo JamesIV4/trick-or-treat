@@ -1092,19 +1092,20 @@ def node_basis(right, up, fwd):
 
 
 # ------------------------------------------------------------------ face v2
-EYE = dict(W=0.046, H=0.058, D=0.006, x=0.079, z=0.806, roll=7.0)
+# (2026-11-17) W, H, D were 0.046, 0.058, 0.006 with the brown iris eye; the anime eye is a little smaller (face()'s was
+# 0.035 x 0.047) and rounder
+EYE = dict(W=0.041, H=0.053, D=0.009, x=0.079, z=0.806, roll=7.0)
 MOUTH_Z = 0.737
 
 
 def eye2(sx, tree, fc=FC, fr=FR, p=None, skin="skin", lash="ink", brow="hair_dark"):
     """One eye's parts, in world space on the untilted head: [(name, object, parent)].
-      eye_<s>       a dark-brown base (the iris's darker rim; NO white sclera anywhere, decision 13), a
-                    thick lash line over the top only (two outer flicks, no outline underneath), two
-                    white catchlights. Origin at the eye centre on the
-                    face; node +Y = eye up, +Z = eye normal.
-      iris_<s>      big deep-brown iris clipped under the lash line (iris_brown, a cinnamon glow low
-                    down, the amber crescent, choco_dark shade under the lid), a moderate ink pupil.
-                    Same origin and axes; the rig slides it (about +-5 mm stays under lash / in the white).
+      eye_<s>       the anime eye (2026-11-17): a glossy ink dome (NO white anywhere, decision 13), a deep
+                    brown lens low in it, three white highlights (big tilted one up-left, small one
+                    right, a pin-prick). Origin at the eye centre on the face; node +Y = eye up,
+                    +Z = eye normal.
+      iris_<s>      the warm glint low in the eye: a burnt-amber crescent with an amber core. Same origin
+                    and axes; the rig slides it (about +-5 mm, stays inside the dome).
       alt_lash_<s>  the shut eye: only a bold happy ^ lash arc with a flick (no lid patch: the face skin is
                     whole under the eye). Translation-only; the rig hides eye_<s> while it shows.
       brow_<s>      origin at the brow's middle. Translation-only."""
@@ -1117,76 +1118,38 @@ def eye2(sx, tree, fc=FC, fr=FR, p=None, skin="skin", lash="ink", brow="hair_dar
     # pale arc just inside the lash line in the engine's face close-up
     S = Surf(tree, c, n, roll=roll, dome=lambda x, y: Dp * max(1 - (x / W) ** 2 - (y / H) ** 2, 0.0))
     F = Surf(tree, c, n, roll=roll)
-    # No white anywhere round the eye (FIDELITY_PASS decision 13): the eye's base disc is the iris's own
-    # darker rim colour, so the brown iris sits in a dark ring that meets the lash line and the skin.
-    eye = [S.disc("sclera", 0, 0, W, H, "choco_dark", segs=24, rings=3, sink=0.0012)]
-    # The lash line: a thick dark stroke over the top of the eye only (the mock's eyes have no drawn
-    # outline underneath, so the white never reads as a goggle rim), tapering out at the corners.
-    N = 22
-    rim_pts, rim_r = [], []
-    for k in range(N + 1):
-        a = math.radians(-14 + 208 * k / N)
-        rim_pts.append((math.cos(a) * W * 1.01, math.sin(a) * H * 1.01))
-        top_k = max(0.0, math.sin(a) + 0.24) / 1.24
-        rim_r.append(0.0046 * top_k ** 0.55 if 0 < k < N else 0.0)
-    # A flat ribbon lying on the (domed) eye, not a round tube: a round stroke catches the light along
-    # its top and reads as a light line inside the lash line (seen in the engine's face close-up).
-    bm = bmesh.new()
-    rows = []
-    for k in range(N + 1):
-        a = math.radians(-14 + 208 * k / N)
-        r = rim_r[k]
-        nx, ny = math.cos(a) / W, math.sin(a) / H
-        nl = math.hypot(nx, ny)
-        nx, ny = nx / nl, ny / nl
-        x0, y0 = rim_pts[k]
-        rows.append([bm.verts.new(S.pt(x0 + nx * r * dx, y0 + ny * r * dx, lift)) for dx, lift in
-                     ((0.7, -0.0008), (0.7, 0.0007), (0.0, 0.0011), (-1.3, 0.0007), (-1.3, -0.0008))])
-    for k in range(N):
-        for j in range(4):
-            bm.faces.new((rows[k][j], rows[k + 1][j], rows[k + 1][j + 1], rows[k][j + 1]))
-    bm.normal_update()
-    bm.faces.ensure_lookup_table()
-    if bm.faces[(N // 2) * 4 + 2].normal.dot(n) < 0:      # a face on top of the ribbon, middle of the arc
-        bmesh.ops.reverse_faces(bm, faces=bm.faces)
-    eye.append(D.mesh(bm, "rim", lash, "flat", "box", smooth=True))
-    for k, (deg, dx1, dy1, dx2, dy2, r0) in enumerate([(40, 0.008, 0.0045, 0.0155, 0.0125, 0.0034),
-                                                         (18, 0.008, 0.001, 0.0135, 0.0048, 0.0026)]):
-        a = math.radians(deg)
-        x0, y0 = math.cos(a) * W, math.sin(a) * H
-        eye.append(F.tube(f"flick{k}", [(sx * x0, y0), (sx * (x0 + dx1), y0 + dy1), (sx * (x0 + dx2), y0 + dy2)],
-                          [r0, r0 * 0.8, 0.0], lash, lift=0.0004, sides=5))
-    # catchlights: fixed on the eye, both eyes lit from the same side (up and to the viewer's left)
-    eye.append(S.disc("hl", -0.0135, 0.0185, 0.0128, 0.0148, "eye_white", lift=0.0058, puff=0.0012, segs=16, rings=2,
+    # (2026-11-17, user: "all the eyes need to be updated to be more like the anime style they had before, but
+    # slightly higher fidelity. They read cuter that way and not so uncanny.") Back to face()'s glossy ink eye
+    # (no sclera, no iris disc, no pupil, no lash line), refined: a smooth ink dome, a deep brown lens low in it
+    # (depth without the shader's sheen: kid_face.cpp keeps the eye matte), a big tilted white highlight up and
+    # to the viewer's left, a small one right of centre and a pin-prick under it, and on the iris part the old
+    # warm glint as a two-tone amber crescent. Still no white rim round the eye (FIDELITY_PASS decision 13).
+    eye = [S.disc("sclera", 0, 0, W, H, "ink", segs=28, rings=6, sink=0.0012)]
+
+    def lens(cx, cy, rx, ry, k, n_=13):
+        """rows for S.band: the lower half of the oval (rx, ry) round (cx, cy), its top bowed up by -k * ry."""
+        rows = []
+        for i in range(n_):
+            u = -0.985 + 1.97 * i / (n_ - 1)
+            s_ = math.sqrt(max(1 - u * u, 0.0))
+            rows.append((cx + rx * u, cy - ry * k * s_, cy - ry * s_))
+        return rows
+    eye.append(S.band("tint", lens(0, -H * 0.14, W * 0.78, H * 0.7, -0.2, 15), "choco_dark", lift=0.0012, puff=0.0003,
                       sink=0.0006))
-    eye.append(S.disc("hl2", 0.0165, -0.0155, 0.0066, 0.0066, "eye_white", lift=0.0058, puff=0.0008, segs=12, rings=2,
+    m = min(W, H)
+    # highlights: fixed on the eye, both eyes lit from the same side (up and to the viewer's left)
+    eye.append(S.disc("hl", -W * 0.27, H * 0.35, m * 0.46, m * 0.35, "eye_white", lift=0.0058, puff=0.0012, segs=16, rings=2,
+                      sink=0.0006, rot=-30.0))
+    eye.append(S.disc("hl2", W * 0.4, -H * 0.06, m * 0.14, m * 0.125, "eye_white", lift=0.0058, puff=0.0008, segs=12, rings=2,
                       sink=0.0006))
-    # The iris: big and warm brown, filling the eye so the white shows only as slivers at the sides; its
-    # top and bottom follow the eye's own outline (clipped), so only the sides show white. Soft gradient
-    # in four layers: dark under the lid, warm brown, a lighter choco glow low down and the burnt-amber
-    # crescent at the bottom; a moderate pupil.
-    def lid_clip(x, y, k=0.975):
-        e = math.sqrt((x / (W * k)) ** 2 + (y / (H * k)) ** 2)
-        return (x / e, y / e) if e > 1.0 else (x, y)
-    IRX, IRY, ICY = 0.0425, 0.0515, -0.0015
-    iris = [S.disc("iris", 0, ICY, IRX, H * 1.1, "iris_brown", lift=0.0022, puff=0.0005, segs=24, rings=3, sink=0.0006,
-                   clip=lid_clip),
-            S.disc("iris_glow", 0, ICY - 0.0165, IRX * 0.8, IRY * 0.6, "choco", lift=0.0026, puff=0.0005, segs=20, rings=2,
-                   sink=0.0005)]
-    rows = []
-    for i in range(13):
-        x = -IRX * 0.74 + IRX * 1.48 * i / 12
-        yb = ICY - IRY * 0.93 * math.sqrt(max(1 - (x / (IRX * 0.93)) ** 2, 0.0))
-        rows.append((x, yb + 0.003 + 0.0095 * (1 - (x / (IRX * 0.74)) ** 2), yb))
-    iris.append(S.band("glint", rows, "burnt_amber", lift=0.0031, puff=0.0006, sink=0.0005))
-    top = []
-    for i in range(13):
-        x = -IRX * 0.92 + IRX * 1.84 * i / 12
-        yt = H * 0.955 * math.sqrt(max(1 - (x / (W * 0.955)) ** 2, 0.0))
-        top.append((x, yt, yt - 0.0045 - 0.0085 * (1 - (x / (IRX * 0.92)) ** 2)))
-    iris.append(S.band("shade", top, "choco_dark", lift=0.0029, puff=0.0004, sink=0.0005))
-    iris.append(S.disc("pupil", 0, ICY + 0.003, 0.0195, 0.0245, "ink", lift=0.0036, puff=0.0004, segs=20, rings=2,
-                       sink=0.0006))
+    eye.append(S.disc("hl3", W * 0.27, -H * 0.25, m * 0.05, m * 0.05, "eye_white", lift=0.0058, puff=0.0004, segs=8, rings=1,
+                      sink=0.0006))
+    # The iris part is now only the warm glint low in the eye (it slides with the look): burnt amber with an
+    # amber core, as face()'s glint but two-tone.
+    GY, GW, GH = -H * 0.36, W * 0.56, H * 0.44
+    iris = [S.band("glint", lens(0, GY, GW, GH, -0.22), "burnt_amber", lift=0.0024, puff=0.0005, sink=0.0006),
+            S.band("glint2", lens(0, GY - GH * 0.2, GW * 0.62, GH * 0.68, -0.28, 11), "amber", lift=0.0034, puff=0.0005,
+                   sink=0.0006)]
     xr, up, nn = S.axes()
     basis = node_basis(xr, up, nn)
     eye_ob = rebase(K.merge(eye, "eye_" + s), c, basis)

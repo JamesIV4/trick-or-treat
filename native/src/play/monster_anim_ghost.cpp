@@ -158,7 +158,7 @@ public:
 		rig.param_all("rim_strength", 0.12f);
 		rig.gloss(mouth_, 0.3f);
 		for (int s = 0; s < 2; ++s) {
-			rig.gloss(eye_[s], -2.0f); // ink dome: no sheen (it read as a chrome lens); the glints carry the wet look
+			// (2026-11-17) anime ink dome with the toon shader's soft sheen, as the old eyes (no gloss -2 on it)
 			rig.gloss(pupil_[s], -2.0f);
 			rig.gloss(cheek_[s], -2.0f); // a flat blush, not a shiny pill
 			rig.show(squint_[s], false);

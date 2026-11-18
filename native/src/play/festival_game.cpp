@@ -49,6 +49,7 @@
 #include "play/loose_candy.h"
 #include "play/ride_on_car.h"
 #include "play/storm_sky.h"
+#include "play/sweep.h"
 #include "play/vfx.h"
 #include "world/world_streamer.h"
 
@@ -115,9 +116,10 @@ void FestivalGame::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_wallet"), &FestivalGame::get_wallet);
 	ClassDB::bind_method(D_METHOD("save_state"), &FestivalGame::save_state);
 	ClassDB::bind_method(D_METHOD("load_state", "state"), &FestivalGame::load_state);
+	ClassDB::bind_method(D_METHOD("save_version"), &FestivalGame::save_version);
 	ClassDB::bind_method(D_METHOD("is_playing"), &FestivalGame::is_playing);
 	ClassDB::bind_method(D_METHOD("_on_candy", "kind", "value", "lot", "position", "id", "key"), &FestivalGame::on_candy);
-	ClassDB::bind_method(D_METHOD("_on_house_cleared", "lot", "key"), &FestivalGame::on_house_cleared);
+	ClassDB::bind_method(D_METHOD("_on_lot_emptied", "lot", "key"), &FestivalGame::on_lot_emptied);
 	ClassDB::bind_method(D_METHOD("_on_sequence", "size", "position", "key"), &FestivalGame::on_sequence);
 	ClassDB::bind_method(D_METHOD("_on_pounded", "position"), &FestivalGame::on_pounded);
 	ClassDB::bind_method(D_METHOD("_on_landed", "impact"), &FestivalGame::on_landed);
@@ -164,6 +166,10 @@ void FestivalGame::parse_cmdline() {
 			capture_view_ = a.substr(15);
 		} else if (a.begins_with("--sweep=")) {
 			sweep_ = a.substr(8).to_int();
+		} else if (a.begins_with("--sweep-dump=")) {
+			sweep_dump_ = a.substr(13);
+		} else if (a.begins_with("--sweep-dump-detail=")) {
+			sweep_dump_detail_ = a.substr(20);
 		} else if (a == "--no-lightning") {
 			lightning_ = false;
 		} else if (a.begins_with("--autopilot=")) {
@@ -190,6 +196,10 @@ void FestivalGame::parse_cmdline() {
 			cine_bounce_seed_ = a.substr(19).to_int();
 		} else if (a.begins_with("--cine-seed=")) {
 			cine_seed_override_ = a.substr(12).to_int();
+		} else if (a == "--save-version-test") {
+			save_test_ = true;
+		} else if (a == "--cine-check") {
+			cine_check_ = true; // Ship: a headless check of every shot's camera (CINE check lines)
 		} else if (a == "--cine-play") {
 			cine_play_ = true;
 			cine_clean_ = true;
@@ -204,6 +214,8 @@ void FestivalGame::parse_cmdline() {
 			review_shop_ = true;
 		} else if (a.begins_with("--overview-dist=")) {
 			camera_->set_overview_distance(float(a.substr(16).to_float()));
+		} else if (a.begins_with("--overview-pitch=")) {
+			camera_->set_overview_pitch(float(a.substr(17).to_float()));
 		} else if (a.begins_with("--ledge-test=")) {
 			ledge_lot_ = a.substr(13).to_int();
 		} else if (a.begins_with("--mantle-test=")) {
@@ -219,6 +231,8 @@ void FestivalGame::parse_cmdline() {
 			review_travel_ = true;
 		} else if (a.begins_with("--fly-test=")) {
 			fly_test_ = float(a.substr(11).to_float());
+		} else if (a == "--door-test") {
+			start_door_test();
 		}
 	}
 }
@@ -250,14 +264,126 @@ void FestivalGame::_ready() {
 		// Headless validation sweep: generate N seeds (neighborhoods, then towns), print stats, quit.
 		const int64_t base = seed_ != 0 ? seed_ : 1;
 		int failures = 0;
+		// --sweep-dump=<file>: also fingerprint every settlement (and the embedded variants the open world
+		// really uses, the world plan around the seed, and each settlement's nest layout).
+		SweepDump dump;
+		if (!sweep_dump_.is_empty() && !dump.open(std::string(sweep_dump_.utf8().get_data()), std::string(sweep_dump_detail_.utf8().get_data()))) {
+			UtilityFunctions::push_error("SWEEP cannot write ", sweep_dump_);
+		}
+		art_.build(); // nest radii for the nest layout
+		auto layout_of = [&](int64_t seed) {
+			Rng rng(uint64_t(seed) ^ 0xBADC0DEull, 11);
+			return plan_infestation(*gen_->context(), art_, Vector3(), false, rng);
+		};
 		for (int i = 0; i < sweep_; ++i) {
 			const bool town = i % 2 == 1;
 			Dictionary st = town ? gen_->generate_settlement(base + i, SettlementKind::Town, true) : gen_->generate(base + i);
 			failures += int(st["openness_failures"]);
 			st.erase("households");
 			st["kind"] = town ? "town" : "neighborhood";
+			const InfestationLayout inf = layout_of(base + i);
+			sweep_layout_stats(*gen_->context(), &inf, st);
+			if (town) {
+				sweep_nav_probe(gen_, inf, st);
+			}
 			UtilityFunctions::print("SWEEP ", JSON::stringify(st));
+			if (dump.is_open()) {
+				dump.settlement("sweep", base + i, *gen_->context(), &inf);
+			}
+			// Stage 4c: a town for every seed (the odd seeds' SWEEP line is one already: the even ones get theirs here),
+			// and a top-down plan view of the first few.
+			for (const String &a : OS::get_singleton()->get_cmdline_user_args()) {
+				if (town && a.begins_with("--sweep-geo=") && i < 12) {
+					sweep_geo_dump(*gen_->context(), inf, std::string(a.substr(12).utf8().get_data()) + "/geo_town_" + std::to_string(base + i) + ".json");
+				}
+			}
+			if (!town) {
+				Dictionary stt = gen_->generate_settlement(base + i, SettlementKind::Town, true);
+				stt.erase("households");
+				stt["kind"] = "town";
+				const InfestationLayout it = layout_of(base + i);
+				sweep_layout_stats(*gen_->context(), &it, stt);
+				sweep_nav_probe(gen_, it, stt);
+				UtilityFunctions::print("SWEEP_TOWN ", JSON::stringify(stt));
+				for (const String &a : OS::get_singleton()->get_cmdline_user_args()) {
+					if (a.begins_with("--sweep-geo=") && i < 12) {
+						sweep_geo_dump(*gen_->context(), it, std::string(a.substr(12).utf8().get_data()) + "/geo_town_" + std::to_string(base + i) + ".json");
+					}
+				}
+			}
+			if (!town) {
+				// Stage 2a: the embedded neighbourhood the open world plays (port road from the seed), with the
+				// monsters' route probe; then the world plan around this seed.
+				Dictionary se = gen_->generate_settlement(base + i, SettlementKind::Neighborhood, true);
+				se.erase("households");
+				se["kind"] = "neighborhood_embedded";
+				const InfestationLayout ie = layout_of(base + i);
+				sweep_layout_stats(*gen_->context(), &ie, se);
+				sweep_nav_probe(gen_, ie, se);
+				UtilityFunctions::print("SWEEP_EMB ", JSON::stringify(se));
+				for (const String &a : OS::get_singleton()->get_cmdline_user_args()) {
+					if (a.begins_with("--sweep-geo=") && i < 8) {
+						sweep_geo_dump(*gen_->context(), ie, std::string(a.substr(12).utf8().get_data()) + "/geo_" + std::to_string(base + i) + ".json");
+					}
+				}
+			}
+			{
+				Dictionary sw;
+				sw["seed"] = base + i;
+				sweep_world_stats(base + i, sw);
+				UtilityFunctions::print("SWEEP_WORLD ", JSON::stringify(sw));
+			}
+			{
+				// Stage 4c: the ground the player walks on in a town (WorldPlan's heightfield, planned without assets)
+				// against the generator's own plan of that town (what its streets, shops and props are built on).
+				// (Ship: and the same for a neighbourhood, SWEEP_HPARITY.)
+				WorldPlan wp;
+				wp.reset(uint64_t(base + i));
+				for (int pk = 0; pk < 2; ++pk) {
+				const RegionKind want = pk == 0 ? RegionKind::Town : RegionKind::Neighborhood;
+				bool done = false;
+				for (int ri = -2; ri <= 2 && !done; ++ri) {
+					for (int rj = -2; rj <= 2 && !done; ++rj) {
+						const RegionPlan &r = wp.region(ri, rj);
+						if (r.kind != want || !r.terrain) {
+							continue;
+						}
+						done = true;
+						SettlementPlan sp = plan_settlement(&gen_->assets(), settlement_seed(r), pk == 0 ? SettlementKind::Town : SettlementKind::Neighborhood, true, r.lane_open, r.hood_port, false);
+						const HoodTerrain *gt = sp.ctx->terrain.get();
+						Dictionary tp;
+						tp["seed"] = base + i;
+						tp["region"] = String::num_int64(ri) + "," + String::num_int64(rj);
+						tp["same_grid"] = int(gt && gt->nx == r.terrain->nx && gt->nz == r.terrain->nz && gt->x0 == r.terrain->x0 && gt->z0 == r.terrain->z0);
+						float diff = gt ? 0.0f : 1e9f;
+						if (gt && gt->h.size() == r.terrain->h.size()) {
+							for (size_t k = 0; k < gt->h.size(); ++k) {
+								diff = Math::max(diff, std::abs(gt->h[k] - r.terrain->h[k]));
+							}
+						} else {
+							diff = 1e9f;
+						}
+						tp["terrain_diff_max"] = diff;
+						tp["lots"] = int(sp.ctx->lots.size());
+						UtilityFunctions::print(pk == 0 ? "SWEEP_TPARITY " : "SWEEP_HPARITY ", JSON::stringify(tp));
+					}
+				}
+				}
+			}
+			if (dump.is_open()) {
+				for (int v = 0; v < 4; ++v) {
+					const SettlementKind kind = v < 2 ? SettlementKind::Neighborhood : SettlementKind::Town;
+					const bool lane_open = (v & 1) == 1;
+					// Neighbourhoods: closed = no port road, open = the port road from the seed.
+					gen_->generate_settlement(base + i, kind, lane_open, kind == SettlementKind::Neighborhood && !lane_open ? 0 : GenContext::PORT_FROM_SEED);
+					const InfestationLayout vi = layout_of(base + i);
+					dump.settlement(std::string(v < 2 ? "hood" : "town") + (lane_open ? "_open" : "_closed"), base + i, *gen_->context(), &vi);
+				}
+				WorldPlan plan;
+				dump.world(base + i, plan);
+			}
 		}
+		UtilityFunctions::print("SWEEP_ROADNET ", String(roadnet_selfcheck().c_str()));
 		UtilityFunctions::print("SWEEP_DONE seeds=", sweep_, " openness_failures=", failures);
 		get_tree()->quit();
 		return;
@@ -271,6 +397,22 @@ void FestivalGame::_ready() {
 	add_child(streamer_);
 	streamer_->on_area_loaded = [this](Area &a) { area_loaded(a); };
 	streamer_->on_area_unloading = [this](Area &a) { area_unloading(a); };
+	// Area preloading: the infestation's walk grid and nest layout are worked out on the streamer's worker
+	// thread with the settlement's plan (Infestation::prepare: plain data), so attaching the area only
+	// makes the nodes. The art kit is built once above and only read.
+	streamer_->on_area_loaded_step = [this](Area &a, uint64_t deadline_us) {
+		auto it = infest_.find(a.key);
+		return it == infest_.end() || !it->second || it->second->build_step(deadline_us);
+	};
+	streamer_->on_area_prepare = [this](const RegionPlan &r) -> WorldStreamer::PrepareFn {
+		const bool peaceful = mode_ == 0;
+		const MonsterArtKit *art = &art_;
+		return [r, art, peaceful](const GenContext &ctx) -> std::shared_ptr<void> {
+			auto inf = std::make_shared<std::unique_ptr<Infestation>>(std::make_unique<Infestation>());
+			(*inf)->prepare(ctx, r, *art, peaceful);
+			return inf;
+		};
+	};
 	Vfx *vfx = memnew(Vfx);
 	vfx->set_name("Vfx");
 	add_child(vfx);
@@ -381,6 +523,9 @@ void FestivalGame::_ready() {
 	// the Town unless explicitly capturing the menu.
 	const bool menu = OS::get_singleton()->get_cmdline_user_args().is_empty() || capture_view_ == "menu";
 	mode_ = menu || !showcase_id_.is_empty() ? 0 : 1; // the showcase stage is a peaceful street: no nests, vines or roaming monsters
+	if (door_test_ && OS::get_singleton()->get_cmdline_user_args().has("--peaceful")) {
+		mode_ = 0; // --door-test in Trick or Treat
+	}
 	started_ = !menu;
 	in_menu_ = menu; // no area banners under the title
 	start_world(seed_);
@@ -402,6 +547,8 @@ void FestivalGame::_exit_tree() {
 	if (streamer_) {
 		streamer_->on_area_loaded = nullptr;
 		streamer_->on_area_unloading = nullptr;
+		streamer_->on_area_prepare = nullptr;
+		streamer_->on_area_loaded_step = nullptr;
 	}
 	if (combat_) {
 		combat_->gather_targets = nullptr;
@@ -504,6 +651,9 @@ void FestivalGame::start_world(int64_t seed) {
 	call_ui("set_candy", w);
 	emit_signal("world_started", seed);
 	frame_ = 0;
+	if (env_ && OS::get_singleton()->get_cmdline_user_args().has("--no-lens")) {
+		env_->set_camera_attributes(Ref<CameraAttributes>()); // review captures: no toy-lens depth blur
+	}
 	if (capture_view_.begins_with("lot:")) {
 		const int lot = capture_view_.substr(4).to_int();
 		if (Area *ar = streamer_->area(WorldStreamer::area_key(0, 0))) {
@@ -521,7 +671,142 @@ void FestivalGame::start_world(int64_t seed) {
 	} else if (capture_view_ == "overview") {
 		camera_->set_overview(true);
 		camera_->snap();
-	} else if (capture_view_.begins_with("nest:") || capture_view_.begins_with("heart:")) {
+	} else if (capture_view_ == "foundation") {
+		// Stage 3b review aid: the home area's most perched house (its pad furthest above the street, a foundation
+		// or extra porch treads showing), from the far side of the street in front of it.
+		if (Area *ar = streamer_->area(WorldStreamer::area_key(0, 0))) {
+			const GenContext &gc = *ar->gen->context();
+			int best = -1;
+			float score = -1e9f;
+			for (const Lot &l : gc.lots) {
+				const Vector3 o = l.xf.origin;
+				const Road &R = gc.roads.roads[l.road];
+				const float perch = o.y - (l.bulb ? R.bulb_c.y : R.project(o).y);
+				const float s = perch - Math::min(l.found_house, l.found_porch) * 0.5f + float(l.porch_steps - 3) * 0.1f;
+				if (!l.bulb && s > score) {
+					score = s;
+					best = l.index;
+				}
+			}
+			if (best >= 0) {
+				const Lot &l = gc.lots[best];
+				const float across = gc.roads.roads[l.road].edge() * 2.0f - 1.0f; // the far sidewalk
+				Vector3 p = ar->to_world(l.to_world(l.house.door_x + 2.5f, 0.0f, across));
+				const Vector3 c = ar->to_world(l.to_world(l.house.door_x, 0.0f, l.house.front_z));
+				p.y = streamer_->ground(p.x, p.z) + 0.3f;
+				player_->teleport(p, std::atan2(c.x - p.x, c.z - p.z));
+				camera_->face_direction(c - p);
+				camera_->snap();
+				player_->set_input_enabled(false);
+				UtilityFunctions::print("FOUNDATION_VIEW lot ", best, " score ", score, " found_house ", l.found_house, " porch ", l.found_porch, " steps ", l.porch_steps, " at ", p);
+			}
+		}
+	} else if (capture_view_ == "yard3c" || capture_view_ == "column3c" || capture_view_ == "roofs3c") {
+		// Stage 3c review aids (world rework worker; surgical, review only). yard3c: from the far sidewalk up the home
+		// area's best sloped yard (a car in the drive, the longest porch flight, the walk to the sidewalk). column3c: a
+		// candy column over a bounce pad, nearest the spawn. roofs3c: an elevated view over a row of roof decks (use
+		// --overview-dist / --overview-pitch with the last two).
+		if (Area *ar = streamer_->area(WorldStreamer::area_key(0, 0))) {
+			const GenContext &gc = *ar->gen->context();
+			if (capture_view_ == "yard3c") {
+				int best = -1;
+				float score = -1e9f;
+				for (const Lot &l : gc.lots) {
+					if (l.bulb || l.shop >= 0) {
+						continue;
+					}
+					const Vector3 o = l.xf.origin;
+					const Road &R = gc.roads.roads[l.road];
+					const float s = (l.car_in_drive ? 3.0f : 0.0f) + Math::min(float(l.porch_steps - 3), 8.0f) * 0.35f + std::abs(o.y - R.project(o).y) * 0.6f +
+							(l.walk_flags.size() > 2 ? 0.5f : 0.0f);
+					if (s > score) {
+						score = s;
+						best = l.index;
+					}
+				}
+				if (best >= 0) {
+					const Lot &l = gc.lots[best];
+					const float mid = (l.house.door_x + l.drive_x) * 0.5f;
+					const float across = gc.roads.roads[l.road].edge() * 2.0f - 1.0f;
+					Vector3 p = ar->to_world(l.to_world(mid + (l.drive_x > l.house.door_x ? -3.0f : 3.0f), 0.0f, across));
+					const Vector3 c = ar->to_world(l.to_world(mid, 0.0f, l.house.front_z * 0.55f));
+					p.y = streamer_->ground(p.x, p.z) + 0.3f;
+					player_->teleport(p, std::atan2(c.x - p.x, c.z - p.z));
+					camera_->face_direction(c - p);
+					camera_->snap();
+					player_->set_input_enabled(false);
+					UtilityFunctions::print("YARD3C_VIEW lot ", best, " score ", score, " car ", l.car_in_drive, " treads ", l.porch_steps, " flags ", int(l.walk_flags.size()));
+				}
+			} else if (capture_view_ == "column3c") {
+				const CandySpec *best = nullptr;
+				for (const CandySpec &c : gc.candy) {
+					// (a street car's column first: out in the open, so the camera behind the kid isn't inside a house)
+					if (c.pattern == CPAT_BOUNCE && c.kind == CANDY_LOLLIPOP &&
+							(!best || (c.lot < 0) > (best->lot < 0) || ((c.lot < 0) == (best->lot < 0) && c.pos.distance_to(gc.spawn) < best->pos.distance_to(gc.spawn)))) {
+						best = &c;
+					}
+				}
+				if (best) {
+					const Vector3 top = ar->to_world(best->pos);
+					const Vector3 to_spawn = Vector3(spawn.x - top.x, 0, spawn.z - top.z).normalized();
+					Vector3 p = top + to_spawn * 3.0f;
+					p.y = streamer_->ground(p.x, p.z) + 0.3f;
+					player_->teleport(p, std::atan2(-to_spawn.x, -to_spawn.z));
+					camera_->set_overview(true);
+					camera_->face_direction(-to_spawn);
+					camera_->snap();
+					player_->set_input_enabled(false);
+					UtilityFunctions::print("COLUMN3C_VIEW top ", top, " lot ", best->lot);
+				}
+			} else {
+				int best = -1;
+				for (const Lot &l : gc.lots) {
+					if (l.deck_half.x > 0.0f && !l.bulb && (best < 0 || l.xf.origin.distance_to(gc.spawn) < gc.lots[best].xf.origin.distance_to(gc.spawn))) {
+						best = l.index;
+					}
+				}
+				if (best >= 0) {
+					const Lot &l = gc.lots[best];
+					Vector3 p = ar->to_world(l.to_world(0.0f, 0.0f, gc.roads.roads[l.road].edge()));
+					const Vector3 c = ar->to_world(l.to_world(0.0f, 0.0f, l.house.front_z));
+					p.y = streamer_->ground(p.x, p.z) + 0.3f;
+					player_->teleport(p, std::atan2(c.x - p.x, c.z - p.z));
+					camera_->set_overview(true);
+					camera_->face_direction(c - p);
+					camera_->snap();
+					player_->set_input_enabled(false);
+					UtilityFunctions::print("ROOFS3C_VIEW lot ", best);
+				}
+			}
+		}
+	} else if (capture_view_ == "crest") {
+		// Stage 3b review aid: the most prominent crest on the home area's roads (highest above the road 40 m
+		// either side), the kid standing on it facing down the far side, the camera behind on the climb.
+		if (Area *ar = streamer_->area(WorldStreamer::area_key(0, 0))) {
+			const GenContext &gc = *ar->gen->context();
+			float best = -1e9f;
+			Vector3 at, dir(0, 0, 1);
+			for (const Road &R : gc.roads.roads) {
+				for (float st = R.s_begin() + 40.0f; st <= R.s_end() - 40.0f; st += 2.0f) {
+					const float a = R.at(st - 40.0f).y, b = R.at(st + 40.0f).y, y = R.at(st).y;
+					const float prom = y - Math::max(a, b);
+					if (prom > best) {
+						best = prom;
+						at = R.at(st);
+						Vector3 t = R.tangent_at(st) * (b < a ? 1.0f : -1.0f); // toward the deeper side
+						t.y = 0.0f;
+						dir = t.normalized();
+					}
+				}
+			}
+			const Vector3 p = ar->to_world(at) + Vector3(0, 0.3f, 0);
+			player_->teleport(p, std::atan2(dir.x, dir.z));
+			camera_->set_overview(true);
+			camera_->face_direction(dir);
+			camera_->snap();
+			player_->set_input_enabled(false);
+			UtilityFunctions::print("CREST_VIEW prominence ", best, " at ", p);
+		}	} else if (capture_view_.begins_with("nest:") || capture_view_.begins_with("heart:")) {
 		// nest:K / heart:K: stand a few metres from the home area's K-th monster or thorn nest.
 		const bool heart = capture_view_.begins_with("heart:");
 		const int k = capture_view_.substr(heart ? 6 : 5).to_int();
@@ -615,6 +900,20 @@ void FestivalGame::start_world(int64_t seed) {
 			camera_->set_overview(over);
 			camera_->snap();
 		}
+	} else if (capture_view_.begins_with("lookat:")) {
+		// lookat:x,z,tx,tz: stand at a world point facing another (Stage 4c review aid: a town's stepped shop fronts
+		// from across the street; the sweep's SWEEP_WORLD world_town_spots give the points).
+		PackedStringArray v = capture_view_.substr(7).split(",");
+		if (v.size() == 4) {
+			const float x = v[0].to_float(), z = v[1].to_float(), tx = v[2].to_float(), tz = v[3].to_float();
+			streamer_->update(Vector3(x, 0, z), true);
+			const Vector3 p(x, streamer_->ground(x, z) + 0.3f, z);
+			const Vector3 t(tx, streamer_->ground(tx, tz) + 1.2f, tz);
+			player_->teleport(p, std::atan2(t.x - p.x, t.z - p.z));
+			camera_->face_direction(t - p);
+			camera_->snap();
+			player_->set_input_enabled(false);
+		}
 	}
 }
 
@@ -645,13 +944,19 @@ void FestivalGame::area_loaded(Area &a) {
 	const int64_t key = int64_t(a.key);
 	if (CandyField *cf = a.gen->candy_field()) {
 		cf->connect("candy_collected", Callable(this, "_on_candy").bind(key));
-		cf->connect("house_cleared", Callable(this, "_on_house_cleared").bind(key));
+		cf->connect("lot_emptied", Callable(this, "_on_lot_emptied").bind(key));
 		cf->connect("sequence_completed", Callable(this, "_on_sequence").bind(key));
 	}
 	a.extras = memnew(Node3D);
 	a.extras->set_name(String(a.plan.name.c_str()) + " Infestation");
 	streamer_->add_child(a.extras);
-	auto inf = std::make_unique<Infestation>();
+	std::unique_ptr<Infestation> inf;
+	if (a.prepared) {
+		inf = std::move(*std::static_pointer_cast<std::unique_ptr<Infestation>>(a.prepared)); // on_area_prepare's
+	}
+	if (!inf) {
+		inf = std::make_unique<Infestation>();
+	}
 	const uint64_t k = a.key;
 	AreaState *st = a.state;
 	inf->on_nest_down = [this, st](int i) {
@@ -673,7 +978,7 @@ void FestivalGame::area_loaded(Area &a) {
 		update_area_hud(true);
 	};
 	inf->on_freed = [this, k]() { area_freed(k); };
-	inf->build(a, &mworld_, a.extras, mode_ == 0);
+	inf->build_begin(a, &mworld_, a.extras, mode_ == 0); // the rest in on_area_loaded_step (sliced by the streamer)
 	if (mode_ == 0) {
 		// Trick or Treat: every gate is awake, so every place visited joins the travel network.
 		bool known = false;
@@ -690,6 +995,9 @@ void FestivalGame::area_loaded(Area &a) {
 	}
 	infest_[a.key] = std::move(inf);
 	place_costume(a);
+	if (!a.state->complete && goals_done(&a)) {
+		a.state->complete = true; // a save from before the house goals: already all clear, nothing to announce
+	}
 }
 
 void FestivalGame::area_unloading(Area &a) {
@@ -732,6 +1040,7 @@ void FestivalGame::area_freed(uint64_t key) {
 		burst_fx(f.gate + Vector3(k * 1.5f - 1.5f, 6.0f + k, -1.0f + k), true);
 	}
 	update_area_hud(true);
+	check_complete(a); // the houses may all be done already
 }
 
 void FestivalGame::update_area_hud(bool force) {
@@ -774,6 +1083,8 @@ void FestivalGame::update_area_hud(bool force) {
 		d["candy_total"] = int(a->state->candy_taken.size());
 		d["houses"] = int(std::count(a->state->rung.begin(), a->state->rung.end(), 1));
 		d["houses_total"] = int(a->state->rung.size());
+		d["cleared"] = int(std::count(a->state->lot_cleared.begin(), a->state->lot_cleared.end(), 1)); // trick-or-treated + all its candy
+		d["complete"] = a->state->complete;
 		d["town"] = a->plan.kind == RegionKind::Town;
 		d["peaceful"] = mode_ == 0;
 	}
@@ -784,7 +1095,9 @@ void FestivalGame::update_area_hud(bool force) {
 		Array b;
 		b.push_back(String(region.c_str()));
 		String sub;
-		if (a && !a->state->freed) {
+		if (a && a->state->complete) {
+			sub = "All clear! Every nest down, every house trick-or-treated and cleared.";
+		} else if (a && !a->state->freed) {
 			sub = "Infested! Destroy the monster nests and the thorn nests (their vines die with them).";
 		} else if (a) {
 			sub = "Freed. The travel gate glows by the side street.";
@@ -861,15 +1174,91 @@ void FestivalGame::on_sequence(int size, Vector3 pos, int64_t key) {
 	}
 }
 
+// Every placed piece of a lot is in the bucket.
+void FestivalGame::on_lot_emptied(int lot, int64_t key) {
+	if (Area *a = streamer_->area(uint64_t(key))) {
+		try_clear_house(a, lot);
+	}
+}
+
+// The house's own placed candy still out (AreaState::candy_taken is the record; doorbell treats don't count).
+int FestivalGame::lot_candy_left(const Area *a, int lot) const {
+	const GenContext *ctx = a->gen->context();
+	if (!ctx) {
+		return 0;
+	}
+	int n = 0;
+	for (size_t i = 0; i < ctx->candy.size(); ++i) {
+		if (ctx->candy[i].lot == lot && !(i < a->state->candy_taken.size() && a->state->candy_taken[i])) {
+			++n;
+		}
+	}
+	return n;
+}
+
+// A house is cleared once it has been trick-or-treated AND all of its candy has been collected, in either
+// order: this runs at the ring and when its last piece is picked up, and announces exactly once (the flag
+// is saved; WorldStreamer::reconcile_state keeps it on re-attach and load).
+void FestivalGame::try_clear_house(Area *a, int lot) {
+	AreaState &st = *a->state;
+	if (lot < 0 || lot >= int(st.rung.size()) || lot >= int(st.lot_cleared.size()) || !st.rung[lot] || st.lot_cleared[lot]) {
+		return;
+	}
+	if (lot_candy_left(a, lot) > 0) {
+		return;
+	}
+	st.lot_cleared[lot] = 1;
+	on_house_cleared(lot, int64_t(a->key));
+	update_area_hud(true);
+	check_complete(a);
+}
+
+// The area's goals: every monster nest and thorn nest down (freed; always so in Trick or Treat), every house
+// trick-or-treated and every house cleared. All done: the area is all clear, announced once and saved.
+bool FestivalGame::goals_done(const Area *a) const {
+	const AreaState &st = *a->state;
+	if (!st.freed || st.rung.empty()) {
+		return false;
+	}
+	for (size_t l = 0; l < st.rung.size(); ++l) {
+		if (!st.rung[l] || l >= st.lot_cleared.size() || !st.lot_cleared[l]) {
+			return false;
+		}
+	}
+	return true;
+}
+
+void FestivalGame::check_complete(Area *a) {
+	if (!a || a->state->complete || !goals_done(a)) {
+		return;
+	}
+	a->state->complete = true;
+	door_test_completed(a->key);
+	call_audio("play_freed");
+	Array c;
+	c.push_back(String(a->plan.name.c_str()) + " is all clear!");
+	c.push_back(3);
+	call_ui("callout", c);
+	Array t;
+	t.push_back(a->plan.kind == RegionKind::Town ? String("Every shop trick-or-treated and cleared.") : String("Every house trick-or-treated and cleared."));
+	call_ui("toast", t);
+	camera_->shake(0.4f);
+	const Vector3 at = infest_.count(a->key) ? infest_[a->key]->gate_position() : a->plan.spawn;
+	for (int k = 0; k < 4; ++k) {
+		burst_fx(at + Vector3(k * 1.5f - 2.25f, 7.0f + k, -1.0f + (k % 2) * 2.0f), true);
+	}
+	update_area_hud(true);
+}
+
+// The "House cleared!" announcement (the porch winds down, a firework, the callout). Callers decide when:
+// try_clear_house in play, the trailer's shot directly.
 void FestivalGame::on_house_cleared(int lot, int64_t key) {
 	Area *a = streamer_->area(uint64_t(key));
 	if (!a) {
 		return;
 	}
+	door_test_announced(uint64_t(key), lot);
 	a->gen->light_up_house(lot);
-	if (lot >= 0 && lot < int(a->state->lot_cleared.size())) {
-		a->state->lot_cleared[lot] = 1;
-	}
 	call_audio("play_cleared");
 	PackedVector3Array bells = a->gen->get_doorbells();
 	if (lot >= 0 && lot < bells.size()) {
@@ -1091,8 +1480,14 @@ void bytes_to_flags(const Variant &v, std::vector<char> &out, bool keep_first) {
 	}
 }
 
-constexpr int SAVE_VERSION = 1;
+// 2 (ship of the world rework, 2026-11-18): winding roads, hills, varied towns, more nests and the house goals moved
+// every layout, and area state (candy, doors, nests) is positional, so a version 1 save can't be loaded into it.
+constexpr int SAVE_VERSION = 2;
 } // namespace
+
+int FestivalGame::save_version() const {
+	return SAVE_VERSION;
+}
 
 Dictionary FestivalGame::save_state() {
 	Dictionary d;
@@ -1134,7 +1529,7 @@ Dictionary FestivalGame::save_state() {
 	const Dictionary areas = streamer_->export_states();
 	d["areas"] = areas;
 	// A summary for the save list.
-	int houses = 0, areas_freed = 0, costumes = 0;
+	int houses = 0, areas_freed = 0, areas_complete = 0, costumes = 0;
 	const Array vals = areas.values();
 	for (int64_t i = 0; i < vals.size(); ++i) {
 		const Dictionary s = vals[i];
@@ -1143,6 +1538,7 @@ Dictionary FestivalGame::save_state() {
 			houses += rung[k] ? 1 : 0;
 		}
 		areas_freed += bool(s.get("freed", false)) ? 1 : 0;
+		areas_complete += bool(s.get("complete", false)) ? 1 : 0;
 	}
 	for (char c : costume_found_) {
 		costumes += c ? 1 : 0;
@@ -1150,6 +1546,7 @@ Dictionary FestivalGame::save_state() {
 	d["area_name"] = String(current_region_.c_str());
 	d["houses"] = houses;
 	d["areas_freed"] = areas_freed;
+	d["areas_complete"] = areas_complete; // all clear: nests, thorn nests, houses trick-or-treated and cleared
 	d["costumes_found"] = costumes;
 	return d;
 }
@@ -1851,6 +2248,24 @@ void FestivalGame::_process(double delta) {
 			get_tree()->quit();
 		}
 	}
+	if (save_test_ && frame_ == 90) {
+		// Ship: --save-version-test (headless, in process; no save file is written): the state as saved now, refused
+		// with an older or a missing version (nothing changed), then taken back with the current one.
+		wallet_ = 37;
+		const Dictionary cur = save_state();
+		Dictionary old = cur.duplicate(true);
+		old["version"] = 1;
+		Dictionary none = cur.duplicate(true);
+		none.erase("version");
+		wallet_ = 5;
+		const bool old_ok = load_state(old), none_ok = load_state(none);
+		const bool untouched = wallet_ == 5;
+		const bool cur_ok = load_state(cur);
+		UtilityFunctions::print("SAVE_TEST version ", int(cur.get("version", -1)), ": old save loaded ", old_ok, ", unversioned loaded ", none_ok, ", state untouched ", untouched,
+				", current loaded ", cur_ok, " (wallet ", wallet_, ")");
+		UtilityFunctions::print(!old_ok && !none_ok && untouched && cur_ok && wallet_ == 37 ? "SAVE_TEST ok" : "SAVE_TEST FAILED");
+		get_tree()->quit();
+	}
 	if (review_free_ && frame_ == 40) {
 		// Review aid: burn every nest and vine in the home area, then step onto its gate.
 		std::vector<Damageable *> targets;
@@ -2147,9 +2562,9 @@ void FestivalGame::_process(double delta) {
 			}
 			// The place: the home street (along it: T; across it: N), an open hillside, or a porch.
 			Area *home = streamer_->area(WorldStreamer::area_key(0, 0));
-			const StreetPlan &st = home->gen->context()->street;
+			const Road &st = home->gen->context()->roads.trunk();
 			const float at = env("TOT_MONSTER_AT").is_empty() ? 0.3f : float(env("TOT_MONSTER_AT").to_float());
-			const float sx = st.center.front().x + (st.center.back().x - st.center.front().x) * Math::clamp(at, 0.1f, 0.9f);
+			const float sx = st.s_begin() + (st.s_end() - st.s_begin()) * Math::clamp(at, 0.1f, 0.9f);
 			mt.P = home->to_world(st.at(sx));
 			mt.T = (home->to_world(st.at(sx + 1.0f)) - home->to_world(st.at(sx - 1.0f))) * Vector3(1, 0, 1);
 			mt.T = mt.T.normalized();
@@ -2408,6 +2823,9 @@ void FestivalGame::_process(double delta) {
 		}
 	}
 
+	if (door_test_) {
+		door_test_step(); // may stand the kid on a doorbell for the doorbell loop below
+	}
 	const Vector3 pp = player_->get_global_position();
 	streamer_->update(pp);
 	if (sky_) {
@@ -2492,6 +2910,7 @@ void FestivalGame::_process(double delta) {
 					v->candy_sparkles(b + Vector3(0, 1.3f, 0), Color(1.0f, 0.75f, 0.3f), 40, 3.5f, 1.1f, 1.5f);
 				}
 				camera_->shake(0.25f);
+				try_clear_house(a, i); // its candy may all be found already: the ring is then the second condition
 			}
 		}
 		if (CandyField *cf = a->gen->candy_field()) {
@@ -2523,6 +2942,7 @@ void FestivalGame::_process(double delta) {
 						Dictionary d;
 						d["name"] = String(f.name.c_str());
 						d["distance"] = int(f.gate.distance_to(pp));
+						d["complete"] = streamer_->state_of(f.key).complete;
 						list.push_back(d);
 						travel_keys_.push_back(f.key);
 					}

@@ -249,10 +249,10 @@ bool FestivalGame::showcase_setup() {
 
 	// The stage: the straightest stretch of the home street with nothing standing in the run, in the
 	// tracking camera's lane or around the turntable. The front faces the side the moonlight comes from.
-	const StreetPlan &st = home->gen->context()->street;
-	const int count = int(st.center.size());
+	const Road &st = home->gen->context()->roads.trunk();
+	const int count = int(st.pts.size());
 	auto street_at = [&](int i) {
-		Vector3 p = home->to_world(st.center[Math::clamp(i, 0, count - 1)]);
+		Vector3 p = home->to_world(st.pts[Math::clamp(i, 0, count - 1)]);
 		p.y = streamer_->ground(p.x, p.z);
 		return p;
 	};
@@ -479,7 +479,10 @@ bool FestivalGame::showcase_check_size(int attempt) {
 		s.borderless = true;
 	}
 	ds->window_set_size(s.size);
-	ds->window_set_position(ds->screen_get_position(ds->window_get_current_screen()) + (attempt == 1 ? Vector2i() : Vector2i(60, 40)));
+	// A background run (tools/godot_bg.ps1) put the window off-screen with --position: keep it there.
+	if (!OS::get_singleton()->get_cmdline_args().has("--position")) {
+		ds->window_set_position(ds->screen_get_position(ds->window_get_current_screen()) + (attempt == 1 ? Vector2i() : Vector2i(60, 40)));
+	}
 	return true;
 }
 

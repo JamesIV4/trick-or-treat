@@ -87,9 +87,8 @@ void KidFace::bind(Node *visual) {
 		// dark rim showed as a pale arc just inside the lash line (FIDELITY_PASS decision 13). -2 = fully
 		// matte (toon.gdshader): no painted highlight and no sky sheen, which turned the lash line, the rim
 		// and the pupil lavender in the bright face close-up.
-		if (GeometryInstance3D *g = Object::cast_to<GeometryInstance3D>(eye_[i])) {
-			g->set_instance_shader_parameter("gloss", -2.0f);
-		}
+		// (2026-11-17) The eye is an anime ink dome again (user: eyes "more like the anime style they had before");
+		// like the old ones it keeps the toon shader's soft sheen, so no gloss -2 on it. The glint stays matte.
 		if (GeometryInstance3D *g = Object::cast_to<GeometryInstance3D>(iris_[i])) {
 			g->set_instance_shader_parameter("gloss", -2.0f);
 		}

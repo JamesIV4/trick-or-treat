@@ -8,6 +8,9 @@
 
 #include "core/noise.h"
 #include "gen/context.h"
+#include "world/world_streamer.h"
+
+static_assert(tot::WorldStreamer::STEP == tot::TERRAIN_LATTICE, "the terrain mesh lattice must match the neighbourhood heightfield (Stage 3b)");
 
 using namespace godot;
 
@@ -15,7 +18,7 @@ namespace tot {
 
 namespace {
 
-constexpr float SETTLE_BLEND = 26.0f; // hills -> settlement plateau
+constexpr float SETTLE_BLEND = WorldPlan::BLEND; // hills -> settlement plateau
 constexpr float JUNCTION_FLAT = 9.0f, JUNCTION_BLEND = 16.0f;
 
 float smooth01(float e0, float e1, float x) {
@@ -54,7 +57,93 @@ float WorldPlan::forest_density(float x, float z) const {
 	return smooth01(-0.35f, 0.3f, noise::fbm(seed_ ^ 0x33, x / 90.0f, z / 90.0f, 3));
 }
 
-// Kind, footprint and street ports, without anything that depends on the neighbours.
+namespace {
+uint64_t region_seed(uint64_t world, int i, int j) {
+	return sub_seed(world, 0x5E77, uint64_t(int64_t(i) + 100000), uint64_t(int64_t(j) + 100000));
+}
+} // namespace
+
+RegionKind WorldPlan::kind_of(int i, int j) const {
+	if (i == 0 && j == 0) {
+		return RegionKind::Neighborhood;
+	}
+	Rng rng(region_seed(seed_, i, j), 17); // the first draw base() makes
+	const float roll = rng.f();
+	return roll < 0.35f ? RegionKind::Woods : (roll < 0.75f ? RegionKind::Neighborhood : RegionKind::Town);
+}
+
+// Every N/S port a neighbourhood builds has a matching port across the boundary. Rows pair up (j even
+// with j + 1): a neighbourhood whose partner row holds a neighbourhood always runs its port road to it
+// (both sides agree). Otherwise it may run one to its partner or to its other neighbour, if that one is
+// woods (woods take a road from every side) or a town whose side lane points at it (preferred: that
+// lane would otherwise stay closed), never to a neighbourhood that is paired with someone else.
+int WorldPlan::hood_port(int i, int j, uint64_t seed) {
+	const int pj = (j & 1) == 0 ? j + 1 : j - 1;
+	const int ps = pj > j ? 1 : -1;
+	const RegionKind pk = kind_of(i, pj);
+	if (pk == RegionKind::Neighborhood) {
+		return ps;
+	}
+	struct Opt {
+		int side;
+		bool town;
+	};
+	std::vector<Opt> opts;
+	auto consider = [&](int nj, int side) {
+		const RegionKind k = kind_of(i, nj);
+		if (k == RegionKind::Woods) {
+			opts.push_back({ side, false });
+		} else if (k == RegionKind::Town && (town_offer(i, nj) & (side > 0 ? 2 : 1))) {
+			// Stage 4c: the town offers a port road on the side facing us (a town builds it only if we take it;
+			// town_offer reads nothing but the seed: no recursion).
+			opts.push_back({ side, true });
+		}
+	};
+	consider(pj, ps);
+	consider(j - ps, -ps);
+	if (opts.empty()) {
+		return 0;
+	}
+	if (opts.size() == 2 && opts[0].town != opts[1].town) {
+		return opts[0].town ? opts[0].side : opts[1].side;
+	}
+	Rng rng(sub_seed(seed, 0x9047), 3);
+	return opts[opts.size() == 2 && rng.chance(0.5f) ? 1 : 0].side;
+}
+
+// Stage 4c: the N/S port roads a town offers (1 north, 2 south), from its seed alone. It builds an offered one
+// only when the neighbour on that side meets it (woods always; a town offering the facing side; a
+// neighbourhood whose own N/S port road points back at it), so every town port is matched.
+int WorldPlan::town_offer(int i, int j) const {
+	Rng rng(sub_seed(region_seed(seed_, i, j), 0x70F0), 5);
+	const float r = rng.f();
+	return r < 0.2f ? 0 : (r < 0.45f ? 1 : (r < 0.7f ? 2 : 3));
+}
+
+int WorldPlan::town_ports(int i, int j) {
+	auto meets = [&](int nj, int side) {
+		const RegionKind k = kind_of(i, nj);
+		if (k == RegionKind::Woods) {
+			return true;
+		}
+		if (k == RegionKind::Town) {
+			return (town_offer(i, nj) & (side > 0 ? 2 : 1)) != 0;
+		}
+		return hood_port(i, nj, region_seed(seed_, i, nj)) == -side;
+	};
+	const int offer = town_offer(i, j);
+	int mask = 0;
+	if ((offer & 1) && meets(j + 1, 1)) {
+		mask |= 1;
+	}
+	if ((offer & 2) && meets(j - 1, -1)) {
+		mask |= 2;
+	}
+	return mask;
+}
+
+// Kind, footprint and street ports. Only settlements look at their neighbours (their kinds, a town's offered
+// port roads, a neighbourhood's port road side), and never at another settlement's footprint.
 const RegionPlan &WorldPlan::base(int i, int j) {
 	const uint64_t k = key(i, j);
 	auto it = base_.find(k);
@@ -64,7 +153,7 @@ const RegionPlan &WorldPlan::base(int i, int j) {
 	RegionPlan r;
 	r.i = i;
 	r.j = j;
-	r.seed = sub_seed(seed_, 0x5E77, uint64_t(int64_t(i) + 100000), uint64_t(int64_t(j) + 100000));
+	r.seed = region_seed(seed_, i, j);
 	Rng rng(r.seed, 17);
 	if (i == 0 && j == 0) {
 		r.kind = RegionKind::Neighborhood;
@@ -72,7 +161,13 @@ const RegionPlan &WorldPlan::base(int i, int j) {
 		const float roll = rng.f();
 		r.kind = roll < 0.35f ? RegionKind::Woods : (roll < 0.75f ? RegionKind::Neighborhood : RegionKind::Town);
 	}
-	const Vector3 center(float(i) * REGION + rng.range(-14.0f, 14.0f), 0.0f, float(j) * REGION + rng.range(-14.0f, 14.0f));
+	Vector3 center(float(i) * REGION + rng.range(-JITTER, JITTER), 0.0f, float(j) * REGION + rng.range(-JITTER, JITTER));
+	if (r.kind == RegionKind::Neighborhood || r.kind == RegionKind::Town) {
+		// Stage 3b: on the terrain lattice, so the settlement's heightfield is the terrain's own triangles (towns
+		// too since Stage 4c).
+		center.x = std::round(center.x / TERRAIN_LATTICE) * TERRAIN_LATTICE;
+		center.z = std::round(center.z / TERRAIN_LATTICE) * TERRAIN_LATTICE;
+	}
 	r.origin = Vector3(center.x, natural(center.x, center.z), center.z);
 	if (r.settlement()) {
 		// Plan just the street and lots (cheap and deterministic) to know the footprint and exits.
@@ -80,13 +175,35 @@ const RegionPlan &WorldPlan::base(int i, int j) {
 		ctx.seed = settlement_seed(r); // exactly what the streamer generates with, so streets meet roads
 		ctx.kind = r.kind == RegionKind::Town ? SettlementKind::Town : SettlementKind::Neighborhood;
 		ctx.embedded = true;
+		if (r.kind == RegionKind::Neighborhood) {
+			r.hood_port = hood_port(i, j, r.seed);
+			ctx.port_side = r.hood_port;
+		} else {
+			// Stage 4c: the town's N/S port roads, only where a road will meet them (the streamer passes hood_port
+			// on to the generator as its port_side).
+			r.hood_port = GenContext::TOWN_PORTS + town_ports(i, j);
+			ctx.port_side = r.hood_port;
+		}
 		plan_street(ctx);
 		if (r.kind == RegionKind::Town) {
+			// Stage 4c: the generator's exact sequence up to the terrain (no assets, nothing but the seed).
 			plan_town_lots(ctx);
+			assign_shops(ctx);
+			for (Lot &lot : ctx.lots) {
+				plan_shop(ctx, lot);
+			}
+			plan_hood_terrain(ctx);
+			r.terrain = ctx.terrain;
 		} else {
 			plan_lots(ctx);
+			// Stage 3b: the graded roads, lot pads and heightfield, exactly as the generator makes them.
+			assign_households(ctx);
+			for (Lot &lot : ctx.lots) {
+				plan_house(ctx, lot);
+			}
+			plan_hood_terrain(ctx);
+			r.terrain = ctx.terrain;
 		}
-		const StreetPlan &s = ctx.street;
 		r.x0 = r.origin.x + ctx.bound_x0 - 3.0f;
 		r.x1 = r.origin.x + ctx.bound_x1 + 3.0f;
 		r.z0 = r.origin.z + ctx.bound_z0 - 4.0f;
@@ -96,16 +213,30 @@ const RegionPlan &WorldPlan::base(int i, int j) {
 		auto port = [&](Vector3 local, Vector3 dir) {
 			Port p;
 			p.valid = true;
-			p.pos = r.origin + Vector3(local.x, 0.0f, local.z);
+			p.pos = r.origin + Vector3(local.x, local.y, local.z); // y: the graded road end (Stage 3b; 0 in towns)
 			p.dir = Vector3(dir.x, 0.0f, dir.z).normalized();
 			return p;
 		};
-		const Vector3 e = s.center.back(), w = s.center.front();
-		r.ports[PORT_E] = port(e, e - s.center[s.center.size() - 3]);
-		r.ports[PORT_W] = port(w, w - s.center[2]);
-		const Vector3 lane_end = s.lane_origin + Vector3(0, 0, float(s.lane_dir) * s.lane_len); // the road starts where the lane asphalt ends
-		r.lane_side = s.lane_dir > 0 ? PORT_N : PORT_S;
-		r.ports[r.lane_side] = port(lane_end, Vector3(0, 0, float(s.lane_dir)));
+		// A port at every road end that leaves the settlement, on the side it heads out of (the road
+		// starts where the street asphalt ends); the first road to claim a side keeps it.
+		for (int ri = 0; ri < int(ctx.roads.roads.size()); ++ri) {
+			const Road &road = ctx.roads.roads[ri];
+			for (bool at_end : { true, false }) {
+				if ((at_end ? road.end_kind : road.start_kind) != RoadEnd::Port) {
+					continue;
+				}
+				const Vector3 pos = at_end ? road.pts.back() : road.pts.front();
+				const Vector3 dir = road.end_dir(at_end);
+				const int side = std::abs(dir.x) >= std::abs(dir.z) ? (dir.x > 0.0f ? PORT_E : PORT_W) : (dir.z > 0.0f ? PORT_N : PORT_S);
+				if (r.ports[side].valid) {
+					continue;
+				}
+				r.ports[side] = port(pos, dir);
+				if (road.parent >= 0 && r.lane_side < 0) {
+					r.lane_side = side; // the side lane's exit (whether a road continues there decides lane_open)
+				}
+			}
+		}
 		const char **suffix = r.kind == RegionKind::Town ? NAME_TOWN : NAME_HOOD;
 		r.name = std::string(NAME_A[rng.irange(0, 19)]) + (r.kind == RegionKind::Town ? "" : " ") + suffix[rng.irange(0, 7)];
 	} else {
@@ -120,6 +251,15 @@ const RegionPlan &WorldPlan::base(int i, int j) {
 	return base_.emplace(k, r).first->second;
 }
 
+void WorldPlan::adopt_regions(const WorldPlan &from) {
+	if (from.seed_ != seed_) {
+		return;
+	}
+	for (const auto &kv : from.base_) {
+		base_.emplace(kv.first, kv.second); // no-op where this plan has the region already
+	}
+}
+
 const RegionPlan &WorldPlan::region(int i, int j) {
 	const uint64_t k = key(i, j);
 	auto it = regions_.find(k);
@@ -127,7 +267,7 @@ const RegionPlan &WorldPlan::region(int i, int j) {
 		return it->second;
 	}
 	RegionPlan r = base(i, j);
-	if (r.settlement()) {
+	if (r.settlement() && r.lane_side >= 0) {
 		const int nj = r.lane_side == PORT_N ? j + 1 : j - 1;
 		const RegionPlan &n = base(i, nj);
 		r.lane_open = n.ports[r.lane_side == PORT_N ? PORT_S : PORT_N].valid;
@@ -157,8 +297,8 @@ const RoadPlan *WorldPlan::road(int i0, int j0, int i1, int j1) {
 	std::unique_ptr<RoadPlan> road;
 	if (pa.valid && pb.valid) {
 		Port qa = pa, qb = pb;
-		qa.pos.y = a.origin.y;
-		qb.pos.y = b.origin.y;
+		qa.pos.y = pa.pos.y; // the street's own end height (a graded neighbourhood road; the level elsewhere)
+		qb.pos.y = pb.pos.y;
 		road = std::make_unique<RoadPlan>();
 		build_road(*road, qa, qb, k);
 	}
@@ -277,6 +417,7 @@ float WorldPlan::settlement_mask(float x, float z) {
 
 float WorldPlan::height(float x, float z) {
 	float h = natural(x, z);
+	float hood_m = 0.0f; // inside a neighbourhood its own graded roads rule (the country road starts at its port)
 	int i, j;
 	region_of(x, z, i, j);
 	for (int di = -1; di <= 1; ++di) {
@@ -291,7 +432,12 @@ float WorldPlan::height(float x, float z) {
 				m = 1.0f - smooth01(JUNCTION_FLAT, JUNCTION_FLAT + JUNCTION_BLEND, Vector2(x - r.origin.x, z - r.origin.z).length());
 			}
 			if (m > 0.0f) {
-				h = Math::lerp(h, r.origin.y, m);
+				// Stage 3b: a settlement's graded heightfield (towns too since Stage 4c).
+				const float target = r.terrain ? r.origin.y + r.terrain->at(x - r.origin.x, z - r.origin.z) : r.origin.y;
+				h = m >= 1.0f ? target : Math::lerp(h, target, m);
+				if (r.terrain) {
+					hood_m = Math::max(hood_m, m);
+				}
 			}
 		}
 	}
@@ -301,7 +447,7 @@ float WorldPlan::height(float x, float z) {
 	for (int k = 0; k < n; ++k) {
 		float y;
 		const float d = polyline_distance(roads[k]->pts, x, z, y);
-		const float m = 1.0f - smooth01(ROAD_HALF + 0.8f, ROAD_HALF + 9.0f, d);
+		const float m = (1.0f - smooth01(ROAD_HALF + 0.8f, ROAD_HALF + 9.0f, d)) * (1.0f - hood_m);
 		if (m > 0.0f) {
 			h = Math::lerp(h, y, m);
 		}

@@ -9,6 +9,8 @@
 #include "play/festival_game.h"
 
 #include <godot_cpp/classes/camera_attributes_practical.hpp>
+#include <godot_cpp/classes/camera3d.hpp>
+#include <godot_cpp/classes/physics_point_query_parameters3d.hpp>
 
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/image.hpp>
@@ -145,7 +147,10 @@ bool FestivalGame::cine_clear(const Vector3 &a, const Vector3 &b) {
 }
 
 Vector2 FestivalGame::cine_lane(const Vector3 &anchor, const Vector3 &back_dir, std::initializer_list<float> sides, std::initializer_list<float> backs, float push, float height,
-		std::initializer_list<Vector3> targets) {
+		std::initializer_list<Vector3> targets, bool *found) {
+	if (found) {
+		*found = false;
+	}
 	const Vector3 side_dir = side_of(back_dir);
 	for (float back : backs) {
 		for (float side : sides) {
@@ -158,11 +163,34 @@ Vector2 FestivalGame::cine_lane(const Vector3 &anchor, const Vector3 &back_dir, 
 				}
 			}
 			if (ok) {
+				if (found) {
+					*found = true;
+				}
 				return Vector2(side, back);
 			}
 		}
 	}
 	return Vector2(*sides.begin(), *backs.begin());
+}
+
+bool FestivalGame::cine_spot_free(const Vector3 &feet) {
+	PhysicsDirectSpaceState3D *space = get_world_3d()->get_direct_space_state();
+	if (!space) {
+		return true;
+	}
+	TypedArray<RID> self;
+	self.push_back(player_->get_rid());
+	for (float h : { 0.4f, 1.2f }) {
+		Ref<PhysicsPointQueryParameters3D> pq;
+		pq.instantiate();
+		pq->set_position(feet + Vector3(0, h, 0));
+		pq->set_collision_mask(1 | 2 | 4);
+		pq->set_exclude(self);
+		if (!space->intersect_point(pq, 1).is_empty()) {
+			return false;
+		}
+	}
+	return true;
 }
 
 void FestivalGame::cine_home(Vector3 &spawn, Vector3 &street) {
@@ -437,18 +465,54 @@ void FestivalGame::cine_build() {
 		s.setup = [=, this]() {
 			cine_a_ = door;
 			cine_c_ = flat(spawn - door);
-			cine_d_ = Vector3();
-			const Vector3 kid_at = ground(door + cine_c_ * 7.0f, 0.2f);
-			player_->teleport(kid_at, std::atan2(-cine_c_.x, -cine_c_.z));
+			cine_d_ = Vector3(0.0f, 0.0f, float(lot));
+			Vector3 kid_at = ground(door + cine_c_ * 7.0f, 0.2f);
 			// A clear line to the porch, the roof and the kid over the whole dolly (lamp posts, trees).
-			const Vector2 lane = cine_lane(door, cine_c_, { 3.0f, -3.0f, 1.5f, -1.5f, 4.5f, -4.5f, 0.0f }, { 15.0f, 13.0f, 17.0f, 11.0f }, 4.0f, 2.4f,
-					{ door + cine_c_ * 1.2f + Vector3(0, 0.5f, 0), door + cine_c_ * 1.2f + Vector3(0, 3.5f, 0), kid_at + Vector3(0, 0.8f, 0) });
+			// Ship: on winding streets the way back toward the spawn can run through the houses across the road, so the
+			// house's own front (its path to the street) is tried too, and then the next best-dressed houses, until the
+			// kid's spot is free and the lane is clear.
+			Vector2 lane(3.0f, 15.0f);
+			bool found = false;
+			Area *ha = streamer_->area(WorldStreamer::area_key(0, 0));
+			std::vector<int> tries = { lot };
+			for (int d : ha ? dressed_houses(ha, spawn) : std::vector<int>()) {
+				if (d != lot && tries.size() < 6) {
+					tries.push_back(d);
+				}
+			}
+			const PackedVector3Array hb = ha ? ha->gen->get_doorbells() : PackedVector3Array();
+			for (int l : tries) {
+				if (!ha || l < 0 || l >= hb.size() || found) {
+					break;
+				}
+				const Vector3 d0 = ha->to_world(hb[l]);
+				const Lot &plot = ha->gen->context()->lots[l];
+				const Vector3 front = flat(ha->to_world(plot.to_world(Vector3(plot.house.door_x, 0, -0.6f))) - d0);
+				for (const Vector3 &c : { flat(spawn - d0), front }) {
+					const Vector3 k = ground(d0 + c * 7.0f, 0.2f);
+					if (!cine_spot_free(k)) {
+						continue;
+					}
+					const Vector2 ln = cine_lane(d0, c, { 3.0f, -3.0f, 1.5f, -1.5f, 4.5f, -4.5f, 0.0f }, { 15.0f, 13.0f, 17.0f, 11.0f }, 4.0f, 2.4f,
+							{ d0 + c * 1.2f + Vector3(0, 0.5f, 0), d0 + c * 1.2f + Vector3(0, 3.5f, 0), k + Vector3(0, 0.8f, 0) }, &found);
+					if (found) {
+						cine_a_ = d0;
+						cine_c_ = c;
+						cine_d_.z = float(l);
+						kid_at = k;
+						lane = ln;
+						break;
+					}
+				}
+			}
+			UtilityFunctions::print("CINE lights: house ", int(cine_d_.z), found ? " (clear)" : " (none clear)", " lane ", lane);
+			player_->teleport(kid_at, std::atan2(-cine_c_.x, -cine_c_.z));
 			cine_b_ = Vector3(lane.x, lane.y, 0);
 		};
 		s.tick = [=, this](float t) {
 			if (t > 0.9f && cine_d_.x == 0.0f) {
 				cine_d_.x = 1.0f;
-				on_house_cleared(lot, int64_t(key));
+				on_house_cleared(int(cine_d_.z), int64_t(key));
 			}
 			player_->bot_input(Vector3(), false, false, t > 1.4f && t < 1.45f);
 		};
@@ -720,22 +784,89 @@ void FestivalGame::cine_build() {
 				order.push_back(i);
 			}
 			std::sort(order.begin(), order.end(), [&](int a, int b) { return in->nest_position(a).distance_to(sp) < in->nest_position(b).distance_to(sp); });
-			const Vector3 nest = order.empty() ? sp + st * 8.0f : in->nest_position(order[std::min<size_t>(1, order.size() - 1)]);
-			cine_a_ = nest;
+			Vector3 nest = order.empty() ? sp + st * 8.0f : in->nest_position(order[std::min<size_t>(1, order.size() - 1)]);
 			cine_c_ = flat(sp - nest);
+			Vector3 kid_at = nest + cine_c_ * 7.0f;
+			kid_at.y = streamer_->ground(kid_at.x, kid_at.z) + 0.3f;
+			Vector2 lane(3.2f, 2.6f);
+			// Ship: the nests nearest the spawn in turn (the second nearest first, as picked), the kid 7 m out on the side
+			// toward the spawn or turned round it, on a free spot with a clear line of fire and a clear camera lane
+			// beside it (on winding streets the straight line back to the spawn often runs into a yard or a house).
+			bool found = false;
+			int fails[4] = { 0, 0, 0, 0 }; // (spot taken, too high or low, line of fire blocked, lane tried)
+			std::vector<int> pick;
+			if (order.size() > 1) {
+				pick.push_back(order[1]);
+			}
+			for (int o : order) {
+				if (pick.size() < 8 && (pick.empty() || o != pick[0])) {
+					pick.push_back(o);
+				}
+			}
+			for (int ni : pick) {
+				const Vector3 nz = in->nest_position(ni);
+				const Vector3 toward = flat(sp - nz);
+				for (int a = 0; a < 12 && !found; ++a) {
+					const float ang = (a % 2 ? 1.0f : -1.0f) * float((a + 1) / 2) * float(Math_TAU) / 12.0f;
+					const Vector3 c = toward.rotated(Vector3(0, 1, 0), ang);
+					Vector3 k = nz + c * 7.0f;
+					k.y = streamer_->ground(k.x, k.z) + 0.3f;
+					if (!cine_spot_free(k)) {
+						++fails[0];
+						continue;
+					}
+					if (std::abs(k.y - nz.y) > 1.6f) {
+						++fails[1];
+						continue;
+					}
+					if (!cine_clear(k + Vector3(0, 0.9f, 0), nz + Vector3(0, 0.8f, 0) + c * 1.2f)) {
+						++fails[2];
+						continue;
+					}
+					++fails[3];
+					// The camera's offsets, clear from every point of its sideways slide (0.75 m in toward the kid over the shot)
+					// to the kid and to the nest (short of it: its own body would block the ray).
+					Vector2 ln;
+					for (float back : { 2.6f, 3.6f, 1.6f }) {
+						for (float side : { 3.2f, -3.2f, 4.5f, -4.5f, 2.2f, -2.2f }) {
+							bool ok = true;
+							for (float sl : { 0.0f, 0.4f, 0.75f }) {
+								const Vector3 cam = k + c * back + side_of(c) * (side - (side >= 0.0f ? sl : -sl)) + Vector3(0, 1.3f, 0);
+								ok = ok && cine_spot_free(cam - Vector3(0, 1.2f, 0)) && cine_clear(cam, k + Vector3(0, 0.9f, 0)) && cine_clear(cam, nz + Vector3(0, 0.8f, 0) + c * 1.2f);
+							}
+							if (ok) {
+								ln = Vector2(side, back);
+								found = true;
+								break;
+							}
+						}
+						if (found) {
+							break;
+						}
+					}
+					if (found) {
+						nest = nz;
+						cine_c_ = c;
+						kid_at = k;
+						lane = ln;
+					}
+				}
+				if (found) {
+					break;
+				}
+			}
+			UtilityFunctions::print("CINE fireball: nest ", nest, found ? " (clear)" : " (none clear)", " kid ", kid_at, " tried ", int(pick.size()), " nests: spot taken ", fails[0], ", height ", fails[1],
+					", line blocked ", fails[2], ", lanes tried ", fails[3]);
+			cine_a_ = nest;
 			if (in) {
 				in->fill_nest_near(nest); // its monsters around it, for context
 			}
-			Vector3 kid_at = nest + cine_c_ * 7.0f;
-			kid_at.y = streamer_->ground(kid_at.x, kid_at.z) + 0.3f;
 			player_->teleport(kid_at, std::atan2(-cine_c_.x, -cine_c_.z));
 			cine_fire_ = 0.4f;
 			cine_aim_on_ = true;
 			cine_aim_ = nest + Vector3(0, 0.8f, 0);
 			// A camera spot beside the kid with a clear view of the kid and the nest (not pulled into
 			// the kid's head by a hedge or fence in between).
-			const Vector2 lane = cine_lane(kid_at, cine_c_, { 3.2f, -3.2f, 4.5f, -4.5f, 2.2f, -2.2f }, { 2.6f, 3.6f, 1.6f }, 0.6f, 1.3f,
-					{ kid_at + Vector3(0, 0.9f, 0), nest + Vector3(0, 0.8f, 0) });
 			cine_d_ = Vector3(lane.x, 0.0f, lane.y);
 		};
 		s.tick = [this](float t) {
@@ -769,24 +900,64 @@ void FestivalGame::cine_build() {
 			// The kid stands out on the street side of the nest with a clear line of fire to the heart (rays end
 			// short of it: its own body would block them), trying directions around the street side first.
 			Infestation *in = infest_.count(WorldStreamer::area_key(0, 0)) ? infest_[WorldStreamer::area_key(0, 0)].get() : nullptr;
-			const Vector3 toward = flat(spawn - heart);
-			const Vector3 aim = heart + Vector3(0, 1.0f, 0);
-			Vector3 dir = toward;
-			Vector3 kid_at = ground(heart + toward * 8.0f, 0.3f);
-			for (int a = 0; a < 16; ++a) {
-				const float ang = (a % 2 ? 1.0f : -1.0f) * float((a + 1) / 2) * float(Math_TAU) / 16.0f;
-				const Vector3 d = toward.rotated(Vector3(0, 1, 0), ang);
-				const Vector3 p = ground(heart + d * 8.0f, 0.3f);
-				if (cine_clear(p + Vector3(0, 0.9f, 0), aim + d * 2.5f)) {
-					dir = d;
-					kid_at = p;
+			Vector3 hz = heart;
+			Vector3 dir = flat(spawn - heart);
+			Vector3 kid_at = ground(heart + dir * 8.0f, 0.3f);
+			Vector2 lane(2.6f, 5.0f);
+			// Ship: one search for the kid's spot AND the camera's lane together: thorn nest 0 first, then the others; 16
+			// directions round each, street side first; the kid's spot free with a clear line of fire to the heart (rays
+			// end short of it: its own body would block them), and a camera offset clear to the kid and the heart from
+			// every point of its sideways slide (1 m further out over the shot). Before, a spot was taken on the line of
+			// fire alone and the lane fell back to its first offset when none was clear.
+			bool found = false;
+			std::vector<Vector3> hearts = { heart };
+			for (int i = 0; in && i < in->hearts_total() && hearts.size() < 5; ++i) {
+				if (in->heart_position(i).distance_to(heart) > 0.5f) {
+					hearts.push_back(in->heart_position(i));
+				}
+			}
+			for (const Vector3 &h : hearts) {
+				const Vector3 toward = flat(spawn - h);
+				const Vector3 aim = h + Vector3(0, 1.0f, 0);
+				for (int a = 0; a < 16 && !found; ++a) {
+					const float ang = (a % 2 ? 1.0f : -1.0f) * float((a + 1) / 2) * float(Math_TAU) / 16.0f;
+					const Vector3 d = toward.rotated(Vector3(0, 1, 0), ang);
+					const Vector3 p = ground(h + d * 8.0f, 0.3f);
+					if (!cine_spot_free(p) || !cine_clear(p + Vector3(0, 0.9f, 0), aim + d * 2.5f)) {
+						continue;
+					}
+					for (float back : { 5.0f, 6.0f, 4.2f }) {
+						for (float side : { 2.6f, -2.6f, 3.4f, -3.4f, 1.8f, -1.8f }) {
+							bool ok = true;
+							for (float sl : { 0.0f, 0.5f, 1.0f }) {
+								const float sd = side + (side >= 0.0f ? sl : -sl);
+								Vector3 cam = p + d * back + side_of(d) * sd;
+								cam.y = p.y + 1.5f;
+								ok = ok && cine_spot_free(cam - Vector3(0, 1.2f, 0)) && cine_clear(cam, p + Vector3(0, 0.9f, 0)) && cine_clear(cam, aim + d * 2.5f);
+							}
+							if (ok) {
+								found = true;
+								lane = Vector2(side, back);
+								hz = h;
+								dir = d;
+								kid_at = p;
+								break;
+							}
+						}
+						if (found) {
+							break;
+						}
+					}
+				}
+				if (found) {
 					break;
 				}
 			}
+			cine_a_ = hz;
+			const Vector3 aim = hz + Vector3(0, 1.0f, 0);
 			cine_c_ = dir;
 			player_->teleport(kid_at, std::atan2(-cine_c_.x, -cine_c_.z));
-			const Vector2 lane = cine_lane(kid_at, cine_c_, { 2.6f, -2.6f, 3.4f, -3.4f, 1.8f, -1.8f }, { 5.0f, 6.0f, 4.2f }, 0.0f, 1.5f,
-					{ kid_at + Vector3(0, 0.9f, 0), aim + cine_c_ * 2.5f });
+			UtilityFunctions::print("CINE thorns: heart ", hz, found ? " (clear)" : " (none clear)");
 			cine_d_ = Vector3(lane.x, 0.0f, lane.y);
 			// The tendrils creep out along the ground with no physics bodies (rays pass through them), so any
 			// that would stand in the kid's spot, the camera's slide or the sightline between them are put away
@@ -972,7 +1143,9 @@ void FestivalGame::cine_build() {
 		s.seed = 103;
 		s.setup = [=, this]() {
 			Vector3 start, d;
-			const bool ok = town_road(town_spawn, town_yaw, 30.0f, start, d);
+			// (Ship: the town of this shot's own world, looked up now: the one found when the reel was built belongs to
+			// the reel's world, and towns are laid out per seed since Stage 4c.)
+			const bool ok = high_street(30.0f, start, d);
 			UtilityFunctions::print("CINE town: straight street ", ok, " from ", start, " dir ", d);
 			cine_a_ = d;
 			cine_town_ = start;
@@ -1012,7 +1185,23 @@ void FestivalGame::cine_build() {
 				car_->place(start + Vector3(0, 0.1f, 0), std::atan2(d.x, d.z));
 				car_->set_auto(true, d);
 			}
-			clear_candy_line(start + side_of(d) * 2.2f + Vector3(0, 0.8f, 0), start + d * 42.0f + side_of(d) * 2.2f + Vector3(0, 0.8f, 0), 2.0f);
+			// Ship: the camera's side offset (it backs down the street ahead of the car) on a line clear of the parked
+			// cars and street things now lining the town's streets: inside nothing and with the car in view all the way.
+			cine_d_ = Vector3(2.2f, 0, 0);
+			for (float side : { 2.2f, -2.2f, 1.4f, -1.4f, 0.6f, -0.6f }) {
+				bool clear = true;
+				for (float u = 0.0f; u <= 36.0f && clear; u += 2.0f) {
+					const Vector3 car_at = ground(start + d * u, 0.8f);
+					const Vector3 cam = ground(start + d * (u + 6.0f) + side_of(d) * side, 0.6f);
+					clear = cine_spot_free(cam - Vector3(0, 0.4f, 0)) && cine_clear(cam, car_at);
+				}
+				if (clear) {
+					cine_d_.x = side;
+					break;
+				}
+			}
+			UtilityFunctions::print("CINE car: camera side ", cine_d_.x);
+			clear_candy_line(start + side_of(d) * cine_d_.x + Vector3(0, 0.8f, 0), start + d * 42.0f + side_of(d) * cine_d_.x + Vector3(0, 0.8f, 0), 2.0f);
 			clear_candy_line(start + Vector3(0, 0.8f, 0), start + d * 42.0f + Vector3(0, 0.8f, 0), 1.6f);
 		};
 		s.tick = [this](float) {
@@ -1023,7 +1212,7 @@ void FestivalGame::cine_build() {
 		s.cam = [this](float t, float &fov) {
 			fov = 44.0f;
 			const Vector3 c = car_ ? car_->get_global_position() : player_->get_global_position();
-			const Vector3 from = c + cine_a_ * (7.0f - 1.2f * t) + side_of(cine_a_) * 2.2f + Vector3(0, 0.6f, 0);
+			const Vector3 from = c + cine_a_ * (7.0f - 1.2f * t) + side_of(cine_a_) * cine_d_.x + Vector3(0, 0.6f, 0);
 			return look(from, c + Vector3(0, 0.8f, 0));
 		};
 		cine_.push_back(s);
@@ -1558,6 +1747,9 @@ void FestivalGame::cine_step(float dt) {
 	if (!rig) {
 		camera_->set_cinematic_pose(xf, fov);
 	}
+	if (cine_check_) {
+		cine_check_frame(xf, rig);
+	}
 	// Keep the kid in focus however close the camera gets: no near blur on trailer shots, and the far
 	// blur starts well beyond the subject (the gameplay rig keeps the normal toy-lens settings).
 	if (env_) {
@@ -1571,6 +1763,10 @@ void FestivalGame::cine_step(float dt) {
 	}
 	if (!cine_still_ && cine_t_ >= s.duration * s.still_at) {
 		cine_still_ = true;
+		if (cine_check_) {
+			cc_still_ = "still";
+			cine_check_frame(xf, rig);
+		}
 		if (!cine_out_.is_empty()) {
 			Ref<Image> img = get_viewport()->get_texture()->get_image();
 			if (img.is_valid()) {
@@ -1601,8 +1797,82 @@ void FestivalGame::cine_step(float dt) {
 		call_ui("fade", Array::make(true));
 	}
 	if (cine_t_ >= s.duration) {
+		if (cine_check_) {
+			cine_check_end();
+		}
 		cine_begin(cine_i_ + 1);
 	}
+}
+
+// Ship: the headless check of a shot's camera (no image needed): the camera actually rendering this frame (the
+// cinematic pose, or the game rig's camera on gameplay shots) under the ground, inside something solid, or with
+// the kid (or the car) hidden behind something. At the still (cc_still_ == "still") the frame's verdict is kept.
+void FestivalGame::cine_check_frame(const Transform3D &xf_in, bool rig) {
+	Transform3D xf = xf_in;
+	if (Camera3D *c = get_viewport()->get_camera_3d()) {
+		xf = c->get_global_transform();
+	}
+	const Vector3 cam = xf.origin;
+	const float over = cam.y - streamer_->ground(cam.x, cam.z);
+	const bool under = over < 0.2f;
+	bool inside = false, hidden = false;
+	const Vector3 subject = (car_ && car_->driving() ? car_->get_global_position() : player_->get_global_position()) + Vector3(0, 0.9f, 0);
+	auto what = [](const Dictionary &hit) {
+		Object *o = hit.get("collider", Variant());
+		Node *n = Object::cast_to<Node>(o);
+		const Vector3 p = hit.get("position", Vector3());
+		return (n ? String(n->get_name()) + "/" + (n->get_parent() ? String(n->get_parent()->get_name()) : String("-")) : String("?")) + "@" + String::num(p.x, 1) + "," + String::num(p.y, 1) + "," + String::num(p.z, 1);
+	};
+	if (PhysicsDirectSpaceState3D *space = get_world_3d()->get_direct_space_state()) {
+		TypedArray<RID> self;
+		self.push_back(player_->get_rid());
+		if (car_) {
+			self.push_back(car_->get_rid());
+		}
+		Ref<PhysicsPointQueryParameters3D> pq;
+		pq.instantiate();
+		pq->set_position(cam);
+		pq->set_collision_mask(1 | 2 | 4);
+		pq->set_exclude(self);
+		const TypedArray<Dictionary> in = space->intersect_point(pq, 1);
+		inside = !in.is_empty();
+		if (inside && cc_inside_what_.is_empty()) {
+			Dictionary h = in[0];
+			h["position"] = cam;
+			cc_inside_what_ = what(h);
+		}
+		Ref<PhysicsRayQueryParameters3D> q = PhysicsRayQueryParameters3D::create(cam, subject, 1 | 2 | 4);
+		q->set_exclude(self);
+		const Dictionary hit = space->intersect_ray(q);
+		hidden = !hit.is_empty();
+		if (hidden && cc_hidden_what_.is_empty()) {
+			cc_hidden_what_ = what(hit);
+		}
+	}
+	if (cc_still_ == "still") {
+		cc_still_ = String("over ") + String::num(over, 1) + (under ? " UNDER" : "") + (inside ? " INSIDE" : "") + (hidden ? " hidden" : " kid seen") + " cam " + String::num(cam.x, 1) + "," +
+				String::num(cam.y, 1) + "," + String::num(cam.z, 1) + (rig ? " (rig)" : "");
+		return;
+	}
+	++cc_frames_;
+	cc_under_ += under ? 1 : 0;
+	cc_inside_ += inside ? 1 : 0;
+	cc_hidden_ += hidden ? 1 : 0;
+	cc_low_ = Math::min(cc_low_, over);
+}
+
+void FestivalGame::cine_check_end() {
+	if (cine_i_ < 0 || cine_i_ >= int(cine_.size())) {
+		return;
+	}
+	UtilityFunctions::print("CINE check ", String(cine_[cine_i_].name.c_str()), ": frames ", cc_frames_, ", under ground ", cc_under_, ", inside ", cc_inside_, ", kid hidden ", cc_hidden_,
+			", lowest ", String::num(cc_low_, 2), " m; still: ", cc_still_.is_empty() ? String("(none)") : cc_still_,
+			cc_inside_what_.is_empty() ? String() : " | inside " + cc_inside_what_, cc_hidden_what_.is_empty() ? String() : " | hidden by " + cc_hidden_what_);
+	cc_frames_ = cc_under_ = cc_inside_ = cc_hidden_ = 0;
+	cc_low_ = 1e9f;
+	cc_still_ = String();
+	cc_inside_what_ = String();
+	cc_hidden_what_ = String();
 }
 
 } // namespace tot

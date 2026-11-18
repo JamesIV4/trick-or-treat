@@ -1,133 +1,15 @@
 {
- "monster_bat": {
-  "pass": true,
-  "fails": [],
-  "notes": [
-   "the rest pose reaches 0.69 m from the axis (collision radius 0.3)",
-   "cast no shadow (reach under 0.10 m): foot_l, foot_r, alt_squint_l, alt_squint_r, brow_l, brow_r, pupil_l, eye_l, pupil_r, eye_r, jaw"
-  ],
-  "tris": 7858,
-  "mesh_parts": 20,
-  "nodes": 20,
-  "height": 0.3727,
-  "min_height": -0.283
- },
- "monster_ghost": {
-  "pass": true,
-  "fails": [],
-  "notes": [
-   "the rest pose reaches 0.61 m from the axis (collision radius 0.4)",
-   "cast no shadow (reach under 0.10 m): alt_happy_l, alt_happy_r, alt_squint_l, alt_squint_r, brow_l, brow_r, cheek_l, cheek_r, pupil_l, eye_l, pupil_r, eye_r, mouth"
-  ],
-  "tris": 7426,
-  "mesh_parts": 16,
-  "nodes": 17,
-  "height": 1.22,
-  "min_height": -0.003
- },
- "monster_gremlin": {
-  "pass": true,
-  "fails": [],
-  "notes": [
-   "the rest pose reaches 0.39 m from the axis (collision radius 0.32)",
-   "leg_l: ball joint under a meshless parent",
-   "leg_r: ball joint under a meshless parent",
-   "cast no shadow (reach under 0.10 m): hand_l, hand_r, brow_l, brow_r, pupil_l, eye_l, pupil_r, eye_r, tongue, nose, shin_l, leg_l, shin_r, leg_r"
-  ],
-  "tris": 7858,
-  "mesh_parts": 26,
-  "nodes": 27,
-  "height": 0.8684,
-  "min_height": 0.0
- },
- "monster_mummy": {
-  "pass": true,
-  "fails": [],
-  "notes": [
-   "the rest pose reaches 0.52 m from the axis (collision radius 0.32)",
-   "cast no shadow (reach under 0.10 m): pupil, eye, pupil_s0, eye_s0"
-  ],
-  "tris": 7982,
-  "mesh_parts": 25,
-  "nodes": 25,
-  "height": 1.4711,
-  "min_height": -0.0
- },
- "monster_pumpkin": {
-  "pass": true,
-  "fails": [],
-  "notes": [
-   "the rest pose reaches 0.79 m from the axis (collision radius 0.42)",
-   "cast no shadow (reach under 0.10 m): pupil_l, pupil_r"
-  ],
-  "tris": 7792,
-  "mesh_parts": 22,
-  "nodes": 23,
-  "height": 0.9646,
-  "min_height": 0.0
- },
- "monster_scarecrow": {
-  "pass": true,
-  "fails": [],
-  "notes": [
-   "the rest pose reaches 0.67 m from the axis (collision radius 0.35)",
-   "cast no shadow (reach under 0.10 m): alt_mouth_o, brow_l, brow_r, pupil_l, eye_l, pupil_r, eye_r"
-  ],
-  "tris": 7746,
-  "mesh_parts": 22,
-  "nodes": 22,
-  "height": 1.7451,
-  "min_height": 0.0
- },
- "monster_skeleton": {
-  "pass": true,
-  "fails": [],
-  "notes": [
-   "cast no shadow (reach under 0.10 m): pupil_l, eye_l, pupil_r, eye_r"
-  ],
-  "tris": 7986,
-  "mesh_parts": 23,
-  "nodes": 23,
-  "height": 1.3004,
-  "min_height": 0.0
- },
  "monster_slime": {
   "pass": true,
   "fails": [],
   "notes": [
    "the rest pose reaches 0.51 m from the axis (collision radius 0.42)",
-   "cast no shadow (reach under 0.10 m): alt_happy_l, alt_happy_r, alt_squint_l, alt_squint_r, brow_l, brow_r, bubble_a, bubble_b, bubble_c, bubble_d, cheek_l, cheek_r, pupil_l, pupil_r, mouth"
+   "cast no shadow (reach under 0.10 m): alt_happy_l, alt_happy_r, alt_squint_l, alt_squint_r, brow_l, brow_r, bubble_a, bubble_b, bubble_c, bubble_d, cheek_l, cheek_r, pupil_l, eye_l, pupil_r, mouth"
   ],
-  "tris": 7414,
+  "tris": 7048,
   "mesh_parts": 21,
   "nodes": 22,
-  "height": 0.7586,
-  "min_height": 0.0
- },
- "monster_spider": {
-  "pass": true,
-  "fails": [],
-  "notes": [
-   "the rest pose reaches 0.80 m from the axis (collision radius 0.45)",
-   "cast no shadow (reach under 0.10 m): pupil_l, eye_l, pupil_r, eye_r, eye_s0, eye_s1, fang_l, fang_r, jaw"
-  ],
-  "tris": 7760,
-  "mesh_parts": 32,
-  "nodes": 32,
-  "height": 0.6563,
-  "min_height": -0.0022
- },
- "monster_toadstool": {
-  "pass": true,
-  "fails": [],
-  "notes": [
-   "the rest pose reaches 0.46 m from the axis (collision radius 0.36)",
-   "cast no shadow (reach under 0.10 m): alt_squint_l, alt_squint_r, hand_l, hand_r, brow_l, brow_r, cheek_l, cheek_r, pupil_l, eye_l, pupil_r, eye_r, mouth"
-  ],
-  "tris": 7399,
-  "mesh_parts": 20,
-  "nodes": 21,
-  "height": 1.0791,
+  "height": 0.7594,
   "min_height": 0.0
  }
 }

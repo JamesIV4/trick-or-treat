@@ -10,6 +10,7 @@
 #include <godot_cpp/variant/string.hpp>
 
 #include <map>
+#include <shared_mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -67,6 +68,8 @@ private:
 	void prepare(AssetInfo &a);
 	godot::Ref<godot::Mesh> make_placeholder(const std::string &id) const;
 	std::unordered_map<std::string, AssetInfo> assets_;
+	std::shared_mutex mutex_; // get() (area preloading reads from worker threads)
+	std::unordered_map<std::string, godot::Ref<godot::Mesh>> merged_; // merged_mesh() bakes (main thread)
 	godot::Ref<godot::Material> material_;
 	int published_ = 0;
 };

@@ -36,7 +36,7 @@ public:
 	int collect(const godot::Vector3 &player, float radius, float height, float dt);
 	// Doorbell treat burst: candies arc out from the door into the yard.
 	void burst(const godot::Vector3 &from, const godot::Vector3 &toward, int lot, int count, uint64_t seed);
-	int remaining_in_lot(int lot) const;
+	int remaining_in_lot(int lot) const; // the lot's placed pieces still out (doorbell treats not counted)
 	int total() const { return total_; }
 	int collected() const { return collected_; }
 	int total_value() const { return total_value_; }
@@ -46,6 +46,13 @@ public:
 	bool nearest_within(const godot::Vector3 &from, float max_rise, godot::Vector3 &out,
 			const std::vector<std::pair<godot::Vector3, float>> *avoid = nullptr) const;
 	godot::PackedInt32Array take_cleared_lots();
+	// Test aid (--door-test): every landed piece of a lot goes to the bucket at once, through the same
+	// pickup path (signals and counters) as a real pickup. Returns the value.
+	int collect_lot_now(int lot);
+	// Test aids: the doorbell reserve per lot (default 14; --candy-reserve=N forces it small to exercise the
+	// grow path) and how many times any field has had to grow a MultiMesh.
+	static void set_reserve_per_lot(int n) { reserve_per_lot_ = n; }
+	static int grow_count() { return grows_; }
 
 	void _process(double delta) override;
 	void _exit_tree() override;
@@ -75,6 +82,8 @@ private:
 		bool broken = false;
 	};
 	void on_picked(Candy &c);
+	int pick(int id);
+	void ensure_room(int kind);
 	int64_t cell_key(int x, int z) const { return (int64_t(x) << 32) ^ int64_t(uint32_t(z)); }
 	void index_candy(int id);
 	void write_instance(const Candy &c, float scale);
@@ -97,7 +106,8 @@ private:
 	std::vector<godot::Ref<godot::Mesh>> meshes_;
 	godot::Ref<godot::Material> candy_mat_, halo_mat_;
 	int total_ = 0, collected_ = 0, total_value_ = 0, collected_value_ = 0;
-	int capacity_extra_ = 160; // room for doorbell bursts
+	int capacity_extra_ = 160; // room for doorbell bursts (setup: from the lot count)
+	static int reserve_per_lot_, grows_;
 	bool finalized_ = false;
 };
 

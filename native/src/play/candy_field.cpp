@@ -21,6 +21,9 @@ using namespace godot;
 
 namespace tot {
 
+int CandyField::reserve_per_lot_ = 14;
+int CandyField::grows_ = 0;
+
 namespace {
 constexpr float CELL = 2.0f;
 constexpr float SEQUENCE_GAP = 1.6f; // longest pause between pickups that still counts as one run
@@ -45,7 +48,8 @@ void CandyField::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("nearest_remaining", "from"), &CandyField::nearest_remaining);
 	ADD_SIGNAL(MethodInfo("candy_collected", PropertyInfo(Variant::INT, "kind"), PropertyInfo(Variant::INT, "value"),
 			PropertyInfo(Variant::INT, "lot"), PropertyInfo(Variant::VECTOR3, "position"), PropertyInfo(Variant::INT, "id")));
-	ADD_SIGNAL(MethodInfo("house_cleared", PropertyInfo(Variant::INT, "lot")));
+	// Every placed piece of a lot is in the bucket (the game decides whether that clears the house).
+	ADD_SIGNAL(MethodInfo("lot_emptied", PropertyInfo(Variant::INT, "lot")));
 	ADD_SIGNAL(MethodInfo("sequence_completed", PropertyInfo(Variant::INT, "size"), PropertyInfo(Variant::VECTOR3, "position")));
 }
 
@@ -54,6 +58,7 @@ void CandyField::setup(const std::vector<Ref<Mesh>> &meshes, const Ref<Material>
 	candy_mat_ = candy_mat;
 	halo_mat_ = halo_mat;
 	per_lot_.assign(std::max(lot_count, 0), 0);
+	capacity_extra_ = reserve_per_lot_ >= 14 ? std::max(160, std::max(lot_count, 0) * reserve_per_lot_) : std::max(lot_count, 0) * reserve_per_lot_; // doorbell bursts (12 a door); grows if ever short
 	slots_.assign(meshes_.size(), {});
 	candy_.clear();
 	grid_.clear();
@@ -302,29 +307,79 @@ int CandyField::collect(const Vector3 &player, float radius, float height, float
 				vfx->trail_end(c.trail);
 			}
 			c.trail = -1;
-			c.alive = false;
-			c.homing = false;
-			c.pop = 0.001f;
-			popping_.push_back(id);
-			const int v = candy_value(c.kind);
-			value += v;
-			collected_++;
-			collected_value_ += v;
-			spark(c.pos, c.kind);
-			emit_signal("candy_collected", c.kind, v, c.lot, c.pos, c.id);
-			on_picked(c);
-			if (c.lot >= 0 && c.lot < int(per_lot_.size())) {
-				if (--per_lot_[c.lot] == 0) {
-					cleared_.push_back(c.lot);
-					emit_signal("house_cleared", c.lot);
-				}
-			}
 			homing_[i] = homing_.back();
 			homing_.pop_back();
+			value += pick(id);
 			continue;
 		}
 		write_instance(c, Math::lerp(1.0f, 0.75f, Math::clamp(c.home_t * 2.0f, 0.0f, 1.0f)));
 		++i;
+	}
+	return value;
+}
+
+// A piece reaches the bucket: the pop, the counters and the signals.
+int CandyField::pick(int id) {
+	Candy &c = candy_[id];
+	c.alive = false;
+	c.homing = false;
+	c.pop = 0.001f;
+	popping_.push_back(id);
+	const int v = candy_value(c.kind);
+	collected_++;
+	collected_value_ += v;
+	spark(c.pos, c.kind);
+	emit_signal("candy_collected", c.kind, v, c.lot, c.pos, c.id);
+	on_picked(c);
+	// Only the house's own placed pieces count toward its lot (doorbell treats are a reward on top: they
+	// carry the lot for the pickup signal but are never saved, so they can't be part of "all its candy").
+	if (c.id >= 0 && c.lot >= 0 && c.lot < int(per_lot_.size())) {
+		if (--per_lot_[c.lot] == 0) {
+			cleared_.push_back(c.lot);
+			emit_signal("lot_emptied", c.lot);
+		}
+	}
+	return v;
+}
+
+// Room for one more piece of `kind` (and its glow column). A full MultiMesh is reallocated bigger and every
+// instance written again (reallocating clears the buffer). Doorbell treats used to be dropped silently once
+// a fixed 160-piece reserve ran out (about 13 doors a field; hoods now have ~45 houses).
+void CandyField::ensure_room(int kind) {
+	Ref<MultiMesh> mm = mm_[kind]->get_multimesh();
+	if (int(slots_[kind].size()) >= mm->get_instance_count()) {
+		++grows_;
+		const int n = Math::max(mm->get_instance_count() * 3 / 2, int(slots_[kind].size()) + 32);
+		mm->set_instance_count(n);
+		for (int i = 0; i < n; ++i) {
+			mm->set_instance_transform(i, Transform3D(Basis().scaled(Vector3(0, 0, 0)), Vector3()));
+		}
+		for (int id : slots_[kind]) {
+			const Candy &c = candy_[id];
+			write_instance(c, c.alive ? 1.0f : 0.0f); // flying, homing and popping ones are rewritten every frame
+		}
+	}
+	if (halo_ && int(candy_.size()) >= halo_->get_multimesh()->get_instance_count()) {
+		++grows_;
+		Ref<MultiMesh> hm = halo_->get_multimesh();
+		const int n = Math::max(hm->get_instance_count() * 3 / 2, int(candy_.size()) + 32);
+		hm->set_instance_count(n);
+		for (int i = 0; i < n; ++i) {
+			hm->set_instance_transform(i, Transform3D(Basis().scaled(Vector3(0, 0, 0)), Vector3()));
+		}
+		for (const Candy &c : candy_) {
+			write_instance(c, c.alive ? 1.0f : 0.0f);
+		}
+	}
+}
+
+int CandyField::collect_lot_now(int lot) {
+	int value = 0;
+	for (int id = 0; id < int(candy_.size()); ++id) {
+		const Candy &c = candy_[id];
+		if (c.alive && !c.homing && c.fly_t >= 1.0f && c.lot == lot) {
+			value += pick(id);
+		}
 	}
 	return value;
 }
@@ -334,15 +389,15 @@ void CandyField::burst(const Vector3 &from, const Vector3 &toward, int lot, int 
 	const Vector3 fwd = Vector3(toward.x, 0, toward.z).normalized();
 	for (int i = 0; i < count; ++i) {
 		const int kind = rng.irange(CANDY_PINK, CANDY_BASIC_COUNT - 1);
-		Ref<MultiMesh> mm = mm_[kind]->get_multimesh();
-		if (int(slots_[kind].size()) >= mm->get_instance_count() || (halo_ && int(candy_.size()) >= halo_->get_multimesh()->get_instance_count())) {
+		if (kind >= int(mm_.size())) {
 			continue;
 		}
+		ensure_room(kind); // every door hands out its full burst, however many have been rung
 		Candy c;
 		const float a = rng.range(-1.1f, 1.1f);
 		const Vector3 dir = fwd.rotated(Vector3(0, 1, 0), a);
 		c.pos = from + dir * rng.range(2.2f, 5.0f);
-		c.pos.y = 0.8f;
+		c.pos.y = from.y + 0.2f; // Stage 3b: by the doorbell's height (0.8 m above a flat street's level)
 		c.fly_from = from + Vector3(0, 1.1f, 0);
 		c.fly_t = 0.0f - float(i) * 0.04f;
 		c.kind = kind;
@@ -351,9 +406,6 @@ void CandyField::burst(const Vector3 &from, const Vector3 &toward, int lot, int 
 		slots_[kind].push_back(int(candy_.size()));
 		candy_.push_back(c);
 		flying_.push_back(int(candy_.size()) - 1);
-		if (lot >= 0 && lot < int(per_lot_.size())) {
-			per_lot_[lot]++;
-		}
 		total_++;
 		total_value_ += 1;
 	}

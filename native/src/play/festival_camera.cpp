@@ -138,7 +138,7 @@ void FestivalCamera::_process(double delta) {
 
 	// Pull back when the player is high up (roofs, tree house).
 	const float want_dist = overview_ ? overview_dist_ : 9.5f + Math::clamp((tp.y - 2.0f) * 0.45f, 0.0f, 3.5f);
-	const float want_pitch = overview_ ? 0.95f : 0.52f;
+	const float want_pitch = overview_ ? overview_pitch_ : 0.52f;
 	dist_ = Math::lerp(dist_, want_dist, 1.0f - std::exp(-dt * 2.0f));
 	pitch_ = Math::lerp(pitch_, want_pitch, 1.0f - std::exp(-dt * 2.0f));
 	// Lazy follow: horizontal quick, vertical slower so jumps don't bounce the frame.

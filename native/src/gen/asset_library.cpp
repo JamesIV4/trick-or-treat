@@ -3,6 +3,7 @@
 #include <godot_cpp/classes/file_access.hpp>
 #include <godot_cpp/classes/json.hpp>
 #include <godot_cpp/classes/mesh_instance3d.hpp>
+#include <godot_cpp/classes/os.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/surface_tool.hpp>
 #include <godot_cpp/core/memory.hpp>
@@ -55,6 +56,7 @@ void hide_alternates(Node *n) {
 void AssetLibrary::load(const String &catalog_path, const Ref<Material> &material) {
 	material_ = material;
 	assets_.clear();
+	merged_.clear();
 	published_ = 0;
 	if (!FileAccess::file_exists(catalog_path)) {
 		UtilityFunctions::push_warning("Trick or Treat: no published catalog at ", catalog_path, "; using placeholders.");
@@ -154,8 +156,23 @@ std::vector<std::string> AssetLibrary::ids() const {
 }
 
 const AssetInfo *AssetLibrary::get(const std::string &id) {
+	// Settlement plans read the library from worker threads (WorldStreamer's area preloading), so lookups
+	// are shared-locked. Entries never move once inserted (node-based map), so the pointer outlives the lock.
+	{
+		std::shared_lock<std::shared_mutex> read(mutex_);
+		auto it = assets_.find(id);
+		if (it != assets_.end()) {
+			return &it->second;
+		}
+	}
+	std::unique_lock<std::shared_mutex> write(mutex_);
 	auto it = assets_.find(id);
 	if (it == assets_.end()) {
+		if (OS::get_singleton()->get_thread_caller_id() != OS::get_singleton()->get_main_thread_id()) {
+			// Not in the catalog: the placeholder (a mesh resource) is made off the main thread. Never seen
+			// with the current catalog; add the id to the catalog if this prints.
+			UtilityFunctions::push_warning("AssetLibrary: '", String(id.c_str()), "' is not in the catalog (first asked for on a worker thread)");
+		}
 		AssetInfo a;
 		a.id = id;
 		a.published = false;
@@ -213,16 +230,21 @@ Ref<Mesh> AssetLibrary::merged_mesh(const std::string &id) {
 	if (a->scene.is_null()) {
 		return a->placeholder;
 	}
+	// Baked once per asset (an instance of the scene plus a SurfaceTool merge: milliseconds each, and every
+	// settlement asks for its candy, bunting and leaves again). Callers only read the mesh. Main thread.
+	auto cached = merged_.find(id);
+	if (cached != merged_.end()) {
+		return cached->second;
+	}
 	Node *inst = a->scene->instantiate();
 	Ref<SurfaceTool> st;
 	st.instantiate();
 	bool any = false;
 	merge_into(inst, Transform3D(), st, any);
 	memdelete(inst);
-	if (!any) {
-		return a->first_mesh;
-	}
-	return st->commit();
+	const Ref<Mesh> m = any ? Ref<Mesh>(st->commit()) : a->first_mesh;
+	merged_[id] = m;
+	return m;
 }
 
 static Node3D *find_part(Node *n, const String &name) {

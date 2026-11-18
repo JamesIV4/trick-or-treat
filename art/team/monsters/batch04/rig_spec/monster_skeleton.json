@@ -24,9 +24,7 @@
   "eye_r": "head",
   "pupil_r": "eye_r",
   "eye_l": "head",
-  "pupil_l": "eye_l",
-  "bandana": "chest",
-  "bandana_tail": "chest"
+  "pupil_l": "eye_l"
  },
  "meshless": [],
  "balls": {
@@ -43,22 +41,7 @@
   "forearm_r": 0.04,
   "hand_r": 0.034
  },
- "soft": {
-  "bandana": {
-   "dir": [
-    0.0,
-    -0.9766,
-    0.2149
-   ],
-   "rigid": 0.012,
-   "loops": 6
-  },
-  "bandana_tail": {
-   "dir": null,
-   "rigid": 0.0,
-   "loops": 6
-  }
- },
+ "soft": {},
  "ik": [
   [
    "leg_l",
@@ -94,5 +77,5 @@
   "eye_l",
   "pupil_l"
  ],
- "tris": 7986
+ "tris": 7292
 }

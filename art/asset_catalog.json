@@ -996,9 +996,7 @@
     "eye_r",
     "pupil_r",
     "eye_l",
-    "pupil_l",
-    "bandana",
-    "bandana_tail"
+    "pupil_l"
    ],
    "brief": "Rattlebones (v2 rig, 23 parts): 1.2 m chibi skeleton with a big cartoon bone skull: domed cranium with sutures and hairline cracks, brow ridges, cheekbones, a heart-shaped nose cavity, an upper jaw with a row of small, rounded, slightly uneven ivory teeth (a darker root: a hint of gum shadow) overlapping the lower row on a separate mandible ('jaw', hinge pivot) with a chin; the mouth closed at the back by a dark wall and floor; skull and body bones alike in matte chalky ivory (stucco layer). Eyes: dark socket linings 'eye_l'/'eye_r' with a small soft teal light 'pupil_l'/'pupil_r' floating inside (slides to look, scales to flare/blink). Ribcage, pelvis, IK arms and legs with ball joints, an orange polka-dot bandana (soft flap and tails), a bone held in the right hand (also the thrown projectile; socket 'muzzle'). Animated by monster_anim_skeleton.cpp.",
    "sockets": [

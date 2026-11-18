@@ -846,17 +846,22 @@ def _dome(name, w, h, d, segs, rings, color, mat="flat"):
     return ob
 
 
-def _decal(name, cx, cz, rx, rz, w, h, d, lift, color, segs=10, rings=2, mat="flat"):
-    """Disc riding `lift` above the dome's surface, centred (cx, cz) in the eye frame."""
+def _decal(name, cx, cz, rx, rz, w, h, d, lift, color, segs=10, rings=2, mat="flat", rot=0.0):
+    """Disc riding `lift` above the dome's surface, centred (cx, cz) in the eye frame (rot: degrees,
+    turning the oval counter-clockwise as seen from the front)."""
     def surf(x, z):
         q = 1.0 - (x / w) ** 2 - (z / h) ** 2
         return -(d * math.sqrt(max(q, 0.0)) + lift)
+    cr, sr = math.cos(math.radians(rot)), math.sin(math.radians(rot))
     bm = bmesh.new()
     c = bm.verts.new((cx, surf(cx, cz) - lift * 0.5, cz))
     prev = None
     for k in range(1, rings + 1):
         f = k / rings
-        ring = [bm.verts.new((cx + math.cos(TAU * j / segs) * rx * f, 0.0, cz + math.sin(TAU * j / segs) * rz * f)) for j in range(segs)]
+        ring = []
+        for j in range(segs):
+            lx, lz = math.cos(TAU * j / segs) * rx * f, math.sin(TAU * j / segs) * rz * f
+            ring.append(bm.verts.new((cx + lx * cr - lz * sr, 0.0, cz + lx * sr + lz * cr)))
         for v in ring:
             v.co.y = surf(v.co.x, v.co.z) - (lift * 0.5 * (1.0 - f))
         for j in range(segs):
@@ -872,6 +877,98 @@ def _decal(name, cx, cz, rx, rz, w, h, d, lift, color, segs=10, rings=2, mat="fl
     if sum(f.normal.y for f in bm.faces) > 0:
         bmesh.ops.reverse_faces(bm, faces=bm.faces)
     return D.mesh(bm, name, color, mat, "box", smooth=True)
+
+
+def _crescent(name, cx, cz, rx, rz, k, w, h, d, lift, color, n=14, puff=0.0, mat="flat"):
+    """A smile-shaped band riding `lift` above the dome: between the lower half of the oval (rx, rz) round
+    (cx, cz) and the same arc squashed to k * rz, so it is thickest in the middle and runs to points at
+    the sides (the glow in the bottom of an anime eye)."""
+    def surf(x, z):
+        q = 1.0 - (x / w) ** 2 - (z / h) ** 2
+        return -(d * math.sqrt(max(q, 0.0)) + lift)
+    bm = bmesh.new()
+    rows = []
+    for i in range(n + 1):
+        u = -0.985 + 1.97 * i / n
+        s = math.sqrt(max(1.0 - u * u, 0.0))
+        x = cx + rx * u
+        zb, zt = cz - rz * s, cz - rz * k * s
+        zm = (zb + zt) * 0.5
+        rows.append([bm.verts.new((x, surf(x, z) - (puff if z == zm else 0.0), z)) for z in (zt, zm, zb)])
+    for i in range(n):
+        a, b = rows[i], rows[i + 1]
+        bm.faces.new((a[0], b[0], b[1], a[1]))
+        bm.faces.new((a[1], b[1], b[2], a[2]))
+    bm.normal_update()
+    if sum(f.normal.y for f in bm.faces) > 0:
+        bmesh.ops.reverse_faces(bm, faces=bm.faces)
+    return D.mesh(bm, name, color, mat, "box", smooth=True)
+
+
+def anime_layers(name, w, h, d, dome="ink", tint=None, glint=("burnt_amber", "amber"), hl="eye_white", look=(0.0, 0.0),
+                 segs=20, rings=5, lift=0.0016, glint_y=-0.3, glint_w=0.54, glint_h=0.4, sparkle=True, hl_scale=1.0):
+    """The cute anime eye (2026-11-17, user: the old anime eyes "read cuter ... and not so uncanny", a little
+    higher fidelity): a glossy dark `dome`, a soft `tint` (a deep colour) in its lower part so it has depth
+    without the shader's sheen, a big tilted highlight up and to the viewer's left, a small one right of
+    centre and a tiny sparkle beside the big one (all `hl`, fixed on the eye), and a two-tone crescent glow
+    in the bottom of the eye (glint = (outer, inner) colours, or None) that the pupil part carries, so a
+    look slides it. No white sclera, no iris disc, no outline ring.
+    Returns (eye objects, pupil objects) in the Blender eye frame (x right as seen from the front, -y out,
+    z up), the dome's base at the origin."""
+    m = min(w, h)
+    eye = [_dome(name + "_dome", w, h, d, segs, rings, dome)]
+    if tint:   # a low lens of deep colour: the eye darkens toward the top like a lit glass bead
+        eye.append(_crescent(name + "_tint", 0.0, -h * 0.14, w * 0.78, h * 0.7, -0.2, w, h, d, lift, tint, n=12))
+    s = hl_scale
+    eye.append(_decal(name + "_hl1", -w * 0.28, h * 0.34, m * 0.41 * s, m * 0.31 * s, w, h, d, lift * 4.2, hl, segs=14, rings=2, rot=-30.0))
+    eye.append(_decal(name + "_hl2", w * 0.4, -h * 0.06, m * 0.14 * s, m * 0.125 * s, w, h, d, lift * 4.2, hl, segs=10, rings=1))
+    if sparkle:   # a pin-prick under the small one
+        eye.append(_decal(name + "_hl3", w * 0.27, -h * 0.25, m * 0.05 * s, m * 0.05 * s, w, h, d, lift * 4.2, hl, segs=8, rings=1))
+    pupil = []
+    if glint:
+        px, pz = look[0] * w, look[1] * h + glint_y * h
+        outer, inner = glint if isinstance(glint, (tuple, list)) else (glint, None)
+        # The pupil part slides flat (pupil_travel x reach, 0.3 of the eye by default) with these heights baked at
+        # rest: the glint is kept small and high, and rides well above the dome, so a full look down only just
+        # tips its points past the rim and a look up does not sink it (checked numerically, 2026-11-17). Keep the
+        # dome about 0.32 of the eye's width deep for the same reason.
+        pupil.append(_crescent(name + "_gl", px, pz, w * glint_w, h * glint_h, -0.22, w, h, d, lift * 2.4, outer, n=10))
+        if inner:
+            pupil.append(_crescent(name + "_gl2", px, pz - h * glint_h * 0.2, w * glint_w * 0.62, h * glint_h * 0.68, -0.28, w, h, d,
+                                   lift * 3.6, inner, n=8))
+    return eye, pupil
+
+
+def _eye_frame(centre, n, up, roll):
+    frame = Matrix.Translation(centre)
+    u = V(up) - n * V(up).dot(n)
+    u = u.normalized() if u.length > 1e-6 else n.orthogonal().normalized()
+    rot = Matrix(((-n).cross(u).normalized(), -n, u)).transposed()
+    if roll:
+        rot = rot @ Matrix.Rotation(math.radians(-roll), 3, "Y")
+    return frame @ rot.to_4x4()
+
+
+def anime_eye(rig, name, pupil_name, centre, normal, w, h, parent="head", up=(0, 0, 1), roll=0.0, depth=None,
+              eye_extra=(), **kw):
+    """anime_layers() as the two MonsterFace parts (same contract as eye()): `name` = the dome, its tint and
+    the highlights (a blink scales its Y), `pupil_name` = the crescent glow (child of the eye, same origin;
+    the animator slides it to look). eye_extra: more objects for the eye part, authored in the game's eye
+    frame (x, y up, +z out), e.g. a lash line. Returns (eye object, pupil object)."""
+    centre, n = V(centre), V(normal).normalized()
+    d = depth if depth is not None else min(w, h) * 0.32
+    objs, inner = anime_layers(name, w, h, d, **kw)
+    frame = _eye_frame(centre, n, up, roll)
+    for o in objs + inner:
+        o.matrix_world = frame
+    conv = Matrix(((1, 0, 0, 0), (0, 0, -1, 0), (0, 1, 0, 0), (0, 0, 0, 1)))
+    for o in eye_extra:
+        o.matrix_world = frame @ conv @ o.matrix_basis.copy()
+        objs.append(o)
+    e = rig.part(name, objs, centre, parent=parent, z_out=n, up=up, roll=roll, ground=False)
+    p = rig.part(pupil_name, inner, centre, parent=name, z_out=n, up=up, roll=roll, ground=False)
+    rig.eyes[name] = pupil_name
+    return e, p
 
 
 def eye(rig, name, pupil_name, centre, normal, w, h, parent="head", up=(0, 0, 1), roll=0.0, depth=None,

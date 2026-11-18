@@ -72,10 +72,18 @@ public:
 	void beam(Vector3 a, Vector3 b, float width, float height, int cell, Vector3 up = Vector3(0, 1, 0));
 	// Flat horizontal quad strip along a polyline (roads, sidewalks): left/right offsets per point.
 	void ribbon(const std::vector<Vector3> &centers, const std::vector<Vector3> &lefts, float off_a, float off_b, float y, int cell);
+	// The same, each vertex lift above its centre point's own y (spline roads: per-vertex road height).
+	void ribbon_lift(const std::vector<Vector3> &centers, const std::vector<Vector3> &lefts, float off_a, float off_b, float lift, int cell);
 
 	bool empty() const { return verts_.empty(); }
 	int vertex_count() const { return int(verts_.size()); }
+	const std::vector<Vector3> &vertices() const { return verts_; } // for the --sweep layout dump
+	const std::vector<Vector2> &cell_uvs() const { return uv2s_; }
 	godot::Ref<godot::ArrayMesh> build() const;
+	// build() in two halves: the surface arrays (plain data: safe to make on a worker thread) and the
+	// ArrayMesh made from them (a resource: main thread). An empty Array gives an empty mesh.
+	godot::Array arrays() const;
+	static godot::Ref<godot::ArrayMesh> mesh_from_arrays(const godot::Array &arrays);
 	void clear();
 
 private:

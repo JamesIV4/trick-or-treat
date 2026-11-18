@@ -32,6 +32,7 @@ constexpr float SHOT_SPEED = 21.0f;
 constexpr float SHOT_LIFE = 1.1f;
 constexpr float TAIL_TIME = 0.3f; // the trail burning out after impact
 constexpr int SHOT_POOL = 14;
+constexpr float BONE_SCALE = 1.6f; // a thrown bone, drawn this much larger than the held one
 
 Ref<StandardMaterial3D> glow_material(const Color &albedo, const Color &emission, float energy) {
 	Ref<StandardMaterial3D> m;
@@ -206,7 +207,8 @@ void Combat::_ready() {
 		// Hot near the bone and falling off fast (a 1.15 m quad with a slow falloff read as a hazy disc of fog
 		// round a dark bone).
 		g->set_offsets(PackedFloat32Array({ 0.0f, 0.12f, 0.3f, 0.55f, 1.0f }));
-		g->set_colors(PackedColorArray({ Color(1, 1, 1, 0.95f), Color(1, 1, 1, 0.62f), Color(1, 1, 1, 0.22f), Color(1, 1, 1, 0.05f), Color(1, 1, 1, 0.0f) }));
+		// (2026-11-17, user: "a weaker glow and larger bone": about half the first strength)
+		g->set_colors(PackedColorArray({ Color(1, 1, 1, 0.5f), Color(1, 1, 1, 0.32f), Color(1, 1, 1, 0.11f), Color(1, 1, 1, 0.025f), Color(1, 1, 1, 0.0f) }));
 		Ref<GradientTexture2D> tex;
 		tex.instantiate();
 		tex->set_gradient(g);
@@ -226,7 +228,7 @@ void Combat::_ready() {
 		m->set_flag(BaseMaterial3D::FLAG_DISABLE_FOG, true);
 		Ref<QuadMesh> q;
 		q.instantiate();
-		q->set_size(Vector2(0.85f, 0.85f));
+		q->set_size(Vector2(1.2f, 1.2f)); // round the bone drawn BONE_SCALE times larger
 		q->set_material(m);
 		halo_mesh_ = q;
 	}
@@ -388,7 +390,8 @@ void Combat::throw_projectile(const Vector3 &origin, const Vector3 &velocity, Pr
 			t.kind = kind;
 			t.node->set_mesh(kind == BONE ? bone_mesh_ : goo_mesh_);
 			t.node->set_material_override(look_mat_[kind]); // null for the stand-in meshes, which carry their own
-			t.node->set_global_position(origin);
+			const float sc = kind == BONE ? BONE_SCALE : 1.0f;
+			t.node->set_global_transform(Transform3D(Basis().scaled(Vector3(sc, sc, sc)), origin));
 			t.node->set_visible(true);
 			t.halo->set_global_position(origin);
 			t.halo->set_visible(kind == BONE);
@@ -397,7 +400,7 @@ void Combat::throw_projectile(const Vector3 &origin, const Vector3 &velocity, Pr
 				const bool bone = kind == BONE;
 				t.node->set_instance_shader_parameter("rim_strength", bone ? 1.0f : 0.7f);
 				t.node->set_instance_shader_parameter("rim_color", bone ? Color(1.0f, 1.0f, 1.0f) : Color(1.0f, 0.92f, 0.75f));
-				t.node->set_instance_shader_parameter("hit_flash", bone ? Color(0.55f, 0.54f, 0.5f) : Color(0.2f, 0.17f, 0.11f));
+				t.node->set_instance_shader_parameter("hit_flash", bone ? Color(0.3f, 0.29f, 0.27f) : Color(0.2f, 0.17f, 0.11f));
 			}
 			return;
 		}
@@ -711,7 +714,9 @@ void Combat::_process(double delta) {
 			puff(t.pos, t.kind == BONE ? Color(0.9f, 0.88f, 0.8f) : Color(0.5f, 1.0f, 0.4f), 10, 2.0f);
 			continue;
 		}
-		t.node->set_global_transform(Transform3D(Basis(Vector3(1, 0, 0), t.life * 14.0f) * Basis(Vector3(0, 0, 1), t.life * 9.0f), t.pos));
+		// A thrown bone is drawn larger than the one in the skeleton's hand, so it reads in flight (user, 2026-11-17).
+		const float sc = t.kind == BONE ? BONE_SCALE : 1.0f;
+		t.node->set_global_transform(Transform3D(Basis(Vector3(1, 0, 0), t.life * 14.0f) * Basis(Vector3(0, 0, 1), t.life * 9.0f) * Basis().scaled(Vector3(sc, sc, sc)), t.pos));
 		t.halo->set_global_position(t.pos);
 	}
 }

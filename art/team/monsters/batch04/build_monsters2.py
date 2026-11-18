@@ -27,9 +27,22 @@ def G(x, y, z):
 # ====================================================================== RATTLEBONES
 def skeleton():
     K.reset()
-    BW, BT, BD, DEEP, INK = "ivory", "ivory_shade", "ivory_deep", "wood", "ink"
+    # (2026-11-17, user: the skeleton and the mummy "don't read well against the game's levels because they're
+    # too dark, make them lighter like their previous iterations") batch03's pale bone instead of tan ivory.
+    BW, BT, BD, DEEP, INK = "bone", "bone_shade", "ivory_shade", "wood", "ink"
     OR, ORD = "pumpkin", "pumpkin_dark"
     R = M.Rig("monster_skeleton", height=1.2, radius=0.3)
+    # (2026-11-17, user: "The head to body size proportion was better before too") The body below the neck is
+    # stretched 12% in height above the ankles (GB: every body position goes through Y; joints and bones keep
+    # their thickness, the limbs and spine get longer), and the skull and jaw are scaled to HEAD_SCALE about
+    # the neck and set on the taller neck (rescale_head, after the eyes): head 0.31 of the height, as batch03's.
+    STRETCH, HEAD_SCALE = 1.12, 0.82
+
+    def Y(y):
+        return y if y <= 0.075 else 0.075 + (y - 0.075) * STRETCH
+
+    def GB(x, y, z):
+        return M.g2b((x, Y(y), z))
 
     def ball(c, r, name, segs=8, rings=5, color=BW):
         return M.blob(name, c, (r, r, r), segs=segs, rings=rings, color=color)
@@ -44,63 +57,63 @@ def skeleton():
     for s in (-1, 1):
         ring = K.torus(f"ilium{s}", 0.058, 0.032, color=BW, major_seg=12, minor_seg=6)
         K.paint(ring, BT, where=lambda c, n: n.dot(V((c.x, c.y, 0)).normalized()) < -0.35)   # inside of the hole
-        M.put(ring, G(s * 0.076, 0.507, -0.004), V((s * 0.38, -1.0, 0.28)), scale=(1.0, 1.12, 1.0))
+        M.put(ring, GB(s * 0.076, 0.507, -0.004), V((s * 0.38, -1.0, 0.28)), scale=(1.0, 1.12, 1.0))
         body.append(ring)
-        body.append(M.blob(f"hipcup{s}", G(s * 0.09, 0.462, 0.0), (0.054, 0.046, 0.042), segs=8, rings=5, color=BW))
-    body.append(M.blob("sacrum", G(0, 0.505, -0.03), (0.05, 0.036, 0.075), segs=8, rings=6, color=BW,
+        body.append(M.blob(f"hipcup{s}", GB(s * 0.09, 0.462, 0.0), (0.054, 0.046, 0.042), segs=8, rings=5, color=BW))
+    body.append(M.blob("sacrum", GB(0, 0.505, -0.03), (0.05, 0.036, 0.075), segs=8, rings=6, color=BW,
                        warp=lambda c: V((c.x * (1.0 - 0.55 * max(0.0, -c.z)), c.y, c.z))))
-    body.append(M.blob("pubis", G(0, 0.452, 0.028), (0.045, 0.03, 0.03), segs=8, rings=5, color=BW))
-    R.part("body", body, G(0, 0.47, 0))
+    body.append(M.blob("pubis", GB(0, 0.452, 0.028), (0.045, 0.03, 0.03), segs=8, rings=5, color=BW))
+    R.part("body", body, GB(0, 0.47, 0))
 
     # ------------------------------------------------------------ chest: spine, ribcage, collar, neck
     chest = []
     for k, y in enumerate((0.546, 0.581, 0.615)):
-        chest.append(M.blob(f"lumbar{k}", G(0, y, -0.016 - 0.01 * k), (0.036, 0.032, 0.023), segs=7, rings=4, color=BW))
-    chest.append(M.tube("spine", [G(0, 0.617, -0.048), G(0, 0.694, -0.058), G(0, 0.772, -0.04)], 0.024, sides=7,
+        chest.append(M.blob(f"lumbar{k}", GB(0, y, -0.016 - 0.01 * k), (0.036, 0.032, 0.023), segs=7, rings=4, color=BW))
+    chest.append(M.tube("spine", [GB(0, 0.617, -0.048), GB(0, 0.694, -0.058), GB(0, 0.772, -0.04)], 0.024, sides=7,
                         color=BT, mat="flat"))
-    for k, (y, rx) in enumerate(((0.632, 0.108), (0.688, 0.128), (0.744, 0.118))):
+    for k, (y, rx) in enumerate(((0.632, 0.124), (0.688, 0.147), (0.744, 0.136))):   # (2026-11-17) 15% wider, as the old ribcage: not one narrow tube
         for s in (-1, 1):
             pts, rr = [], []
             for i in range(7):
                 t = i / 6
                 a = math.radians(8 + 158 * t)   # from the spine round the side to the sternum
-                pts.append(G(s * rx * math.sin(a), y + 0.012 - 0.046 * t ** 1.3, 0.016 - 0.076 * math.cos(a)))
+                pts.append(GB(s * rx * math.sin(a), y + 0.012 - 0.046 * t ** 1.3, 0.016 - 0.076 * math.cos(a)))
                 rr.append(0.0215 - 0.003 * t)
             chest.append(M.tube(f"rib{k}{s}", pts, rr, sides=5, color=BW, mat="flat", cap_offset=0.5))
-    chest.append(M.blob("sternum", G(0, 0.688, 0.094), (0.032, 0.02, 0.078), segs=8, rings=6, color=BW))
+    chest.append(M.blob("sternum", GB(0, 0.688, 0.094), (0.032, 0.02, 0.078), segs=8, rings=6, color=BW))
     for s in (-1, 1):
-        chest.append(M.limb(f"collar{s}", G(s * 0.02, 0.768, 0.068), G(s * 0.175, 0.772, 0.0), 0.017, flare_a=1.2,
+        chest.append(M.limb(f"collar{s}", GB(s * 0.02, 0.768, 0.068), GB(s * 0.19, 0.772, 0.0), 0.017, flare_a=1.2,
                             flare_b=1.5, sides=6, color=BW))
-        chest.append(M.blob(f"shcup{s}", G(s * 0.172, 0.766, 0.0), (0.042, 0.042, 0.042), segs=7, rings=4, color=BW))
-        chest.append(M.blob(f"scap{s}", G(s * 0.088, 0.711, -0.078), (0.048, 0.016, 0.056), segs=7, rings=4, color=BW))
+        chest.append(M.blob(f"shcup{s}", GB(s * 0.187, 0.766, 0.0), (0.042, 0.042, 0.042), segs=7, rings=4, color=BW))
+        chest.append(M.blob(f"scap{s}", GB(s * 0.1, 0.711, -0.086), (0.048, 0.016, 0.056), segs=7, rings=4, color=BW))
     for k, y in enumerate((0.787, 0.816)):
-        chest.append(M.blob(f"neck{k}", G(0, y, -0.012 + 0.006 * k), (0.032, 0.03, 0.022), segs=7, rings=4, color=BW))
-    R.part("chest", chest, G(0, 0.535, 0), parent="body")
+        chest.append(M.blob(f"neck{k}", GB(0, y, -0.012 + 0.006 * k), (0.032, 0.03, 0.022), segs=7, rings=4, color=BW))
+    R.part("chest", chest, GB(0, 0.535, 0), parent="body")
 
     # ------------------------------------------------------------ legs (straight down at rest: IK chains)
     for side, s in (("l", 1), ("r", -1)):
         x = s * 0.09
-        hip, knee, ankle = G(x, 0.445, 0), G(x, 0.26, 0), G(x, 0.075, 0)
+        hip, knee, ankle = GB(x, 0.445, 0), GB(x, 0.26, 0), GB(x, 0.075, 0)
         thigh = [M.limb(f"thigh{s}", hip, knee, 0.036, flare_a=1.2, flare_b=1.25, sides=7, color=BW)]
         for k in (-1, 1):
             thigh.append(ball(knee + V((k * 0.031, 0, 0.004)), 0.04, f"cond{s}{k}", segs=7, rings=4))
         R.part(f"leg_{side}", thigh, hip, parent="body", ball=0.056, ball_color=BW)
         R.part(f"shin_{side}", [M.limb(f"tib{s}", knee, ankle, 0.033, flare_a=1.2, flare_b=1.35, sides=7, color=BW)], knee,
                parent=f"leg_{side}", ball=0.049, ball_color=BW)
-        foot = [M.blob(f"sole{s}", G(x, 0.034, 0.045), (0.068, 0.092, 0.048), segs=10, rings=6, color=BW,
+        foot = [M.blob(f"sole{s}", GB(x, 0.034, 0.045), (0.068, 0.092, 0.048), segs=10, rings=6, color=BW,
                        warp=flat(0.034, 0.048))]
         for k, (dx, dz, r) in enumerate(((-0.047, 0.107, 0.033), (0.0, 0.13, 0.036), (0.047, 0.107, 0.033))):
-            foot.append(M.blob(f"toe{s}{k}", G(x + dx, 0.03, dz), (r, r * 1.25, 0.034), segs=7, rings=4, color=BW,
+            foot.append(M.blob(f"toe{s}{k}", GB(x + dx, 0.03, dz), (r, r * 1.25, 0.034), segs=7, rings=4, color=BW,
                                warp=flat(0.03, 0.034)))
-        foot.append(M.blob(f"heel{s}", G(x, 0.04, -0.035), (0.047, 0.038, 0.04), segs=7, rings=4, color=BW,
+        foot.append(M.blob(f"heel{s}", GB(x, 0.04, -0.035), (0.047, 0.038, 0.04), segs=7, rings=4, color=BW,
                            warp=flat(0.04, 0.04)))
         R.part(f"foot_{side}", foot, ankle, parent=f"shin_{side}", ball=0.044, ball_color=BW, ball_segs=7)
         R.ik_chain(f"leg_{side}", f"shin_{side}", f"foot_{side}")
 
     # ------------------------------------------------------------ arms (straight down at rest: IK chains)
     for side, s in (("l", 1), ("r", -1)):
-        x = s * 0.198
-        sh, el, wr = G(x, 0.763, 0), G(x, 0.593, 0), G(x, 0.433, 0)
+        x = s * 0.214   # (2026-11-17) shoulders out with the wider ribcage
+        sh, el, wr = GB(x, 0.763, 0), GB(x, 0.593, 0), GB(x, 0.433, 0)
         upper = [M.limb(f"hum{s}", sh, el, 0.029, flare_a=1.2, flare_b=1.25, sides=7, color=BW)]
         for k in (-1, 1):
             upper.append(ball(el + V((k * 0.025, 0, 0.003)), 0.033, f"econd{s}{k}", segs=7, rings=4))
@@ -108,30 +121,30 @@ def skeleton():
         R.part(f"forearm_{side}", [M.limb(f"rad{s}", el, wr, 0.027, flare_a=1.2, flare_b=1.3, sides=7, color=BW)], el,
                parent=f"arm_{side}", ball=0.04, ball_color=BW, ball_segs=7, ground=False)
         if side == "l":   # open mitten hand, fingers spread: the one that points at the player
-            hand = [M.blob("palm_l", G(x, 0.388, 0.004), (0.023, 0.042, 0.046), segs=8, rings=5, color=BW)]
+            hand = [M.blob("palm_l", GB(x, 0.388, 0.004), (0.023, 0.042, 0.046), segs=8, rings=5, color=BW)]
             for k, (dz, ang, ln) in enumerate(((-0.03, -20, 0.046), (-0.01, -7, 0.055), (0.011, 6, 0.052), (0.031, 19, 0.042))):
-                a = G(x, 0.365, dz)
-                b = a + G(0, -math.cos(math.radians(ang)), math.sin(math.radians(ang))) * ln
+                a = GB(x, 0.365, dz)
+                b = a + GB(0, -math.cos(math.radians(ang)), math.sin(math.radians(ang))) * ln
                 hand.append(M.tube(f"fing_l{k}", [a, a.lerp(b, 0.5), b], [0.014, 0.0145, 0.012], sides=6, color=BW,
                                    mat="flat", cap_offset=0.9))
-            a = G(x, 0.395, 0.036)
-            b = a + G(0, -0.55, 0.83).normalized() * 0.042
+            a = GB(x, 0.395, 0.036)
+            b = a + GB(0, -0.55, 0.83).normalized() * 0.042
             hand.append(M.tube("thumb_l", [a, a.lerp(b, 0.5), b], [0.0155, 0.016, 0.0135], sides=6, color=BW, mat="flat",
                                cap_offset=0.9))
         else:             # fist round the bone
-            gc = G(x, 0.376, 0.012)   # grip centre = the bone's pivot
-            hand = [M.blob("palm_r", G(x, 0.400, 0.006), (0.027, 0.042, 0.035), segs=8, rings=5, color=BW)]
+            gc = GB(x, 0.376, 0.012)   # grip centre = the bone's pivot
+            hand = [M.blob("palm_r", GB(x, 0.400, 0.006), (0.027, 0.042, 0.035), segs=8, rings=5, color=BW)]
             for k, dz in enumerate((-0.026, 0.0, 0.026)):
                 loop = K.torus(f"grip{k}", 0.033, 0.015, color=BW, major_seg=8, minor_seg=4)
-                M.put(loop, gc + G(0, 0, dz), G(0, 0, 1))
+                M.put(loop, gc + GB(0, 0, dz), GB(0, 0, 1))
                 hand.append(loop)
-            hand.append(M.blob("thumb_r", gc + G(0, 0.014, 0.046), (0.017, 0.022, 0.016), segs=7, rings=4, color=BW))
+            hand.append(M.blob("thumb_r", gc + GB(0, 0.014, 0.046), (0.017, 0.022, 0.016), segs=7, rings=4, color=BW))
         R.part(f"hand_{side}", hand, wr, parent=f"forearm_{side}", ball=0.034, ball_color=BW, ball_segs=7, ground=False)
         R.ik_chain(f"arm_{side}", f"forearm_{side}", f"hand_{side}")
-    held = M.bone("held", gc + G(0, 0, -0.105), gc + G(0, 0, 0.225), 0.026, color=BW, mat="flat", knob=1.7, sides=7,
+    held = M.bone("held", gc + GB(0, 0, -0.105), gc + GB(0, 0, 0.225), 0.026, color=BW, mat="flat", knob=1.7, sides=7,
                   knob_segs=7, knob_rings=5)
     R.part("bone", [held], gc, parent="hand_r", ground=False)
-    R.socket("muzzle", gc + G(0, 0, 0.06), "hand_r")   # the middle of the held bone: where a throw leaves from
+    R.socket("muzzle", gc + GB(0, 0, 0.06), "hand_r")   # the middle of the held bone: where a throw leaves from
 
     # ------------------------------------------------------------ skull (head) and mandible (jaw)
     # A cute cartoon SKULL, not a ball (the user read the v2 ball head as a robot): a domed cranium with
@@ -145,8 +158,8 @@ def skeleton():
     T_UP = 0.926                     # game height of the palate edge: the upper teeth hang from it
     TOOTH_H, TOOTH_D = 0.027, 0.022  # tooth height, depth
     J_TOP, J_BOT = T_UP - 2 * TOOTH_H, 0.8     # mandible: alveolar rim at the front, chin bottom
-    SKULL_MAT, SKULL_UV = "stucco", 3.0
-    TEETH, GUM = "linen", "ivory_shade"   # (polish) ivory teeth (bone_shade on the flat layer still read white), a darker root: a hint of gum shadow
+    SKULL_MAT, SKULL_UV = "concrete", 3.0   # (2026-11-17) batch03's softer texture: stucco at 0.7 darkened the pale bone
+    TEETH, GUM = "bone", "bone_shade"   # (polish) ivory teeth (bone_shade on the flat layer still read white), a darker root: a hint of gum shadow
 
     def gauss(da, de, wa, we):
         return math.exp(-(da / wa) ** 2 - (de / we) ** 2)
@@ -392,33 +405,26 @@ def skeleton():
                      parent="head", roll=-s * TILT, back=INK, light="glow_magic_teal", light_r=0.42, light_tall=1.2,
                      light_back=0.35, look=(-s * 0.1, -0.08), light_segs=7, light_rings=4)
 
-    # ------------------------------------------------------------ bandana: neck ring, knot and a soft front flap
-    PIN = G(0, 0.808, 0.058)
+    # The head (skull, jaw, eyes) was built at its old size on the old neck: scale it about its pivot and move
+    # that pivot onto the stretched neck (see STRETCH above).
+    def rescale_head():
+        old = R.parts["head"].world.translation.copy()
+        new = GB(0, 0.825, 0)
+        for n in ("head", "jaw", "eye_l", "pupil_l", "eye_r", "pupil_r"):
+            prt = R.parts[n]
+            if prt.ob.type == "MESH":
+                prt.ob.data.transform(M.Matrix.Scale(HEAD_SCALE, 4))
+                prt.ob.data.update()
+            w = prt.world.copy()
+            w.translation = new + (w.translation - old) * HEAD_SCALE
+            prt.world = w
+        for n in ("head", "jaw", "eye_l", "pupil_l", "eye_r", "pupil_r"):
+            prt = R.parts[n]
+            prt.ob.matrix_basis = R.parts[prt.parent].world.inverted() @ prt.world
+    rescale_head()
 
-    def flap(u, v):
-        x = 1.0 - u * 2.0
-        w = 0.105 * (1.0 - v) ** 0.8 + 0.003
-        z = 0.075 + 0.05 * math.sin(min(1.0, v * 1.25) * math.pi / 2) - 0.072 * (x * w / 0.105) ** 2
-        return G(x * w, 0.811 - 0.15 * v, z)
-    cloth = [M.shell("flap", flap, 6, 7, thick=0.007, color=OR, rim_color=ORD),
-             K.torus("bring", 0.058, 0.021, color=OR, major_seg=12, minor_seg=5, loc=G(0, 0.806, -0.004),
-                     scale=(1.05, 1.0, 0.85)),
-             M.blob("knot", G(0, 0.806, -0.082), (0.03, 0.024, 0.026), segs=7, rings=4, color=ORD)]
-    for k, (u, v) in enumerate(((0.5, 0.2), (0.27, 0.12), (0.73, 0.12), (0.38, 0.42), (0.62, 0.42))):
-        p = flap(u, v)
-        n = (flap(u + 0.02, v) - flap(u - 0.02, v)).cross(flap(u, v + 0.02) - flap(u, v - 0.02)).normalized()
-        dot = K.cylinder(f"dot{k}", 0.011, 0.003, color="cream", verts=6)
-        M.put(dot, p + n * 0.0008, n)
-        cloth.append(dot)
-    R.part("bandana", cloth, PIN, parent="chest", soft=dict(dir=G(0, -1, 0.22), rigid=0.012, loops=6), ground=False)
-    KN = G(0, 0.806, -0.088)
-    tails = []
-    for k, (sx, drop, out) in enumerate(((-1, 0.22, 0.115), (1, 0.17, 0.07))):
-        pts = [KN, KN + G(sx * out * 0.25, -0.03, -0.038), KN + G(sx * out * 0.62, -drop * 0.5, -0.064),
-               KN + G(sx * out, -drop, -0.078)]
-        tails.append(M.ribbon(f"tail{k}", pts, lambda t: 0.052 - 0.014 * t, thick=0.006, nv=8, nu=2, color=OR,
-                              up=G(0, 0.3, -1)))
-    R.part("bandana_tail", tails, KN, parent="chest", soft=dict(dir=None, loops=6), ground=False)
+    # (The bandana, a neck ring with a knot, tails and a soft front flap, was removed: user, 2026-11-17, "Ditch
+    # the bandana". The animator skips its code when the parts are missing.)
 
     # ------------------------------------------------------------ extreme poses for the review sheet
     poses = [
@@ -472,8 +478,11 @@ def mummy():
     big amber eye in a dark gap between the wraps, a squinting second one in a slit beside it, a head
     knot with two tails, a waist knot with a tail, a loose strip on the left wrist."""
     K.reset()
-    LL, LM, LS, LD, DK = "linen_light", "linen", "linen_shade", "linen_deep", "linen_dark"
-    MAT, UVS = "burlap", 5.5                 # the weave, scaled down to gauze
+    # (2026-11-17, user: too dark against the levels; lighter like the previous mummy) batch03's cream and pale bone
+    # wraps instead of tan linen, and its paper texture (burlap at strength 0.85 darkened every strip); the dark
+    # gaps round the eyes stay dark.
+    LL, LM, LS, LD, DK = "cream", "bone", "bone_shade", "linen_shade", "linen_dark"
+    MAT, UVS = "paper", 5.5                  # soft fibres, scaled down to gauze
     TONE = ((LS, LD, 0.006), (LM, LS, 0.009), (LL, LS, 0.012))   # layer -> (top, edge, height)
     UP, DOWN = V((0, 0, 1)), V((0, 0, -1))
     R = M.Rig("monster_mummy", height=1.4, radius=0.32)
@@ -711,11 +720,16 @@ def mummy():
 
     ep, en = on_surf(htree, HC, hd(*EYE))
     # A shallow dome: the pupil part slides flat across it (MonsterFace), so a deep one would swallow its trailing edge.
-    M.eye(R, "eye", "pupil", ep - en * 0.004, en, 0.084, 0.084, parent="head", depth=0.022, sclera=DK, iris="glow_amber_dim",
-          iris_r=0.78, iris2="glow_amber_dim", iris2_r=0.56, pupil="ink", pupil_r=0.33, lift=0.0022)
+    # (2026-11-17, user: back to the old anime eyes, a little higher fidelity) both eyes are glossy ink anime eyes:
+    # glowing white highlights and a two-tone amber glow crescent low in each (the pupil part: it slides to look
+    # and flares with the wind-up); no iris disc or pupil.
+    # (the mummy is at its triangle budget: an 18-sided dome, a one-tone glow in the small squinting eye)
+    M.anime_eye(R, "eye", "pupil", ep - en * 0.004, en, 0.078, 0.084, parent="head", depth=0.026, lift=0.0022, segs=18,
+                tint="choco_dark", glint=("glow_amber_dim", "glow_amber"), hl="glow_white", glint_w=0.6, glint_h=0.48)
     sp, sn = on_surf(htree, HC, hd(*SQ))
-    M.eye(R, "eye_s0", "pupil_s0", sp - sn * 0.003, sn, 0.05, 0.025, parent="head", depth=0.011, sclera=DK, iris="glow_amber_dim",
-          iris_r=0.95, iris2="glow_amber_dim", iris2_r=0.66, pupil="ink", pupil_r=0.36, roll=6 * FS, segs=10, lift=0.002)
+    M.anime_eye(R, "eye_s0", "pupil_s0", sp - sn * 0.003, sn, 0.05, 0.025, parent="head", depth=0.011, roll=6 * FS, segs=10, rings=2,
+                lift=0.002, glint="glow_amber", hl="glow_white", sparkle=False, glint_y=-0.2, glint_w=0.7,
+                glint_h=0.6, hl_scale=1.2)
     kout = V((kn.x, kn.y, 0)).normalized()
     ktan = UP.cross(kout).normalized()
     R.part("knot_tail_a", [streamer("ktail_a", [K0, K0 + kout * 0.05 + DOWN * 0.03 + ktan * 0.01, K0 + kout * 0.085 + DOWN * 0.14 + ktan * 0.03,
@@ -1323,22 +1337,17 @@ def gremlin():
         brow = M.tube(f"brow{side}", pts, [0.0075, 0.0118, 0.0128, 0.011, 0.0065], sides=6, color="choco_dark", mat="flat", cap_offset=0.8)
         R.part(f"brow_{side}", [brow], pc, parent="head", z_out=nc, ground=False)
 
-    # ------------------------------------------------------------ eyes: big glossy brown eyes with a lash line
-    EW, EH = 0.05, 0.058
+    # ------------------------------------------------------------ eyes: big glossy anime eyes
+    # (2026-11-17, user: back to the old anime eyes, a little higher fidelity) batch03's ink eye with a pumpkin
+    # glint low in it, now a two-tone crescent (glow_amber inside: the wind-up flare warms it) under glowing
+    # white highlights; no sclera, iris or lash line.
+    EW, EH = 0.052, 0.064
     for side, s in (("l", 1), ("r", -1)):
         p, n = hs(s * 24.5, 0.528)
         out = V((n.x, n.y, 0)).normalized()
         en = (n + out * 0.9).normalized()           # looks straight out, not up the slope
-        lash = []
-        for k in range(8):
-            a = math.radians(14 + 152 * k / 7)
-            lash.append(V((s * EW * 1.04 * math.cos(a), EH * 1.04 * math.sin(a), 0.003)))
-        lash = [V((s * EW * 1.3, EH * 0.62, 0.002))] + lash   # the outer flick, then the line from outer to inner
-        lash_ob = M.tube(f"lash{side}", lash, lambda t: 0.0045 + 0.0035 * math.sin(math.pi * min(1.0, t * 1.15)), sides=5, color="ink",
-                         mat="flat", cap_offset=0.7)
-        M.eye(R, f"eye_{side}", f"pupil_{side}", p - n * 0.006, en, EW, EH, parent="head", depth=EW * 0.3, sclera="trim_white",
-              iris="iris_brown", iris_r=0.74, iris2="glow_amber_dim", iris2_r=0.52, pupil="ink", pupil_r=0.31, look=(-s * 0.07, -0.05),
-              eye_extra=[lash_ob])
+        M.anime_eye(R, f"eye_{side}", f"pupil_{side}", p - n * 0.006, en, EW, EH, parent="head", depth=EW * 0.32, roll=-8.0 * s,
+                    tint="choco_dark", glint=("pumpkin_dark", "glow_amber"), hl="glow_white")
 
     # ------------------------------------------------------------ nose: a little button with nostrils
     p, n = hs(0, 0.47)
@@ -1650,22 +1659,17 @@ def toadstool():
         sprout.append(M.shell(f"leaf{s}", leaf_out, 6, 7, inner=leaf_in, color=LEAF, mat=SOFT, paint=paint, rim_color=LEAF))
     R.part("sprout", sprout, B0, parent="cap", soft=dict(dir=CROT @ UP, rigid=0.012, loops=6), ground=False)
 
-    # ------------------------------------------------------------ face: eyes, lashes, brows, blush, mouth
-    EW, EH, EAZ, EY = 0.05, 0.058, 22.5, 0.43
+    # ------------------------------------------------------------ face: eyes, brows, blush, mouth
+    # (2026-11-17, user: back to the old anime eyes, a little higher fidelity) batch03's glossy ink eye with a
+    # pink glow low in it, now a plum-to-pink two-tone crescent (glow cell inside: the wind-up flare lights it),
+    # glowing white highlights; no sclera, iris or lash line.
+    EW, EH, EAZ, EY = 0.05, 0.064, 22.5, 0.43
     for side, s in (("l", 1), ("r", -1)):
         p, n = hs(s * EAZ, EY)
         out = V((n.x, n.y, 0)).normalized()
         en = (n + out * 0.9).normalized()
-        lash = []
-        for k in range(8):
-            a = math.radians(16 + 150 * k / 7)
-            lash.append(V((s * EW * 1.05 * math.cos(a), EH * 1.05 * math.sin(a), 0.003)))
-        lash = [V((s * EW * 1.32, EH * 0.66, 0.002))] + lash
-        lash_ob = M.tube(f"lash{side}", lash, lambda t: 0.0042 + 0.0034 * math.sin(math.pi * min(1.0, t * 1.15)), sides=5,
-                         color="ink", mat="flat", cap_offset=0.7)
-        M.eye(R, f"eye_{side}", f"pupil_{side}", p - n * 0.006, en, EW, EH, parent="head", depth=EW * 0.3, sclera="trim_white",
-              iris="iris_brown", iris_r=0.76, iris2="glow_amber_dim", iris2_r=0.5, pupil="ink", pupil_r=0.32, look=(-s * 0.06, -0.05),
-              eye_extra=[lash_ob])
+        M.anime_eye(R, f"eye_{side}", f"pupil_{side}", p - n * 0.006, en, EW, EH, parent="head", depth=EW * 0.32, roll=-6.0 * s,
+                    tint="licorice_black", glint=("spider_berry", "glow_lantern_pink"), hl="glow_white")
         # brow: a thin brown arc well above the eye
         pts = [hs(s * (9.0 + 25.0 * (i / 4)), 0.513 + 0.008 * (i / 4) + 0.009 * math.sin(math.pi * i / 4), 0.004)[0] for i in range(5)]
         pc, nc = hs(s * 21.0, 0.52)
@@ -1923,11 +1927,11 @@ def ghost():
         p, n = hs(s * EAZ, EY)
         out = V((n.x, n.y, 0)).normalized()
         en = (n + out * 0.6).normalized()
-        # ink dome, a very dark brown iris, ink pupil; the glints are a glow cell so the wind-up flare
-        # makes them blaze while the dark of the eye stays dark
-        M.eye(R, f"eye_{side}", f"pupil_{side}", p - n * 0.007, en, EW, EH, parent="head", depth=EW * 0.3, sclera="ink",
-              iris="linen_dark", iris_r=0.8, pupil="ink", pupil_r=0.46, glint="glow_white",
-              look=(-s * 0.03, -0.1), segs=18)
+        # (2026-11-17, user: back to the old anime eyes, a little higher fidelity) batch03's ink eye with a lilac
+        # glint low in it (now a two-tone crescent) and no iris or pupil; the highlights are a glow cell so the
+        # wind-up flare makes them blaze while the dark of the eye stays dark
+        M.anime_eye(R, f"eye_{side}", f"pupil_{side}", p - n * 0.007, en, EW, EH, parent="head", depth=EW * 0.32, roll=-6.0 * s,
+                    tint="licorice_black", glint=("bat_wing", "bat_belly"), hl="glow_white")
         # a short soft brow stroke well above the eye
         pts = [hs(s * (17.0 + 13.0 * (i / 4)), EY + 0.1 + 0.006 * math.sin(math.pi * i / 4) + 0.004 * (i / 4), 0.0035)[0]
                for i in range(5)]
@@ -2018,14 +2022,21 @@ def slime():
         brow_l/r, cheek_l/r, mouth (cavity + teeth + tongue, scaled open about the lip line),
         alt_squint_l/r (> <), alt_happy_l/r (^ ^), bubble_a..d (raised bubbles that slide on springs),
         alt_goo (hidden: the look of the thrown goo); socket_muzzle in front of the mouth."""
+    # (2026-11-17, user: "The new Jelly is weaker than the old model, especially the bottom area where it meets
+    # the ground. The new blobs down there don't convey the look of a jelly, and it's overall not nearly as
+    # cute.") Back to the batch03 slime's look on this rig: its round dome profile, a smooth glossy puddle foot
+    # with a gentle wave and a few melty lumps (no separate drips), its colours and vinyl, black anime eyes
+    # with big highlights, pink blush and a small smile. Part names and pivots unchanged for the animator.
     K.reset()
-    GOO, GOO_L, GOO_S, BUB = "goo_lime", "apple_green", "gourd_green", "slime_light"
-    MAT = "flat"
+    GOO, GOO_L, GOO_S, BUB = "slime_green", "slime_light", "slime_dark", "glow_slime"
+    MAT = "vinyl"
     UP = V((0, 0, 1))
     R = M.Rig("monster_slime", height=0.7, radius=0.42)
-    # the gumdrop's profile: radius by height (a wide rounded foot, concave flanks into the peak)
-    PY = (0.0, 0.025, 0.07, 0.14, 0.23, 0.32, 0.40, 0.47, 0.53, 0.575, 0.6, 0.615, 0.627)
-    PR = (0.36, 0.397, 0.408, 0.402, 0.376, 0.326, 0.264, 0.203, 0.152, 0.118, 0.098, 0.08, 0.0)
+    # the profile: radius by height, batch03's lathe including its puddle foot (out to 0.47 m just above the
+    # ground, rounding under onto it). The foot is part of the body mesh, one continuous surface: a separate
+    # foot mesh laid on the body showed a ring at the join (user, 2026-11-17).
+    PY = (0.0, 0.018, 0.05, 0.085, 0.14, 0.22, 0.31, 0.41, 0.5, 0.575, 0.625, 0.642, 0.648)
+    PR = (0.38, 0.465, 0.47, 0.43, 0.41, 0.405, 0.39, 0.355, 0.3, 0.22, 0.12, 0.05, 0.0)
     TOP = PY[-1]
 
     def interp(ys, vs, y):
@@ -2050,24 +2061,33 @@ def slime():
     def rad(y):
         return max(0.0, interp(PY, PR, y))
 
-    def body_mesh(name, nc, ys):
+    def wave(th, y):
+        """batch03's goo warp: a gentle seven-lobe wave round the foot, fading out by 0.12 m up."""
+        low = max(0.0, 1.0 - y / 0.12)
+        return 1.0 + 0.09 * math.sin(7.0 * th + 0.4) * low + 0.02 * math.sin(3.0 * th) * (1.0 - low)
+
+    def body_mesh(name, nc, ys, dark=False):
         bm = M.bmesh.new()
         ths = [M.TAU * i / nc for i in range(nc)]
-        rows = [[bm.verts.new(G(rad(y) * math.sin(th), y, rad(y) * math.cos(th))) for th in ths] for y in ys]
+        rows = [[bm.verts.new(G(rad(y) * wave(th, y) * math.sin(th), y, rad(y) * wave(th, y) * math.cos(th))) for th in ths]
+                for y in ys]
         bot = bm.verts.new(G(0, 0.004, 0))
         top = bm.verts.new(G(0, TOP, 0))
+        low = []
         for i in range(nc):
             i2 = (i + 1) % nc
-            bm.faces.new((bot, rows[0][i2], rows[0][i]))
+            low.append(bm.faces.new((bot, rows[0][i2], rows[0][i])))
             for k in range(len(ys) - 1):
-                bm.faces.new((rows[k][i], rows[k][i2], rows[k + 1][i2], rows[k + 1][i]))
-            bm.faces.new((rows[-1][i], rows[-1][i2], top))
+                f = bm.faces.new((rows[k][i], rows[k][i2], rows[k + 1][i2], rows[k + 1][i]))
+                if ys[k + 1] <= 0.026:   # the rounded edge where the foot meets the ground: batch03's darker base
+                    low.append(f)
         M.bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-        return M.D.mesh(bm, name, GOO, MAT, "cyl", smooth=True, center=tuple(G(0, 0.3, 0)))
+        extra = [(low, GOO_S, MAT)] if dark else []
+        return M.D.mesh(bm, name, GOO, MAT, "cyl", smooth=True, center=tuple(G(0, 0.3, 0)), extra=extra)
 
-    YS = (0.0, 0.012, 0.03, 0.055, 0.085, 0.12, 0.16, 0.2, 0.245, 0.29, 0.335, 0.38, 0.425, 0.465, 0.5, 0.53,
-          0.553, 0.572, 0.588, 0.6, 0.609, 0.616, 0.622)
-    btree = M.proxy_tree(lambda: body_mesh("jelly_hi", 160, [i * 0.625 / 120 for i in range(121)]))
+    YS = (0.0, 0.006, 0.012, 0.018, 0.026, 0.036, 0.05, 0.066, 0.085, 0.11, 0.14, 0.18, 0.22, 0.265, 0.31, 0.36,
+          0.41, 0.455, 0.5, 0.54, 0.575, 0.6, 0.62, 0.634, 0.643)
+    btree = M.proxy_tree(lambda: body_mesh("jelly_hi", 160, [i * 0.646 / 120 for i in range(121)]))
 
     def hs(az, y, off=0.0):
         """(point, normal) on the jelly at azimuth az (degrees, 0 = front, + toward its left), height y."""
@@ -2076,7 +2096,7 @@ def slime():
         loc, nrm, _, _ = btree.ray_cast(V((0, 0, y)) + d * 2.0, -d, 4.0)
         return loc + nrm * off, nrm
 
-    head = [body_mesh("jelly", 48, YS)]
+    head = [body_mesh("jelly", 70, YS, dark=True)]
 
     # paler inner swirls (decals a hair above the surface), as in the mock's back view, and two
     # highlight streaks high on its right where the key light's sheen would lie
@@ -2089,12 +2109,8 @@ def slime():
             y = y0 + (y1 - y0) * u + bulge * math.sin(math.pi * u)
             return hs(a, y + (v - 0.5) * width(u), 0.0012)[0]
         return M.patch(name, fn, nu, 2, color=color, flip=False)
-    head.append(swirl("swirl_back", 105.0, 255.0, 0.16, 0.36, 0.075, bulge=0.06))
-    head.append(swirl("swirl_back2", 150.0, 225.0, 0.4, 0.5, 0.04, bulge=0.025))
-    head.append(swirl("swirl_side_l", 62.0, 108.0, 0.11, 0.2, 0.045, bulge=0.02))
-    head.append(swirl("swirl_side_r", -66.0, -112.0, 0.12, 0.22, 0.045, bulge=0.02))
-    head.append(swirl("sheen_a", -42.0, -22.0, 0.47, 0.55, 0.02, bulge=0.01, color="trim_white", nu=10))
-    head.append(swirl("sheen_b", -58.0, -50.0, 0.4, 0.44, 0.013, bulge=0.004, color="trim_white", nu=6))
+    # (The paler swirls and the white highlight streaks painted on the jelly were removed: user, 2026-11-17, "On
+    # the slime, remove the swirls added, they look bad". The shader's soft highlight gives the sheen.)
 
     # small raised bubbles set in the jelly (the big ones are parts and slide)
     def bubble(name, az, y, r, segs=8, rings=5):
@@ -2109,8 +2125,8 @@ def slime():
     for k, (az, y, r) in enumerate(((-84, 0.31, 0.016), (102, 0.22, 0.018), (-140, 0.27, 0.019), (140, 0.44, 0.013))):
         head += bubble(f"bub{k}", az, y, r, segs=7, rings=4)[0]
 
-    # the lip line: a thin smile across the top of the mouth (the cavity part shuts onto it)
-    MAZ, MW, MTOP, MCURVE, MDEEP = 3.0, 12.5, 0.248, 0.011, 0.082
+    # the lip line: a thin smile across the top of the mouth (the cavity part shuts onto it); small, as batch03's
+    MAZ, MW, MTOP, MCURVE, MDEEP = 0.0, 8.0, 0.232, 0.009, 0.05
 
     def top(az):
         return MTOP + MCURVE * ((az - MAZ) / MW) ** 2
@@ -2121,111 +2137,62 @@ def slime():
     R.part("body", [], G(0, 0, 0))
     R.part("head", head, G(0, 0, 0), parent="body")
 
-    # ------------------------------------------------------------ skirt: a ring of rounded drips
-    NL = 9
-    LW = (1.1, 0.9, 1.2, 0.8, 1.0, 1.15, 0.85, 1.05, 0.95)          # lobe widths (front lobe first)
-    LR = (0.505, 0.47, 0.52, 0.455, 0.49, 0.53, 0.465, 0.5, 0.48)    # how far each drip runs out
-    LH = (0.088, 0.076, 0.092, 0.07, 0.082, 0.095, 0.074, 0.086, 0.08)
-    tw = sum(LW)
-    edges = [0.0]
-    for w in LW:
-        edges.append(edges[-1] + M.TAU * w / tw)
-    shift = -M.TAU * LW[0] / tw / 2.0   # the first lobe centred at the front
-    R_GAP, H_GAP = 0.39, 0.022
-    U_COLS = (-1.0, -0.86, -0.62, -0.32, 0.0, 0.32, 0.62, 0.86)
-
+    # ------------------------------------------------------------ skirt: what oozes out of the foot
+    # The foot itself is part of the body mesh (no join to show). This part holds the melty lumps and bubbles
+    # round it, so the animator's landing splash (it spreads and ripples the skirt) still throws them out.
     def drip(th):
-        """(outer radius, height) of the skirt at azimuth th."""
-        x = (th - shift) % M.TAU
-        k = max(i for i in range(NL) if edges[i] <= x + 1e-9)
-        k = min(k, NL - 1)
-        u = ((x - edges[k]) / (edges[k + 1] - edges[k])) * 2.0 - 1.0
-        f = max(0.0, 1.0 - u * u) ** 0.5
-        return R_GAP + (LR[k] - R_GAP) * f, H_GAP + (LH[k] - H_GAP) * f
+        """(outer radius of the foot, height of its widest point) at azimuth th."""
+        return rad(0.05) * wave(th, 0.05), 0.05
 
-    def skirt_col(th):
-        """The drip's cross-section, (r, y) points round a closed loop: it leaves the body tangent to it,
-        swells out and down to its outermost point, rounds under onto the ground, runs back inside."""
+    skirt = []
+    # melty lumps oozing out of the foot (batch03's five), flattened where they touch the ground
+    for k, (a, r) in enumerate(((35, 0.075), (120, 0.06), (200, 0.08), (255, 0.055), (320, 0.07))):
+        th = math.radians(a)
         ro, h = drip(th)
-        ya = h + 0.1
-        ra = rad(ya) + 0.0016   # its top edge lies on the body, just proud of it: no seam line
-        e = 1e-3
-        dr = (rad(ya - e) - rad(ya + e)) / (2 * e)   # how much the body widens per metre down
-        da = V((dr, -1.0, 0.0)).normalized()
-        A, B = V((ra, ya, 0.0)), V((ro, h * 0.5, 0.0))
-        L1, L2 = 0.4 * (B - A).length, 0.45 * h + 0.02
-        C1, C2 = A + da * L1, B + V((0.0, L2, 0.0))
-        pts = [(ra - 0.03, ya - 0.01), (ra, ya)]
-        for s in (0.2, 0.4, 0.6, 0.8, 1.0):
-            q = A * (1 - s) ** 3 + C1 * 3 * s * (1 - s) ** 2 + C2 * 3 * s * s * (1 - s) + B * s ** 3
-            pts.append((q.x, q.y))
-        for a in (-30, -60, -90):
-            r = math.radians(a)
-            pts.append((ro - h * 0.5 + h * 0.5 * math.cos(r), h * 0.5 + h * 0.5 * math.sin(r)))
-        pts.append((0.31, 0.0))
-        pts.append((0.31, 0.06))
-        return pts
-
-    ths = [shift + edges[k] + (edges[k + 1] - edges[k]) * (u + 1.0) / 2.0 for k in range(NL) for u in U_COLS]
-    bm = M.bmesh.new()
-    cols = [skirt_col(th) for th in ths]
-    grid = [[bm.verts.new(G(r * math.sin(th), y, r * math.cos(th))) for (r, y) in col] for th, col in zip(ths, cols)]
-    npt = len(cols[0])
-    tops = []
-    for i in range(len(ths)):
-        i2 = (i + 1) % len(ths)
-        for k in range(npt):
-            k2 = (k + 1) % npt
-            f = bm.faces.new((grid[i][k], grid[i2][k], grid[i2][k2], grid[i][k2]))
-            if k == 6:   # the outermost swell of each drip: a paler band, lit from within
-                tops.append(f)
-    M.bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    skirt = [M.D.mesh(bm, "skirt_mesh", GOO, MAT, "cyl", smooth=True, center=tuple(G(0, 0.05, 0)), extra=[(tops, GOO_L, MAT)])]
-    # a few small bubbles in the drips
+        rr = ro - r * 0.35
+        c = G(rr * math.sin(th), r * 0.38, rr * math.cos(th))
+        skirt.append(M.blob(f"lump{k}", c, (r * 1.2, r * 1.2, r * 0.6), segs=12, rings=6, color=GOO, mat=MAT,
+                            warp=lambda q: V((q.x, q.y, q.z if q.z > 0 else q.z * 0.3))))
+    # a few small glowing bubbles in the foot
     for k, th in enumerate((0.3, 2.2, 3.6, 5.1)):
         ro, h = drip(th)
-        rr = ro - h * 0.55
-        c = G(rr * math.sin(th), h * 0.82, rr * math.cos(th))
-        skirt.append(M.blob(f"sbub{k}", c, (0.011, 0.011, 0.011), segs=6, rings=4, color=BUB, mat=MAT))
+        rr = ro - h * 0.7
+        c = G(rr * math.sin(th), h * 0.9, rr * math.cos(th))
+        skirt.append(M.blob(f"sbub{k}", c, (0.012, 0.012, 0.012), segs=6, rings=4, color=BUB, mat=MAT))
     R.part("skirt", skirt, G(0, 0, 0), parent="head")
 
     # ------------------------------------------------------------ the curled tip: one soft tube with a ball
-    cpts = [G(0, 0.54, 0), G(0, 0.6, 0), G(0.004, 0.645, -0.004), G(0.028, 0.684, -0.008), G(0.068, 0.708, -0.01),
-            G(0.11, 0.702, -0.01), G(0.135, 0.68, -0.008), G(0.132, 0.658, -0.006)]
-    crad = [0.1, 0.093, 0.079, 0.064, 0.052, 0.046, 0.043, 0.042]
+    # (smaller and set on the rounder dome: batch03's little soft-serve curl)
+    cpts = [G(0, 0.6, 0), G(0, 0.65, 0), G(0.004, 0.682, -0.004), G(0.024, 0.71, -0.006), G(0.055, 0.726, -0.008),
+            G(0.086, 0.721, -0.008), G(0.104, 0.704, -0.006), G(0.102, 0.688, -0.005)]
+    crad = [0.062, 0.056, 0.048, 0.04, 0.034, 0.03, 0.028, 0.027]
     curl = [M.tube("curltube", cpts, crad, sides=12, color=GOO, mat=MAT, cap_offset=0.6),
-            M.blob("curlball", G(0.128, 0.652, -0.006), (0.05, 0.05, 0.048), segs=10, rings=6, color=GOO, mat=MAT),
-            M.blob("curlpin", G(0, 0.58, 0), (0.02, 0.02, 0.02), segs=6, rings=4, color=GOO, mat=MAT),
-            M.blob("curlglint", G(0.112, 0.676, 0.033), (0.01, 0.01, 0.008), segs=6, rings=4, color="trim_white", mat=MAT)]
-    R.part("curl", curl, G(0, 0.58, 0), parent="head", soft=dict(dir=None, rigid=0.04, loops=6), ground=False)
+            M.blob("curlball", G(0.099, 0.684, -0.005), (0.032, 0.032, 0.031), segs=10, rings=6, color=GOO, mat=MAT),
+            M.blob("curlpin", G(0, 0.63, 0), (0.016, 0.016, 0.016), segs=6, rings=4, color=GOO, mat=MAT),
+            M.blob("curlglint", G(0.086, 0.701, 0.022), (0.007, 0.007, 0.006), segs=6, rings=4, color="trim_white", mat=MAT)]
+    R.part("curl", curl, G(0, 0.63, 0), parent="head", soft=dict(dir=None, rigid=0.03, loops=6), ground=False)
 
     # ------------------------------------------------------------ face: big glossy eyes with a dark outline
-    EW, EH, EAZ, EY = 0.082, 0.095, 22.5, 0.365
+    # batch03's cute eyes: a glossy black dome, a big white highlight up-left and a small one low-right, and a
+    # pale lime glint low in the eye (the "pupil" part carries the glint, so a look slides it)
+    EW, EH, EAZ, EY = 0.08, 0.1, 20.5, 0.36
     for side, s in (("l", 1), ("r", -1)):
         p, n = hs(s * EAZ, EY)
-        out = V((n.x, n.y, 0)).normalized()
-        en = (n + out * 0.8).normalized()
-        ring = []
-        for k in range(17):
-            a = math.radians(-90 + 360 * k / 16)
-            ring.append(V((EW * 1.0 * math.cos(a), EH * 1.0 * math.sin(a), 0.0085)))
-        line = M.tube(f"eyeline{side}", ring, lambda t: 0.0055 + 0.0035 * max(0.0, math.sin(math.pi * t)), sides=5,
-                      color="choco_dark", mat=MAT, cap_offset=0.5)
-        M.eye(R, f"eye_{side}", f"pupil_{side}", p - n * 0.008, en, EW, EH, parent="head", depth=EW * 0.36,
-              sclera="trim_white", iris="iris_brown", iris_r=0.74, pupil="ink", pupil_r=0.42, glint="glow_white",
-              look=(-s * 0.05, -0.04), segs=18, eye_extra=[line])
-        # brow: a short thick dark arc above the outer half of the eye
-        pts = [hs(s * (14.0 + 19.0 * (i / 4)), EY + 0.112 + 0.013 * math.sin(math.pi * i / 4) - 0.006 * (i / 4), 0.004)[0]
+        # (the shared anime eye: its glint is sized and raised so a full look neither sinks it nor pushes it past the rim)
+        M.anime_eye(R, f"eye_{side}", f"pupil_{side}", p - n * 0.005, n, EW, EH, parent="head", depth=EW * 0.32, roll=-8.0 * s,
+                    tint="choco_dark", glint=(GOO, GOO_L), hl="glow_white")
+        # brow: a short thin dark arc high above the eye (only shows much when the animator raises or knits it)
+        pts = [hs(s * (13.0 + 16.0 * (i / 4)), EY + 0.125 + 0.01 * math.sin(math.pi * i / 4) - 0.005 * (i / 4), 0.004)[0]
                for i in range(5)]
-        pc, nc = hs(s * 23.5, EY + 0.12)
-        brow = M.tube(f"brow{side}", pts, [0.006, 0.0098, 0.0105, 0.0088, 0.0052], sides=6, color="choco_dark", mat=MAT,
+        pc, nc = hs(s * 21.0, EY + 0.13)
+        brow = M.tube(f"brow{side}", pts, [0.004, 0.0065, 0.007, 0.006, 0.0035], sides=6, color="choco_dark", mat=MAT,
                       cap_offset=0.8)
         R.part(f"brow_{side}", [brow], pc, parent="head", z_out=nc, ground=False)
-        # cheek: a paler raised oval of jelly sunk into the face; puffs when scaled
-        q, qn = hs(s * 43.0, 0.25)
-        ck = M.blob(f"cheekpad{side}", (0, 0, 0), (0.056, 0.038, 0.04), segs=12, rings=6, color=GOO_L, mat=MAT)
-        M.put(ck, q - qn * 0.022, qn, up=tuple(UP))
-        R.part(f"cheek_{side}", [ck], q - qn * 0.022, parent="head", z_out=qn, ground=False)
+        # cheek: a soft pink blush, flat on the face; puffs when scaled
+        q, qn = hs(s * 37.0, 0.25)
+        ck = M.blob(f"cheekpad{side}", (0, 0, 0), (0.046, 0.03, 0.012), segs=12, rings=5, color="cheek_pink", mat="flat")
+        M.put(ck, q - qn * 0.002, qn, roll=-14.0 * s)
+        R.part(f"cheek_{side}", [ck], q - qn * 0.002, parent="head", z_out=qn, ground=False)
         # shut eyes (> <) for a hit, happy arcs (^ ^) for a laugh; hidden until shown
         chev = [hs(s * (EAZ + 8.0), EY + 0.03, 0.006)[0], hs(s * (EAZ - 7.0), EY + 0.002, 0.006)[0],
                 hs(s * (EAZ + 8.0), EY - 0.026, 0.006)[0]]
@@ -2242,9 +2209,7 @@ def slime():
         depth = MDEEP * math.sqrt(max(0.0, 1.0 - (a / MW) ** 2)) ** 0.75 + 0.003
         return hs(MAZ + a, top(MAZ + a) - 0.0015 - v * depth, 0.0012)[0]
 
-    def mpaint(i, j):
-        if j == 0 and 2 <= i <= 7:
-            return ("trim_white", MAT)
+    def mpaint(i, j):   # no teeth (batch03's mouth was a dark smile with a tongue)
         if j >= 3 and 2 <= i <= 7:
             return ("tongue", MAT)
         if j >= 4 and i in (1, 8):
@@ -2871,25 +2836,18 @@ def bat():
     MP, MN = hs(0, lip_el(0), 0.0012)
     R.part("jaw", [mouth], MP, parent="head", z_out=MN, ground=False)
 
-    # ------------------------------------------------------------ eyes: white, two-tone amber iris, ink pupil, glints, lash line
-    EW, EH, EAZ, EEL = 0.047, 0.054, 26.0, 5.0
+    # ------------------------------------------------------------ eyes: big glossy anime eyes with an amber glow
+    # (2026-11-17, user: back to the old anime eyes, a little higher fidelity) an ink dome with glowing white
+    # highlights and a broad two-tone amber crescent low in it (both glow cells, flaring with the wind-up): the
+    # old bat's yellow glow kept as the anime eye's glint; no sclera, iris, pupil or lash line.
+    # glow_amber (#ff9a26) read lemon yellow under the key light at any glow; glow_amber_dim stays amber.
+    EW, EH, EAZ, EEL = 0.05, 0.06, 26.0, 5.0
     for side, s in (("l", 1), ("r", -1)):
         p, n = hs(s * EAZ, EEL)
         out = V((n.x, n.y, 0)).normalized()
         en = (n + out * 0.35).normalized()
-        lash = []
-        for k in range(9):
-            a = math.radians(10 + 160 * k / 8)
-            lash.append(V((s * EW * 1.05 * math.cos(a), EH * 1.05 * math.sin(a), 0.004)))
-        lash = [V((s * EW * 1.32, EH * 0.68, 0.003))] + lash
-        lash_ob = M.tube(f"lash{side}", lash, lambda t: 0.0042 + 0.0034 * math.sin(math.pi * min(1.0, t * 1.12)), sides=5, color="ink",
-                         mat="flat", cap_offset=0.7)
-        # a thin dark-brown limbal ring (never glows) round one amber disc (a glow cell), an ink pupil:
-        # the iris glows softly at night and the ring keeps the eye from reading as a glowing bullseye.
-        # glow_amber (#ff9a26) read lemon yellow under the key light at any glow; glow_amber_dim stays amber.
-        M.eye(R, f"eye_{side}", f"pupil_{side}", p - n * 0.005, en, EW, EH, parent="head", depth=EW * 0.27, sclera="trim_white",
-              iris="iris_brown", iris_r=0.82, iris2="glow_amber_dim", iris2_r=0.74, pupil="ink", pupil_r=0.38, glint="glow_white",
-              look=(-s * 0.05, -0.06), segs=18, eye_extra=[lash_ob])
+        M.anime_eye(R, f"eye_{side}", f"pupil_{side}", p - n * 0.005, en, EW, EH, parent="head", depth=EW * 0.32, roll=-6.0 * s,
+                    tint="hat_violet_deep", glint=("glow_amber_dim", "glow_amber"), hl="glow_white")
         # brow: a short dark arc well above the eye, thick in the middle
         pts = [hs(s * (13.0 + 22.0 * (i / 4)), EEL + 27.0 + 3.5 * math.sin(math.pi * i / 4) - 2.0 * (i / 4), 0.004)[0] for i in range(5)]
         pc, nc = hs(s * 24.0, EEL + 29.0)
@@ -3229,22 +3187,17 @@ def spider():
     MP, MN = hs(0, lip_el(0), 0.0012)
     R.part("jaw", [mouth], MP, parent="head", z_out=MN, ground=False)
 
-    # ------------------------------------------------------------ big eyes: white, two-tone amber iris, ink pupil, glints, lash
-    EW, EH, EAZ, EEL = 0.06, 0.066, 27.0, 1.0
+    # ------------------------------------------------------------ big eyes: glossy anime eyes with an amber glow
+    # (2026-11-17, user: back to the old anime eyes, a little higher fidelity) an ink dome, glowing white
+    # highlights and a broad two-tone amber crescent low in it (glow cells: the old spider's yellow glow kept as
+    # the glint, flaring with the wind-up); no sclera, iris, pupil or lash line.
+    EW, EH, EAZ, EEL = 0.058, 0.07, 27.0, 1.0
     for side, s in (("l", 1), ("r", -1)):
         p, n = hs(s * EAZ, EEL)
         out = V((n.x, n.y, 0)).normalized()
         en = (n + out * 0.3).normalized()
-        lash = []
-        for k in range(9):
-            a = math.radians(10 + 160 * k / 8)
-            lash.append(V((s * EW * 1.05 * math.cos(a), EH * 1.05 * math.sin(a), 0.004)))
-        lash = [V((s * EW * 1.3, EH * 0.72, 0.003))] + lash
-        lash_ob = M.tube(f"lash{side}", lash, lambda t: 0.0042 + 0.0034 * math.sin(math.pi * min(1.0, t * 1.12)), sides=4,
-                         color="ink", mat="flat", cap_offset=0.7)
-        M.eye(R, f"eye_{side}", f"pupil_{side}", p - n * 0.006, en, EW, EH, parent="head", depth=EW * 0.3, sclera="trim_white",
-              iris="iris_brown", iris_r=0.76, iris2="glow_amber_dim", iris2_r=0.68, pupil="ink", pupil_r=0.4, glint="glow_white",
-              look=(-s * 0.05, -0.07), segs=16, eye_extra=[lash_ob])
+        M.anime_eye(R, f"eye_{side}", f"pupil_{side}", p - n * 0.006, en, EW, EH, parent="head", depth=EW * 0.32, roll=-6.0 * s,
+                    tint="hat_violet_deep", glint=("glow_amber_dim", "glow_amber"), hl="glow_white")
         chev = [hs(s * (EAZ + 9.0), EEL + 10.0, 0.006)[0], hs(s * (EAZ - 8.0), EEL + 0.5, 0.006)[0],
                 hs(s * (EAZ + 9.0), EEL - 9.0, 0.006)[0]]
         if side == "l":
@@ -3260,10 +3213,10 @@ def spider():
         rot = Mx(((-n).cross(u).normalized(), -n, u)).transposed()
         frame = Mx.Translation(p - n * 0.004) @ rot.to_4x4()
         d = r * 0.55
-        objs = [M._dome(name + "_d", r, r, d, 8, 2, "iris_brown"),
-                M._decal(name + "_i", 0.0, -r * 0.04, r * 0.78, r * 0.78, r, r, d, 0.0012, "glow_amber_dim", segs=8, rings=1),
-                M._decal(name + "_p", 0.0, -r * 0.08, r * 0.4, r * 0.44, r, r, d, 0.0026, "ink", segs=6, rings=1),
-                M._decal(name + "_g", -r * 0.3, r * 0.34, r * 0.22, r * 0.2, r, r, d, 0.0038, "glow_white", segs=5, rings=1)]
+        # (2026-11-17) little anime beads to match the big eyes: ink, an amber glow crescent low, one highlight
+        objs = [M._dome(name + "_d", r, r, d, 9, 2, "ink"),
+                M._crescent(name + "_i", 0.0, -r * 0.36, r * 0.6, r * 0.46, -0.22, r, r, d, 0.0012, "glow_amber_dim", n=4),
+                M._decal(name + "_g", -r * 0.28, r * 0.32, r * 0.34, r * 0.27, r, r, d, 0.0026, "glow_white", segs=6, rings=1, rot=-30.0)]
         for o in objs:
             o.matrix_world = frame
         return objs, p, n

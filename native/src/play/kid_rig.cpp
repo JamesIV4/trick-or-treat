@@ -279,7 +279,7 @@ const KidTuning &kid_tuning(const String &id) {
 		witch.elbow_rest = 0.15f;
 		// Polish (2026-11-15): the hat read as glossy plastic in the face beat; felt has no highlight and only a faint
 		// sheen (-1 is the scarecrow's felt hat, -2 none at all).
-		witch.hat_gloss = -2.0f; // -1.6 left a pale sky sheen on the brim's underside (seen at a grazing angle)
+		witch.hat_gloss = 0.0f; // the original sheen (user, 2026-11-17); -2 removed every highlight from the hat
 		// Polish round 3: with the default highlight and sky sheen the bangs read as glossy toffee sticks and the locks as
 		// shiny chocolate in the face beat; hair is soft, not lacquered.
 		witch.hair_gloss = -1.0f; // no highlight; the sky sheen stays (at -1.4 the hair warmed to ginger without it)
@@ -296,7 +296,8 @@ const KidTuning &kid_tuning(const String &id) {
 		skeleton.id = "kid_skeleton";
 		skeleton.costume = KID_SKELETON;
 		skeleton.rattle = 0.0f;
-		skeleton.matte = -2.0f; // black fleece and printed bones: no vinyl highlights (batch05 costume_skeleton.py)
+		// (matte -2 took every highlight off the costume; the user preferred the original sheen, 2026-11-17)
+		skeleton.matte = 0.0f;
 		t.push_back(skeleton);
 		// Pumpkin: arms held clear of the round body; stem, leaves and vines wobble; a heavier bounce.
 		KidTuning pumpkin;

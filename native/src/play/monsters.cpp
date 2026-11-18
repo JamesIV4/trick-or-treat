@@ -799,7 +799,11 @@ void MonsterNest::_process(double delta) {
 	if (dormant_) {
 		return;
 	}
-	if (alive < tuning(type_).max_alive) {
+	// Stage 4c: with ~2.5x the nests an area holds, a nest only sends monsters out while the kid is within ~85 m
+	// (the ones already out stay), so the live count follows what is around the kid rather than the area's size.
+	const Vector3 me = get_global_position(), kid = world_->player_pos();
+	const bool near_kid = Vector2(me.x - kid.x, me.z - kid.z).length_squared() < 85.0f * 85.0f;
+	if (alive < tuning(type_).max_alive && near_kid) {
 		timer_ -= dt;
 		if (timer_ <= 0.0f) {
 			timer_ = rng_.range(5.0f, 8.0f);
@@ -861,20 +865,25 @@ bool MonsterNest::take_hit(float damage, const Vector3 &from) {
 // hedges, porches, big props) is blocked, grown by a monster's radius, so routes go round them
 // instead of shoving into fences or through houses.
 void Infestation::build_nav(const Area &area) {
-	const GenContext &ctx = *area.gen->context();
+	build_nav(*area.gen->context(), area.plan);
+}
+
+// Plain data from the settlement's plan (area preloading runs it on a worker thread, see prepare()).
+void Infestation::build_nav(const GenContext &ctx, const RegionPlan &plan) {
 	constexpr float PAD = 14.0f, R = 0.45f;
-	nav_x0_ = area.plan.x0 - PAD;
-	nav_z0_ = area.plan.z0 - PAD;
-	nav_y_ = area.plan.origin.y;
-	nav_w_ = int((area.plan.x1 - area.plan.x0 + PAD * 2.0f) / NAV_CELL) + 1;
-	nav_h_ = int((area.plan.z1 - area.plan.z0 + PAD * 2.0f) / NAV_CELL) + 1;
+	nav_x0_ = plan.x0 - PAD;
+	nav_z0_ = plan.z0 - PAD;
+	nav_y_ = plan.origin.y;
+	nav_w_ = int((plan.x1 - plan.x0 + PAD * 2.0f) / NAV_CELL) + 1;
+	nav_h_ = int((plan.z1 - plan.z0 + PAD * 2.0f) / NAV_CELL) + 1;
 	nav_.assign(size_t(nav_w_) * nav_h_, 0);
 	for (const OBox &b : ctx.boxes) {
-		const float bottom = b.xf.origin.y - b.half.y, top = b.xf.origin.y + b.half.y;
+		const float g = ctx.ground(b.xf.origin.x, b.xf.origin.z); // Stage 3b: heights above the ground under it
+		const float bottom = b.xf.origin.y - b.half.y - g, top = b.xf.origin.y + b.half.y - g;
 		if (top < 0.35f || bottom > 1.3f) {
 			continue; // paths, mats and steps; awnings and roofs overhead
 		}
-		const Transform3D world(b.xf.basis, area.to_world(b.xf.origin));
+		const Transform3D world(b.xf.basis, b.xf.origin + plan.origin); // Area::to_world
 		const Transform3D inv = world.affine_inverse();
 		const float ext = Math::max(b.half.x, b.half.z) * 1.42f + R;
 		const int cx0 = int((world.origin.x - ext - nav_x0_) / NAV_CELL), cx1 = int((world.origin.x + ext - nav_x0_) / NAV_CELL);
@@ -894,6 +903,8 @@ void Infestation::build_nav(const Area &area) {
 			}
 		}
 	}
+	labels_.clear();
+	ensure_labels();
 }
 
 bool Infestation::nav_line(const Vector3 &a, const Vector3 &b) const {
@@ -908,6 +919,64 @@ bool Infestation::nav_line(const Vector3 &a, const Vector3 &b) const {
 	return true;
 }
 
+// Stage 2a: the bigger neighbourhoods need longer searches (the --sweep nav probe: at 9000 about 1 in 30 chases and 1 in 6
+// walks home from past the leash between connected cells were cut short; at 40000 none, worst ~6 ms in a debug build).
+// A search with no way through (the target in a fenced-off pocket) keeps the old cap: it only wants the nearest approach.
+// Stage 2b (2-3x the houses): at 40000 about 1 in 8 walks home from past the leash was still cut short; 100000.
+int Infestation::route_cap = 100000;
+constexpr int HOPELESS_CAP = 9000;
+
+void Infestation::ensure_labels() const {
+	if (labels_.size() != nav_.size()) {
+		// Flood fill with route()'s moves (8 neighbours, no corner cutting).
+		labels_.assign(nav_.size(), 0);
+		int next = 0;
+		std::vector<int> stack;
+		for (int i = 0; i < int(nav_.size()); ++i) {
+			if (nav_[i] || labels_[i]) {
+				continue;
+			}
+			labels_[i] = ++next;
+			stack.push_back(i);
+			while (!stack.empty()) {
+				const int c = stack.back();
+				stack.pop_back();
+				const int cx = c % nav_w_, cz = c / nav_w_;
+				for (int dz = -1; dz <= 1; ++dz) {
+					for (int dx = -1; dx <= 1; ++dx) {
+						if ((dx == 0 && dz == 0) || nav_blocked(cx + dx, cz + dz) || (dx && dz && (nav_blocked(cx + dx, cz) || nav_blocked(cx, cz + dz)))) {
+							continue;
+						}
+						const int ni = (cz + dz) * nav_w_ + cx + dx;
+						if (!labels_[ni]) {
+							labels_[ni] = next;
+							stack.push_back(ni);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+int Infestation::nav_label(const Vector3 &p) const {
+	if (nav_.empty()) {
+		return 0;
+	}
+	ensure_labels();
+	const int x = int(std::floor((p.x - nav_x0_) / NAV_CELL)), z = int(std::floor((p.z - nav_z0_) / NAV_CELL));
+	for (int r = 0; r <= 4; ++r) {
+		for (int dz = -r; dz <= r; ++dz) {
+			for (int dx = -r; dx <= r; ++dx) {
+				if ((std::abs(dx) == r || std::abs(dz) == r) && !nav_blocked(x + dx, z + dz)) {
+					return labels_[(z + dz) * nav_w_ + x + dx];
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 bool Infestation::route(const Vector3 &from, const Vector3 &to, std::vector<Vector3> &path) const {
 	if (nav_.empty()) {
 		return false;
@@ -918,6 +987,8 @@ bool Infestation::route(const Vector3 &from, const Vector3 &to, std::vector<Vect
 		return x >= 0 && z >= 0 && x < nav_w_ && z < nav_h_;
 	};
 	int sx, sz, gx, gz;
+	route_expanded_ = 0;
+	route_capped_ = false;
 	if (!cell(from, sx, sz)) {
 		return false;
 	}
@@ -948,7 +1019,9 @@ bool Infestation::route(const Vector3 &from, const Vector3 &to, std::vector<Vect
 		return true;
 	}
 	// A* over 8 neighbours (no corner cutting), capped so a hopeless search can't stall a frame.
+	ensure_labels();
 	const int n = nav_w_ * nav_h_;
+	const int cap = labels_[sz * nav_w_ + sx] == labels_[gz * nav_w_ + gx] ? route_cap : Math::min(route_cap, HOPELESS_CAP);
 	static thread_local std::vector<float> g;
 	static thread_local std::vector<int> parent;
 	static thread_local std::vector<uint32_t> stamp;
@@ -976,7 +1049,7 @@ bool Infestation::route(const Vector3 &from, const Vector3 &to, std::vector<Vect
 	open.push({ h(start), start });
 	int best = start, expanded = 0;
 	float best_h = h(start);
-	while (!open.empty() && expanded < 9000) {
+	while (!open.empty() && expanded < cap) {
 		const Node cur = open.top();
 		open.pop();
 		if (cur.i == goal) {
@@ -1009,6 +1082,8 @@ bool Infestation::route(const Vector3 &from, const Vector3 &to, std::vector<Vect
 			}
 		}
 	}
+	route_expanded_ = expanded;
+	route_capped_ = best != goal && expanded >= cap;
 	// Walk back (to the goal, or as close as the search got), then pull the string tight.
 	std::vector<Vector3> cells;
 	for (int i = best; i >= 0 && stamp[i] == gen; i = parent[i]) {
@@ -1380,12 +1455,13 @@ bool VineTendril::take_hit(float damage, const Vector3 &from) {
 // ================================================================ Infestation
 namespace {
 
-bool clear_of_boxes(const GenContext &ctx, const Vector3 &p, float r) {
+// through_fences: yard fences don't count (thorn vines creep between the pickets and under the rails).
+bool clear_of_boxes(const GenContext &ctx, const Vector3 &p, float r, bool through_fences = false) {
 	for (const OBox &b : ctx.boxes) {
-		if (b.boundary) {
+		if (b.boundary || (through_fences && b.shot_through)) {
 			continue;
 		}
-		if (b.xf.origin.y + b.half.y < 0.25f) {
+		if (b.xf.origin.y + b.half.y - ctx.ground(p.x, p.z) < 0.25f) { // Stage 3b: above the ground here
 			continue;
 		}
 		const Vector3 l = b.xf.affine_inverse().xform(Vector3(p.x, b.xf.origin.y, p.z));
@@ -1402,8 +1478,9 @@ bool clear_of_boxes(const GenContext &ctx, const Vector3 &p, float r) {
 float shot_openness(const GenContext &ctx, const Vector3 &p) {
 	constexpr float REACH = 4.5f;
 	std::vector<const OBox *> near;
+	const float g = ctx.ground(p.x, p.z); // Stage 3b: heights above the ground here
 	for (const OBox &b : ctx.boxes) {
-		if (b.shot_through || b.top() < 0.55f || b.xf.origin.y - b.half.y > 1.4f) {
+		if (b.shot_through || b.top() - g < 0.55f || b.xf.origin.y - b.half.y - g > 1.4f) {
 			continue; // shots fly through it (yard fences), it's too low to stop one, or it's overhead
 		}
 		const Vector3 d = b.xf.origin - p;
@@ -1469,24 +1546,664 @@ Infestation::~Infestation() {
 	}
 }
 
+InfestationLayout plan_infestation(const GenContext &ctx, const MonsterArtKit &art, const Vector3 &origin, bool peaceful, Rng &rng_) {
+	InfestationLayout L;
+	const std::vector<RoadJunction> mouths = ctx.roads.junctions(0);
+	// The gate and the cart sit up the first side road (offsets measured the way the main street runs).
+	const Road &lane = mouths.empty() ? ctx.roads.trunk() : ctx.roads.roads[mouths.front().child];
+	const float fwd = -float(lane.parent_side); // lateral sign on the lane toward the main street's +s
+	const bool town = ctx.kind == SettlementKind::Town;
+	const bool legacy = ctx.roads.trunk().x_station; // the pre-Stage-4c town street
+	auto to_world = [&](const Vector3 &p) { return p + origin; };
+	auto to_local = [&](const Vector3 &p) { return p - origin; };
+	// Neighbourhoods (Stage 2a): the gate stands on the island in the middle of the cul-de-sac nearest the
+	// spawn, the cart on that turning circle's sidewalk facing it.
+	int bulb = -1;
+	const bool square = town && ctx.square.valid; // Stage 4c: a town's gate and cart stand on its square
+	if (square) {
+		L.gate = ctx.square.gate;
+		L.cart = ctx.square.cart;
+	}
+	for (int r = 0; r < int(ctx.roads.roads.size()) && !town; ++r) {
+		const Road &R = ctx.roads.roads[r];
+		if (R.bulb() && (bulb < 0 || R.bulb_c.distance_to(ctx.spawn) < ctx.roads.roads[bulb].bulb_c.distance_to(ctx.spawn))) {
+			bulb = r;
+		}
+	}
+	if (bulb >= 0) {
+		const Road &B = ctx.roads.roads[bulb];
+		L.gate = B.bulb_c; // the turning circle's own height (Stage 3b: graded roads)
+		const Vector3 te = B.tangent_at(B.s_end()), le = B.left_at(B.s_end());
+		const float rw = B.bulb_r + B.curb + B.verge + 0.9f; // on the sidewalk ring
+		std::vector<Vector3> keep_off; // driveway aprons and front walks round the ring
+		for (const Lot &lot : ctx.lots) {
+			if (lot.road == bulb) {
+				keep_off.push_back(lot.to_world(lot.drive_x, 0.0f, 1.2f));
+				keep_off.push_back(lot.to_world(lot.house.door_x, 0.0f, 1.2f));
+			}
+		}
+		Vector3 at = B.bulb_c + te * rw;
+		for (float a : { 0.0f, 0.45f, -0.45f, 0.9f, -0.9f, 1.35f, -1.35f, 1.8f, -1.8f, 2.2f, -2.2f }) {
+			const Vector3 dir = te * std::cos(a) + le * std::sin(a);
+			const Vector3 cand = B.bulb_c + dir * rw;
+			bool ok = ctx.roads.zone(cand) == RoadZone::Walk && clear_of_boxes(ctx, cand, 1.1f);
+			for (const Vector3 &k : keep_off) {
+				ok = ok && Vector2(k.x - cand.x, k.z - cand.z).length() > 2.6f;
+			}
+			if (ok) {
+				at = cand;
+				break;
+			}
+		}
+		const Vector3 face = Vector3(B.bulb_c.x - at.x, 0.0f, B.bulb_c.z - at.z).normalized(); // the cart's front faces the gate
+		L.cart = Transform3D(Basis(Vector3(0, 1, 0), std::atan2(face.x, face.z)), Vector3(at.x, B.bulb_c.y, at.z));
+	}
+
+	// Travel gate: a pad beside the side street, just inside the lantern arch.
+	if (bulb < 0 && !square) {
+		const float d = lane.s_end() - 2.6f;
+		Vector3 local = lane.point(d, fwd * 5.6f);
+		if (!clear_of_boxes(ctx, local, 1.3f)) {
+			local = lane.point(d, fwd * -5.6f);
+		}
+		L.gate = local;
+	}
+	const Vector3 gate_pos = to_world(L.gate);
+	// Candy shop cart across the side street from the gate: step onto its doormat to shop.
+	if (bulb < 0 && !square) {
+		const float side = (mouths.empty() ? ctx.roads.project(0, to_local(gate_pos)) : ctx.roads.project(mouths.front().child, to_local(gate_pos))).lateral * fwd > 0.0f ? -1.0f : 1.0f;
+		Vector3 local = lane.point(lane.s_end() - 7.5f, fwd * side * 6.2f);
+		for (float back : { 7.5f, 10.5f, 4.5f, 13.0f }) {
+			const Vector3 cand = lane.point(lane.s_end() - back, fwd * side * 6.2f);
+			if (clear_of_boxes(ctx, cand, 1.1f)) {
+				local = cand;
+				break;
+			}
+		}
+		// The cart's front (+Z) faces the middle of the side street.
+		const Vector3 face = lane.left_at(lane.s_end()) * (-fwd * side);
+		L.cart = Transform3D(Basis(Vector3(0, 1, 0), std::atan2(face.x, face.z)), local);
+	}
+
+	const Vector3 spawn_local = ctx.spawn;
+	const Vector3 gate_local = to_local(gate_pos);
+	const Vector3 shop_local = L.cart.xform(Vector3(0, 0, 1.25f)); // the cart's doormat
+
+	// Stage 3c: every nest and thorn nest stands where the walk grid (the raster the monsters walk on, built
+	// from the plan alone) connects it to the spawn: in 4c, 6 of 25 hoods had one shut in a fenced backyard.
+	Infestation walk;
+	{
+		RegionPlan rp;
+		rp.x0 = ctx.bound_x0 - 3.0f;
+		rp.x1 = ctx.bound_x1 + 3.0f;
+		rp.z0 = ctx.bound_z0 - 4.0f;
+		rp.z1 = ctx.bound_z1 + 4.0f;
+		walk.build_nav(ctx, rp);
+	}
+	const int spawn_label = walk.nav_label(spawn_local);
+	auto walk_reachable = [&](const Vector3 &p) { return spawn_label == 0 || walk.nav_label(p) == spawn_label; };
+
+	// Road geometry the rules need: where roads meet, each road's built stretch, the asphalt.
+	const std::vector<Road> &roads = ctx.roads.roads;
+	std::vector<Vector3> junction_pts;
+	for (const Road &R : roads) {
+		if (R.parent >= 0) {
+			junction_pts.push_back(roads[R.parent].at(R.parent_s));
+		}
+	}
+	auto built = [](const Road &R) {
+		return R.lots_s1 > R.lots_s0 ? std::make_pair(R.lots_s0, R.lots_s1) : std::make_pair(R.s_begin(), R.s_end());
+	};
+	// On some road's asphalt (alongside it, within half a road width of its centreline); `along` gets
+	// the fraction along that road's built stretch.
+	auto asphalt = [&](const Vector3 &p, float *along) {
+		for (int r = 0; r < int(roads.size()); ++r) {
+			const RoadHit h = ctx.roads.project(r, p);
+			if (h.beyond <= 0.0f && std::abs(h.lateral) < roads[r].half_road) {
+				if (along) {
+					const auto b = built(roads[r]);
+					*along = (h.s - b.first) / Math::max(b.second - b.first, 1.0f);
+				}
+				return true;
+			}
+		}
+		if (!legacy && ctx.roads.zone(p) == RoadZone::Asphalt) {
+			// A turning circle or a junction patch: asphalt, but no "along" a road (nests keep off it).
+			if (along) {
+				*along = 1.0f;
+			}
+			return true;
+		}
+		return false;
+	};
+	auto near_junction = [&](const Vector3 &p, float d) {
+		for (const Vector3 &j : junction_pts) {
+			if (Vector2(p.x - j.x, p.z - j.z).length() < d) {
+				return true;
+			}
+		}
+		return false;
+	};
+	auto in_bounds = [&](const Vector3 &p, float m) {
+		return p.x > ctx.bound_x0 + m && p.x < ctx.bound_x1 - m && p.z > ctx.bound_z0 + m && p.z < ctx.bound_z1 - m;
+	};
+	std::vector<Vector3> doors;
+	for (const Lot &lot : ctx.lots) {
+		doors.push_back(lot.doorbell);
+	}
+	auto far_from_key_points = [&](const Vector3 &p, float r) {
+		if (p.distance_to(spawn_local) < 7.0f || p.distance_to(gate_local) < 4.5f || p.distance_to(shop_local) < 4.5f) {
+			return false;
+		}
+		for (const Vector3 &d : doors) {
+			if (p.distance_to(d) < r) {
+				return false;
+			}
+		}
+		return true;
+	};
+
+	// The area's monster mix: three or four kinds.
+	std::vector<int> &kinds = L.kinds;
+	for (int k = 0; k < int(MonsterType::Count); ++k) {
+		kinds.push_back(k);
+	}
+	rng_.shuffle(kinds);
+	kinds.resize(rng_.chance(0.5f) ? 3 : 4);
+	// Neighbourhoods grew (Stage 2a, 2b): one more nest per ~90 m of built road past Stage 0's ~120 m, one more
+	// thorn nest per ~220 m past ~40 m (Stage 2a's 260 m step, carried on), no extra draws.
+	float built_len = 0.0f;
+	for (const Road &R : ctx.roads.roads) {
+		built_len += Math::max(0.0f, R.lots_s1 - R.lots_s0);
+	}
+	// Stage 4c (user: "a lot more monster spawners and some more thorns"): about 2.5x the nests and +50-75% thorn
+	// nests, scaled by the built street length and randomised: hoods 18-24 nests and 6-8 thorn nests, towns (which
+	// vary in size now) 12-20 and 4-6.
+	int want_nests, want_hearts;
+	if (town) {
+		want_nests = Math::clamp(12 + int((built_len - 150.0f) / 45.0f), 12, 19) + rng_.irange(0, 1);
+		want_hearts = Math::clamp(4 + int((built_len - 200.0f) / 160.0f), 4, 5) + rng_.irange(0, 1);
+	} else {
+		want_nests = Math::clamp(18 + int((built_len - 400.0f) / 45.0f), 18, 23) + rng_.irange(0, 1);
+		want_hearts = Math::clamp(6 + int((built_len - 450.0f) / 150.0f), 6, 7) + rng_.irange(0, 1);
+	}
+	if (peaceful) {
+		want_nests = want_hearts = 0;
+	}
+	L.want_nests = want_nests;
+	L.want_hearts = want_hearts;
+
+	// One spacing rule across every nest; relaxed 15% at a time (at most twice, and it stays relaxed)
+	// when the draws run dry, rather than placing fewer.
+	struct Placed {
+		Vector3 p;
+		bool heart;
+	};
+	std::vector<Placed> placed;
+	float scale = 1.0f;
+	int level = 0;
+	auto spaced = [&](const Vector3 &p, bool heart) {
+		for (const Placed &q : placed) {
+			const float gap = heart && q.heart ? 18.0f : (heart != q.heart ? 12.0f : 14.0f);
+			if (Vector2(p.x - q.p.x, p.z - q.p.z).length() < gap * scale) {
+				return false;
+			}
+		}
+		return true;
+	};
+	// Weighted draw (toward open ground that's easy to shoot into) among the unused candidates that
+	// pass `ok`; base weight 0 marks a candidate that fails a fixed rule.
+	auto draw = [&](const std::vector<float> &base, std::vector<char> &used, const std::function<bool(int)> &ok, const std::function<float(int)> &mul = nullptr) {
+		for (;;) {
+			std::vector<float> w(base.size(), 0.0f);
+			float total = 0.0f;
+			for (size_t i = 0; i < base.size(); ++i) {
+				if (base[i] > 0.0f && !used[i] && ok(int(i))) {
+					w[i] = base[i] * (mul ? mul(int(i)) : 1.0f);
+					total += w[i];
+				}
+			}
+			if (total > 0.0f) {
+				float roll = rng_.range(0.0f, total);
+				int got = -1;
+				for (size_t i = 0; i < w.size(); ++i) {
+					if (w[i] <= 0.0f) {
+						continue;
+					}
+					got = int(i);
+					roll -= w[i];
+					if (roll <= 0.0f) {
+						break;
+					}
+				}
+				used[got] = 1;
+				return got;
+			}
+			if (level >= 2) {
+				return -1;
+			}
+			++level;
+			scale *= 0.85f;
+		}
+	};
+	// Candidate classes (a spot on the asphalt is ROAD whatever loop made it).
+	enum { ROAD, WALK, LOT, OPEN, CLASSES };
+	struct Cand {
+		Vector3 p;
+		bool road = false;
+		float along = 0.0f;
+		int cls = LOT;
+		bool back_row = false; // Stage 4c: a town's open ground out behind its rows (drawn at a fifth of the weight)
+	};
+	auto add_cand = [&](std::vector<Cand> &out, const Vector3 &p, int cls = LOT) {
+		Cand c;
+		c.p = p;
+		c.road = asphalt(p, &c.along);
+		c.cls = c.road ? int(ROAD) : cls;
+		out.push_back(c);
+	};
+
+	// Thorn nests first (the widest gaps): two or three huge bramble masses with a glowing heart.
+	// Every thorn vine in the area grows out of one of them. Anywhere a player can reach: front lawns
+	// and backyards, shop service yards, the town square and pocket parks, sidewalks, the street itself
+	// (a bramble mass blocking the road), but at most one on a road.
+	std::vector<Cand> heart_cands;
+	for (const Lot &lot : ctx.lots) {
+		const HouseSpec &h = lot.house;
+		const float zb = h.front_z - h.depth;
+		if (town) {
+			const float hw = lot.width * 0.38f;
+			if (lot.depth + zb > 4.4f) {
+				add_cand(heart_cands, lot.to_world(rng_.range(-hw, hw), 0, rng_.range(-lot.depth + 1.8f, zb - 1.8f)));
+			}
+		} else {
+			// The front lawn between the porch steps and the sidewalk (the mass kept on the grass), and the backyard.
+			const float fw = Math::max(0.0f, lot.width * 0.5f - 2.0f);
+			const float z0 = h.front_z + h.porch_d + 1.8f, z1 = -1.8f;
+			if (z0 < z1) {
+				for (int k = 0; k < 2; ++k) {
+					add_cand(heart_cands, lot.to_world(rng_.range(-fw, fw), 0, rng_.range(z0, z1)));
+				}
+			}
+			const float hw = lot.width * 0.3f;
+			for (int k = 0; k < 2; ++k) {
+				add_cand(heart_cands, lot.to_world(h.house_x + rng_.range(-hw, hw), 0, zb - rng_.range(2.8f, 4.5f)));
+			}
+		}
+	}
+	for (int r = 0; r < int(roads.size()); ++r) {
+		const Road &R = roads[r];
+		const auto b = built(R);
+		const float len = b.second - b.first;
+		// On the asphalt, near the crown.
+		for (int k = 0, n = Math::max(2, int(len / 8.0f)); k < n; ++k) {
+			add_cand(heart_cands, R.point(Math::lerp(b.first, b.second, rng_.range(0.15f, 0.85f)), rng_.range(-1.2f, 1.2f)));
+		}
+		for (int side : { 1, -1 }) {
+			// On the sidewalk.
+			for (int k = 0, n = Math::max(2, int(len / 12.0f + 0.5f)); k < n; ++k) {
+				const float lat = R.half_road + R.curb + R.verge + (R.walk - R.verge) * rng_.range(0.3f, 0.7f);
+				add_cand(heart_cands, R.point(Math::lerp(b.first, b.second, rng_.range(0.05f, 0.95f)), side * lat), WALK);
+			}
+			// Open frontage with no lot: the town square, pocket parks.
+			for (const auto &g : frontage_gaps(ctx, r, side, 5.0f)) {
+				const Transform3D frame = R.frontage_frame((g.first + g.second) * 0.5f, side);
+				const float hw = Math::max(0.0f, (g.second - g.first) * 0.5f - 1.6f);
+				for (int k = 0; k < 2; ++k) {
+					add_cand(heart_cands, frame.xform(Vector3(rng_.range(-hw, hw), 0, -rng_.range(2.0f, town ? 13.0f : 8.0f))), OPEN);
+				}
+			}
+		}
+	}
+	L.heart_candidates = int(heart_cands.size());
+	std::vector<float> heart_w;
+	for (const Cand &c : heart_cands) {
+		const bool ok = in_bounds(c.p, 2.0f) && clear_of_boxes(ctx, c.p, 1.6f) && far_from_key_points(c.p, 4.0f) &&
+				c.p.distance_to(spawn_local) >= 12.0f && !(c.road && near_junction(c.p, 12.0f)) && walk_reachable(c.p);
+		heart_w.push_back(ok ? spot_weight(ctx, c.p) : 0.0f);
+		L.road_heart_candidates += ok && c.road ? 1 : 0;
+	}
+	{
+		// Each class (road, sidewalk, yards, open ground) gets the same share of the draw, so the most
+		// open ground (the road, then the sidewalk) doesn't win every time; openness still picks the
+		// spot within a class.
+		float total[CLASSES] = {};
+		for (size_t i = 0; i < heart_cands.size(); ++i) {
+			total[heart_cands[i].cls] += heart_w[i];
+		}
+		for (size_t i = 0; i < heart_cands.size(); ++i) {
+			if (heart_w[i] > 0.0f) {
+				heart_w[i] /= total[heart_cands[i].cls];
+			}
+		}
+	}
+
+	// Monster nests: anywhere across front yards and backyards (homes), service yards and sidewalks
+	// (shops), open ground off the street, and out on the asphalt of any road.
+	std::vector<Cand> spots;
+	for (const Lot &lot : ctx.lots) {
+		const HouseSpec &h = lot.house;
+		const float zb = h.front_z - h.depth;
+		const float hw = lot.width * 0.42f;
+		if (town) {
+			if (lot.depth + zb > 3.6f) {
+				for (int k = 0; k < 2; ++k) {
+					add_cand(spots, lot.to_world(rng_.range(-hw, hw), 0, rng_.range(-lot.depth + 1.2f, zb - 1.2f)));
+				}
+			}
+			for (int k = 0; k < 2; ++k) {
+				add_cand(spots, lot.to_world(rng_.range(-hw, hw), 0, rng_.range(1.6f, 2.8f)));
+			}
+		} else {
+			for (int k = 0; k < 3; ++k) {
+				add_cand(spots, lot.to_world(rng_.range(-hw, hw), 0, rng_.range(1.4f, h.front_z + h.porch_d + 0.6f)));
+			}
+			if (lot.depth + zb > 4.5f) {
+				for (int k = 0; k < 3; ++k) {
+					add_cand(spots, lot.to_world(rng_.range(-hw, hw), 0, rng_.range(-lot.depth + 1.5f, zb - 1.5f)));
+				}
+			}
+		}
+	}
+	if (legacy) {
+		const Road &s = ctx.roads.trunk();
+		for (int k = 0; k < 10; ++k) {
+			const float x = Math::lerp(s.lots_s0, s.lots_s1, rng_.range(0.06f, 0.94f));
+			const float side = rng_.chance(0.5f) ? 1.0f : -1.0f;
+			add_cand(spots, s.at(x) + s.left_at(x) * side * (s.edge() + (town ? rng_.range(4.5f, 7.5f) : rng_.range(2.0f, 4.5f))));
+		}
+	} else {
+		// Off the sidewalk (front lawns' edges, park corners, the wedges between lots): about 10 per 100 m
+		// of every road's built stretch.
+		for (const Road &s : roads) {
+			for (int k = 0, n = Math::max(2, int((s.lots_s1 - s.lots_s0) / 10.0f + 0.5f)); k < n; ++k) {
+				const float x = Math::lerp(s.lots_s0, s.lots_s1, rng_.range(0.06f, 0.94f));
+				const float side = rng_.chance(0.5f) ? 1.0f : -1.0f;
+				add_cand(spots, s.at(x) + s.left_at(x) * side * (s.edge() + rng_.range(2.0f, 4.5f)));
+			}
+		}
+	}
+	for (const Road &R : roads) {
+		const auto b = built(R);
+		for (int k = 0, n = Math::max(2, int((b.second - b.first) / 10.0f + 0.5f)); k < n; ++k) {
+			add_cand(spots, R.point(Math::lerp(b.first, b.second, rng_.range(0.15f, 0.85f)), rng_.range(-2.5f, 2.5f)));
+		}
+	}
+	if (town && !legacy) {
+		// Stage 4c: a town holds 12-20 nests in a smaller area than a neighbourhood: every open spot on a 6 m grid
+		// too (sidewalks, the square and the plazas, service yards, open ground between and behind the rows).
+		for (float z = ctx.bound_z0 + 3.0f; z < ctx.bound_z1 - 3.0f; z += 6.0f) {
+			for (float x = ctx.bound_x0 + 3.0f; x < ctx.bound_x1 - 3.0f; x += 6.0f) {
+				const Vector3 p(x, 0.0f, z);
+				const RoadZone zn = ctx.roads.zone(p);
+				const RoadHit nh = ctx.roads.nearest(p);
+				// (Out behind the rows only as a fallback, at a tiny weight, so the streets get the nests first.)
+				const bool by_street = nh.road >= 0 && std::abs(nh.lateral) < roads[nh.road].edge() + 9.0f;
+				if (zn == RoadZone::Walk || zn == RoadZone::Off) {
+					add_cand(spots, p, zn == RoadZone::Walk ? WALK : OPEN);
+					spots.back().back_row = !by_street;
+				}
+			}
+		}
+	}
+	L.nest_candidates = int(spots.size());
+	float nest_r = 0.0f; // clearance for the biggest nest in the mix
+	for (int k : kinds) {
+		nest_r = Math::max(nest_r, art[MonsterType(k)].nest_radius + 0.6f);
+	}
+	std::vector<float> spot_w;
+	for (const Cand &c : spots) {
+		bool ok = in_bounds(c.p, 1.0f) && clear_of_boxes(ctx, c.p, nest_r) && far_from_key_points(c.p, 3.0f) && walk_reachable(c.p);
+		if (ok && c.road) {
+			// Out on the asphalt: mid-road, well clear of junctions, the spawn, the gate and the cart.
+			ok = c.along >= 0.15f && c.along <= 0.85f && !near_junction(c.p, 10.0f) && c.p.distance_to(spawn_local) >= 10.0f &&
+					c.p.distance_to(gate_local) >= 7.0f && c.p.distance_to(shop_local) >= 7.0f;
+		}
+		spot_w.push_back(ok ? spot_weight(ctx, c.p) * (c.back_row ? 0.002f : 1.0f) : 0.0f); // (back row: in effect only once the street-side spots run dry)
+		L.road_nest_candidates += ok && c.road ? 1 : 0;
+	}
+	// Hearts first (the widest gaps), then the nests. Random picks one after another can jam a small
+	// area even at the relaxed gaps: then start over (the rng carries on, so it stays deterministic),
+	// up to four tries, keeping the fullest.
+	int best_n = -1;
+	for (int attempt = 0; attempt < 4 && best_n < want_hearts + want_nests; ++attempt) {
+		InfestationLayout T;
+		placed.clear();
+		scale = 1.0f;
+		level = 0;
+		std::vector<char> heart_used(heart_cands.size(), 0), spot_used(spots.size(), 0);
+		int road_hearts = 0;
+		while (int(T.hearts.size()) < want_hearts) {
+			const int i = draw(heart_w, heart_used, [&](int j) {
+				return !(heart_cands[j].road && road_hearts > 0) && spaced(heart_cands[j].p, true);
+			});
+			if (i < 0) {
+				break;
+			}
+			T.hearts.push_back(heart_cands[i].p);
+			T.heart_on_road.push_back(heart_cands[i].road ? 1 : 0);
+			road_hearts += heart_cands[i].road ? 1 : 0;
+			placed.push_back({ heart_cands[i].p, true });
+		}
+		T.relax_hearts = level;
+		// Stage 4c: spread through the whole area (every street, cul-de-sac, yard and backyard), not clustered:
+		// a spot's weight falls off with how close the nearest nest already placed is (under ~36 m).
+		auto spread = [&](int j) {
+			float d = 1e9f;
+			for (const Placed &q : placed) {
+				if (!q.heart) {
+					d = Math::min(d, Vector2(spots[j].p.x - q.p.x, spots[j].p.z - q.p.z).length());
+				}
+			}
+			const float f = Math::clamp(d / 36.0f, 0.08f, 1.0f);
+			return f * f;
+		};
+		while (int(T.nests.size()) < want_nests) {
+			const int i = draw(spot_w, spot_used, [&](int j) { return spaced(spots[j].p, false); }, spread);
+			if (i < 0) {
+				break;
+			}
+			T.nests.push_back(spots[i].p);
+			T.nest_on_road.push_back(spots[i].road ? 1 : 0);
+			placed.push_back({ spots[i].p, false });
+		}
+		T.relax = level;
+		L.tries = attempt + 1;
+		const int n = int(T.hearts.size() + T.nests.size());
+		if (n > best_n) {
+			best_n = n;
+			L.hearts = T.hearts;
+			L.heart_on_road = T.heart_on_road;
+			L.nests = T.nests;
+			L.nest_on_road = T.nest_on_road;
+			L.relax_hearts = T.relax_hearts;
+			L.relax = T.relax;
+		}
+	}
+	for (size_t i = 0; i < L.nests.size(); ++i) {
+		L.nest_seeds.push_back(rng_.next()); // each nest's own seed, drawn as the nests are made
+	}
+	for (size_t i = 0; i < L.hearts.size(); ++i) {
+		L.heart_yaw.push_back(rng_.range(0.0f, Math_TAU)); // each root mass sprawls its own way
+		L.heart_seeds.push_back(rng_.next());
+	}
+
+	// Thorn vines creep out over the ground from every thorn nest: a few tendrils each, one reaching
+	// for the nearest free front door, where it knots into a big thorn cluster that blocks the doorbell.
+	auto blocked = [&](const Vector3 &p) {
+		if (!in_bounds(p, 1.0f)) {
+			return true;
+		}
+		if (p.distance_to(spawn_local) < 5.5f || p.distance_to(gate_local) < 2.6f || p.distance_to(shop_local) < 3.0f) {
+			return true;
+		}
+		return !clear_of_boxes(ctx, p, 0.3f, true);
+	};
+	auto grow =[&](Vector3 pos, Vector3 dir, float length, const Vector3 *target) {
+		std::vector<Vector3> pts = { pos };
+		const float step = 0.7f;
+		for (float run = 0.0f; run < length; run += step) {
+			if (target) {
+				const Vector3 want = Vector3(target->x - pos.x, 0, target->z - pos.z).normalized();
+				dir = (dir * 0.55f + want * 0.45f).normalized();
+			}
+			dir = dir.rotated(Vector3(0, 1, 0), rng_.range(-0.35f, 0.35f));
+			bool moved = false;
+			// Reaching for a door it may slide along a wall (nearly square turns) to get round a house.
+			static const float free_turns[] = { 0.0f, 0.5f, -0.5f, 1.0f, -1.0f };
+			static const float door_turns[] = { 0.0f, 0.5f, -0.5f, 1.0f, -1.0f, 1.5f, -1.5f };
+			const float *turns = target ? door_turns : free_turns;
+			const int n_turns = target ? 7 : 5;
+			for (int t = 0; t < n_turns; ++t) {
+				const Vector3 d = dir.rotated(Vector3(0, 1, 0), turns[t]);
+				const Vector3 cand = pos + d * step;
+				if (!blocked(cand)) {
+					dir = d;
+					pos = cand;
+					moved = true;
+					break;
+				}
+			}
+			if (!moved) {
+				break;
+			}
+			pts.push_back(pos);
+			if (target && pos.distance_to(*target) < 0.8f) {
+				break;
+			}
+		}
+		return pts;
+	};
+	std::vector<Vector3> door_paths;
+	for (const Lot &lot : ctx.lots) {
+		const HouseSpec &h = lot.house;
+		door_paths.push_back(town ? lot.to_world(h.door_x, 0, 1.5f) : lot.to_world(h.door_x, 0, lot.flight.empty() ? h.front_z + h.porch_d + 1.08f + 1.3f : Math::min(lot.flight_foot + 1.3f, Math::max(lot.flight_foot + 0.5f, lot.walk_end - 0.4f)))); // Stage 3c: past the flight as built, short of the sidewalk
+	}
+	std::vector<char> door_taken(door_paths.size(), 0);
+	for (size_t ni = 0; ni < L.hearts.size(); ++ni) {
+		const Vector3 c = L.hearts[ni];
+		const float r = 2.0f;
+		// Uneven spokes: a varied count, angles knocked off the even spread, lengths from stubby to long.
+		const int n = rng_.irange(4, 8);
+		const float a0 = rng_.range(0.0f, Math_TAU);
+		for (int k = 0; k < n; ++k) {
+			const float a = a0 + (k + rng_.range(-0.35f, 0.35f)) * Math_TAU / n;
+			const Vector3 dir = Vector3(std::cos(a), 0, std::sin(a));
+			const float len = rng_.chance(0.3f) ? rng_.range(4.0f, 8.0f) : rng_.range(8.0f, 18.0f);
+			if (blocked(c + dir * r)) {
+				continue; // the root mass's edge runs into a fence or a wall here
+			}
+			std::vector<Vector3> pts = grow(c + dir * r, dir, len, nullptr);
+			if (pts.size() >= 4) {
+				// A side branch partway along.
+				if (pts.size() > 6 && rng_.chance(0.6f)) {
+					const size_t at = Math::clamp(size_t(pts.size() * rng_.range(0.3f, 0.7f)), size_t(1), pts.size() - 2);
+					const Vector3 bd = (pts[at] - pts[at - 1]).normalized().rotated(Vector3(0, 1, 0), rng_.chance(0.5f) ? 0.9f : -0.9f);
+					std::vector<Vector3> branch = grow(pts[at], bd, rng_.range(4.0f, 7.0f), nullptr);
+					if (branch.size() >= 4) {
+						L.tendrils.push_back({ branch, int(ni) });
+					}
+				}
+				L.tendrils.push_back({ pts, int(ni) });
+			}
+		}
+		// Reach for the nearest free front door; if the way there is shut (a heart behind a house, a
+		// fenced yard), the next nearest, up to three.
+		std::vector<std::pair<float, int>> order;
+		for (size_t d = 0; d < door_paths.size(); ++d) {
+			const float dd = door_paths[d].distance_to(c);
+			if (!door_taken[d] && dd < 26.0f && door_paths[d].distance_to(spawn_local) > 7.0f) {
+				order.push_back({ dd, int(d) });
+			}
+		}
+		std::sort(order.begin(), order.end());
+		for (size_t k = 0; k < order.size() && k < 3; ++k) {
+			const Vector3 target = door_paths[order[k].second];
+			const Vector3 dir = Vector3(target.x - c.x, 0, target.z - c.z).normalized();
+			if (blocked(c + dir * r)) {
+				continue;
+			}
+			std::vector<Vector3> pts = grow(c + dir * r, dir, order[k].first * 1.8f, &target);
+			if (pts.size() >= 3 && pts.back().distance_to(target) < 1.5f) {
+				door_taken[order[k].second] = 1;
+				L.tendrils.push_back({ pts, int(ni) });
+				L.knots.push_back({ target, int(ni) });
+				break;
+			}
+		}
+	}
+	if (ctx.terrain) {
+		// Stage 3b: everything stands on the graded ground (picked in the plane above).
+		auto settle = [&](Vector3 &p) { p.y = ctx.ground(p.x, p.z); };
+		for (Vector3 &p : L.nests) {
+			settle(p);
+		}
+		for (Vector3 &p : L.hearts) {
+			settle(p);
+		}
+		for (auto &t : L.tendrils) {
+			for (Vector3 &p : t.pts) {
+				settle(p);
+			}
+		}
+		for (auto &k : L.knots) {
+			settle(k.first);
+		}
+		settle(L.gate);
+		L.cart.origin.y = ctx.ground(L.cart.origin.x, L.cart.origin.z);
+	}
+	return L;
+}
+
+// The walk grid and the layout, in the order build() always made them (the same rng_ draws), with no
+// nodes: WorldStreamer's area preloading runs this on a worker thread before the area is attached.
+void Infestation::prepare(const GenContext &ctx, const RegionPlan &plan, const MonsterArtKit &art, bool peaceful) {
+	rng_ = Rng(plan.seed ^ 0xBADC0DEull, 11);
+	build_nav(ctx, plan);
+	prepared_layout_ = plan_infestation(ctx, art, plan.origin, peaceful, rng_);
+	prepared_ = true;
+	prepared_peaceful_ = peaceful;
+}
+
 void Infestation::build(Area &area, MonsterWorld *world, Node3D *root, bool peaceful) {
+	build_begin(area, world, root, peaceful);
+	build_step(0);
+}
+
+// The gate and the cart now; the nests, thorn nests, tendrils and knots one by one in build_step(), in
+// the order build() always made them (tendrils and knots draw from rng_).
+void Infestation::build_begin(Area &area, MonsterWorld *world, Node3D *root, bool peaceful) {
 	world_ = world;
 	root_ = root;
 	const GenContext &ctx = *area.gen->context();
 	AreaState &st = *area.state;
-	rng_ = Rng(area.plan.seed ^ 0xBADC0DEull, 11);
-	build_nav(area);
+	if (!prepared_ || prepared_peaceful_ != peaceful) {
+		prepare(ctx, area.plan, *world->art, peaceful);
+	}
+	prepared_ = false;
 	leash_ = Rect2(area.plan.x0 - 12.0f, area.plan.z0 - 12.0f, area.plan.x1 - area.plan.x0 + 24.0f, area.plan.z1 - area.plan.z0 + 24.0f);
-	const StreetPlan &s = ctx.street;
-	const bool town = ctx.kind == SettlementKind::Town;
+	build_layout_ = std::move(prepared_layout_);
+	const InfestationLayout &layout = build_layout_;
+	if (!peaceful) {
+		int nests_road = 0, hearts_road = 0;
+		for (char c : layout.nest_on_road) {
+			nests_road += c ? 1 : 0;
+		}
+		for (char c : layout.heart_on_road) {
+			hearts_road += c ? 1 : 0;
+		}
+		String where;
+		for (size_t i = 0; i < layout.nests.size(); ++i) {
+			const Vector3 w = area.to_world(layout.nests[i]);
+			where += String(" ") + (layout.nest_on_road[i] ? "road" : "off-road") + "(" + String::num(w.x, 1) + "," + String::num(w.z, 1) + ")";
+		}
+		UtilityFunctions::print("Infestation: ", int(layout.nests.size()), " nests (", nests_road, " on the road), ", int(layout.hearts.size()), " thorn nests (",
+				hearts_road, " on the road), ", int(layout.knots.size()), " doors knotted, spacing relax ", layout.relax, ";", where);
+	}
 
 	// Travel gate: a pad beside the side street, just inside the lantern arch.
 	{
-		Vector3 local = s.lane_origin + Vector3(5.6f, 0, float(s.lane_dir) * (s.lane_len - 2.6f));
-		if (!clear_of_boxes(ctx, local, 1.3f)) {
-			local.x = s.lane_origin.x - 5.6f;
-		}
-		gate_pos_ = area.to_world(local);
+		gate_pos_ = area.to_world(layout.gate);
 		MeshInstance3D *base = mesh_node(world->art->gate_base, world->toon);
 		base->set_position(gate_pos_);
 		root->add_child(base);
@@ -1516,17 +2233,7 @@ void Infestation::build(Area &area, MonsterWorld *world, Node3D *root, bool peac
 
 	// Candy shop cart across the side street from the gate: step onto its doormat to shop.
 	{
-		const float side = area.to_local(gate_pos_).x - s.lane_origin.x > 0.0f ? -1.0f : 1.0f;
-		Vector3 local = s.lane_origin + Vector3(side * 6.2f, 0, float(s.lane_dir) * (s.lane_len - 7.5f));
-		for (float back : { 7.5f, 10.5f, 4.5f, 13.0f }) {
-			const Vector3 cand = s.lane_origin + Vector3(side * 6.2f, 0, float(s.lane_dir) * (s.lane_len - back));
-			if (clear_of_boxes(ctx, cand, 1.1f)) {
-				local = cand;
-				break;
-			}
-		}
-		// The cart's front (+Z) faces the middle of the side street.
-		const Transform3D xf(Basis(Vector3(0, 1, 0), -side * Math_PI * 0.5f), area.to_world(local));
+		const Transform3D xf(layout.cart.basis, area.to_world(layout.cart.origin));
 		MeshInstance3D *cart = mesh_node(world->art->shop_cart, world->toon);
 		cart->set_transform(xf);
 		cart->set_instance_shader_parameter("rim_strength", 0.2f);
@@ -1563,344 +2270,127 @@ void Infestation::build(Area &area, MonsterWorld *world, Node3D *root, bool peac
 		root->add_child(lamp);
 		shop_pos_ = xf.xform(Vector3(0, 0, 1.25f));
 	}
+	if (st.spawner_down.size() != layout.nests.size()) {
+		st.spawner_down.assign(layout.nests.size(), 0);
+	}
+	if (st.heart_down.size() != layout.hearts.size()) {
+		st.heart_down.assign(layout.hearts.size(), 0);
+	}
+	if (st.vine_down.size() != layout.tendrils.size() + layout.knots.size()) {
+		st.vine_down.assign(layout.tendrils.size() + layout.knots.size(), 0);
+	}
+	build_state_ = &st;
+	build_origin_ = area.plan.origin;
+	build_peaceful_ = peaceful;
+	build_unit_ = 0;
+	building_ = true;
+}
 
-	// Candidate nest spots, scattered at random: anywhere across front yards and backyards (homes),
-	// service yards and sidewalks (shops), and open ground off the street.
-	std::vector<Vector3> spots;
-	std::vector<Vector3> doors;
-	for (const Lot &lot : ctx.lots) {
-		const HouseSpec &h = lot.house;
-		const float zb = h.front_z - h.depth;
-		const float hw = lot.width * 0.42f;
-		doors.push_back(lot.doorbell);
-		if (town) {
-			if (lot.depth + zb > 3.6f) {
-				for (int k = 0; k < 2; ++k) {
-					spots.push_back(lot.to_world(rng_.range(-hw, hw), 0, rng_.range(-lot.depth + 1.2f, zb - 1.2f)));
-				}
-			}
-			for (int k = 0; k < 2; ++k) {
-				spots.push_back(lot.to_world(rng_.range(-hw, hw), 0, rng_.range(1.6f, 2.8f)));
-			}
-		} else {
-			for (int k = 0; k < 3; ++k) {
-				spots.push_back(lot.to_world(rng_.range(-hw, hw), 0, rng_.range(1.4f, h.front_z + h.porch_d + 0.6f)));
-			}
-			if (lot.depth + zb > 4.5f) {
-				for (int k = 0; k < 3; ++k) {
-					spots.push_back(lot.to_world(rng_.range(-hw, hw), 0, rng_.range(-lot.depth + 1.5f, zb - 1.5f)));
-				}
-			}
-		}
+bool Infestation::build_step(uint64_t deadline_us) {
+	if (!building_) {
+		return true;
 	}
-	for (int k = 0; k < 10; ++k) {
-		const float x = Math::lerp(ctx.bound_x0, ctx.bound_x1, rng_.range(0.06f, 0.94f));
-		const float side = rng_.chance(0.5f) ? 1.0f : -1.0f;
-		spots.push_back(s.at(x) + s.left_at(x) * side * (s.edge() + (town ? rng_.range(4.5f, 7.5f) : rng_.range(2.0f, 4.5f))));
-	}
-	std::vector<float> spot_w;
-	for (const Vector3 &p : spots) {
-		spot_w.push_back(spot_weight(ctx, p));
-	}
-	const Vector3 spawn_local = ctx.spawn;
-	const Vector3 gate_local = area.to_local(gate_pos_);
-	auto far_from_key_points = [&](const Vector3 &p, float r) {
-		if (p.distance_to(spawn_local) < 7.0f || p.distance_to(gate_local) < 4.5f) {
+	MonsterWorld *world = world_;
+	Node3D *root = root_;
+	const InfestationLayout &layout = build_layout_;
+	AreaState &st = *build_state_;
+	const Vector3 origin = build_origin_;
+	auto to_world = [&](const Vector3 &p) { return p + origin; }; // Area::to_world
+	const std::vector<int> &kinds = layout.kinds;
+	const std::vector<Vector3> &picked = layout.nests;
+	const std::vector<Vector3> &heart_spots = layout.hearts;
+	const std::vector<InfestationLayout::Tendril> &planned = layout.tendrils;
+	const std::vector<std::pair<Vector3, int>> &knots = layout.knots;
+	const size_t units = picked.size() + heart_spots.size() + planned.size() + knots.size();
+	bool did = false;
+	const float lift = 0.02f;
+	for (; build_unit_ < units; ++build_unit_) {
+		if (did && deadline_us != 0 && NeighborhoodGenerator::build_clock_us() >= deadline_us) {
 			return false;
 		}
-		for (const Vector3 &d : doors) {
-			if (p.distance_to(d) < r) {
-				return false;
+		did = true;
+		size_t i = build_unit_;
+		if (i < picked.size()) {
+			// Monster nests and thorn nests, from the layout (one monster type per nest).
+			const MonsterType mt = MonsterType(kinds[i % kinds.size()]);
+			MonsterNest *n = memnew(MonsterNest);
+			root->add_child(n);
+			n->set_global_position(to_world(picked[i]));
+			n->init(mt, world, layout.nest_seeds[i]);
+			nests_.push_back(n);
+			if (st.spawner_down[i]) {
+				n->preset_destroyed();
 			}
-		}
-		return true;
-	};
-	// The area's monster mix: three or four kinds.
-	std::vector<int> kinds;
-	for (int k = 0; k < int(MonsterType::Count); ++k) {
-		kinds.push_back(k);
-	}
-	rng_.shuffle(kinds);
-	kinds.resize(rng_.chance(0.5f) ? 3 : 4);
-	const int want_nests = peaceful ? 0 : (town ? rng_.irange(5, 6) : rng_.irange(4, 5));
-	// Draw spots at random, weighted toward open ground that's easy to shoot into.
-	auto draw = [&](std::vector<Vector3> &cands, std::vector<float> &w, const std::function<bool(const Vector3 &)> &ok) {
-		for (;;) {
-			float total = 0.0f;
-			for (size_t i = 0; i < cands.size(); ++i) {
-				if (w[i] > 0.0f && !ok(cands[i])) {
-					w[i] = 0.0f; // fails a hard rule (now or for good): drop it
+			const int idx = int(i);
+			n->spawn_monster = [this](MonsterNest *nest) { spawn_from(nest); };
+			n->on_destroyed = [this, idx](MonsterNest *) {
+				if (on_nest_down) {
+					on_nest_down(idx);
 				}
-				total += w[i];
+				check_freed();
+			};
+			continue;
+		}
+		i -= picked.size();
+		if (i < heart_spots.size()) {
+			ThornVine *h = memnew(ThornVine);
+			root->add_child(h);
+			h->set_global_position(to_world(heart_spots[i]));
+			h->rotate_y(layout.heart_yaw[i]); // each root mass sprawls its own way
+			h->init(world, int(i) + 1, 1.7f, layout.heart_seeds[i]);
+			h->make_heart();
+			hearts_.push_back(h);
+			if (st.heart_down[i]) {
+				h->preset_burned();
 			}
-			if (total <= 0.0f) {
-				return -1;
-			}
-			float roll = rng_.range(0.0f, total);
-			for (size_t i = 0; i < cands.size(); ++i) {
-				if (w[i] <= 0.0f) {
-					continue;
+			const int idx = int(i);
+			h->on_burned = [this, idx](ThornVine *heart) {
+				if (on_heart_down) {
+					on_heart_down(idx);
 				}
-				roll -= w[i];
-				if (roll <= 0.0f) {
-					w[i] = 0.0f;
-					return int(i);
-				}
-			}
-		}
-	};
-	std::vector<Vector3> picked;
-	while (int(picked.size()) < want_nests) {
-		const MonsterType mt = MonsterType(kinds[picked.size() % kinds.size()]);
-		const float r = (*world->art)[mt].nest_radius + 0.6f;
-		const int i = draw(spots, spot_w, [&](const Vector3 &p) {
-			if (!clear_of_boxes(ctx, p, r) || !far_from_key_points(p, 3.0f)) {
-				return false;
-			}
-			for (const Vector3 &q : picked) {
-				if (q.distance_to(p) < 14.0f) {
-					return false;
-				}
-			}
-			return true;
-		});
-		if (i < 0) {
-			break;
-		}
-		picked.push_back(spots[i]);
-	}
-	if (st.spawner_down.size() != picked.size()) {
-		st.spawner_down.assign(picked.size(), 0);
-	}
-	for (size_t i = 0; i < picked.size(); ++i) {
-		const MonsterType mt = MonsterType(kinds[i % kinds.size()]);
-		MonsterNest *n = memnew(MonsterNest);
-		root->add_child(n);
-		n->set_global_position(area.to_world(picked[i]));
-		n->init(mt, world, rng_.next());
-		nests_.push_back(n);
-		if (st.spawner_down[i]) {
-			n->preset_destroyed();
-		}
-		const int idx = int(i);
-		n->spawn_monster = [this](MonsterNest *nest) { spawn_from(nest); };
-		n->on_destroyed = [this, idx](MonsterNest *) {
-			if (on_nest_down) {
-				on_nest_down(idx);
-			}
-			check_freed();
-		};
-	}
-
-	// Thorn nests: two or three huge bramble masses with a glowing heart, away from the monster
-	// nests. Every thorn vine in the area grows out of one of them.
-	std::vector<Vector3> heart_spots;
-	const int want_hearts = peaceful ? 0 : rng_.irange(2, 3);
-	// Candidates: open lawns, then the street itself (a bramble mass blocking the road).
-	std::vector<Vector3> heart_cands;
-	for (const Lot &lot : ctx.lots) {
-		const HouseSpec &h = lot.house;
-		if (!town) {
-			const float hw = lot.width * 0.3f;
-			heart_cands.push_back(lot.to_world(rng_.range(-hw, hw), 0, rng_.range(1.8f, h.front_z + h.porch_d)));
-			heart_cands.push_back(lot.to_world(h.house_x + rng_.range(-hw, hw), 0, h.front_z - h.depth - rng_.range(2.8f, 4.5f)));
-		}
-	}
-	for (int k = 0; k < 12; ++k) {
-		const float x = rng_.range(ctx.bound_x0 + 10.0f, ctx.bound_x1 - 10.0f);
-		if (std::abs(x - s.lane_x) > 12.0f) {
-			heart_cands.push_back(s.at(x) + s.left_at(x) * rng_.range(-1.2f, 1.2f));
-		}
-	}
-	std::vector<float> heart_w;
-	for (const Vector3 &p : heart_cands) {
-		heart_w.push_back(spot_weight(ctx, p));
-	}
-	while (int(heart_spots.size()) < want_hearts) {
-		const int i = draw(heart_cands, heart_w, [&](const Vector3 &p) {
-			if (!clear_of_boxes(ctx, p, 1.6f) || !far_from_key_points(p, 4.0f) || p.distance_to(spawn_local) < 12.0f) {
-				return false;
-			}
-			for (const Vector3 &q : picked) {
-				if (q.distance_to(p) <= 8.0f) {
-					return false;
-				}
-			}
-			for (const Vector3 &q : heart_spots) {
-				if (q.distance_to(p) <= 15.0f) {
-					return false;
-				}
-			}
-			return true;
-		});
-		if (i < 0) {
-			break;
-		}
-		heart_spots.push_back(heart_cands[i]);
-	}
-	if (st.heart_down.size() != heart_spots.size()) {
-		st.heart_down.assign(heart_spots.size(), 0);
-	}
-	for (size_t i = 0; i < heart_spots.size(); ++i) {
-		ThornVine *h = memnew(ThornVine);
-		root->add_child(h);
-		h->set_global_position(area.to_world(heart_spots[i]));
-		h->rotate_y(rng_.range(0.0f, Math_TAU)); // each root mass sprawls its own way
-		h->init(world, int(i) + 1, 1.7f, rng_.next());
-		h->make_heart();
-		hearts_.push_back(h);
-		if (st.heart_down[i]) {
-			h->preset_burned();
-		}
-		const int idx = int(i);
-		h->on_burned = [this, idx](ThornVine *heart) {
-			if (on_heart_down) {
-				on_heart_down(idx);
-			}
-			// Its vines wither, burning back outward from the thorn nest.
-			const Vector3 c = heart->get_global_position();
-			for (size_t k = 0; k < tendrils_.size(); ++k) {
-				if (tendril_nest_[k] == idx) {
-					tendrils_[k]->wither(0.2f + tendrils_[k]->get_global_position().distance_to(c) * 0.05f);
-				}
-			}
-			for (size_t k = 0; k < vines_.size(); ++k) {
-				if (vine_nest_[k] == idx) {
-					vines_[k]->wither(0.6f + vines_[k]->get_global_position().distance_to(c) * 0.06f);
-				}
-			}
-			check_freed();
-		};
-	}
-
-	// Thorn vines creep out over the ground from every thorn nest: a few tendrils each, one
-	// reaching for the nearest front door, where it knots into a big thorn cluster that blocks the
-	// doorbell. They wither and burn away when their thorn nest is destroyed.
-	const Vector3 shop_local = area.to_local(shop_pos_);
-	auto blocked = [&](const Vector3 &p) {
-		if (p.x < ctx.bound_x0 + 1.0f || p.x > ctx.bound_x1 - 1.0f || p.z < ctx.bound_z0 + 1.0f || p.z > ctx.bound_z1 - 1.0f) {
-			return true;
-		}
-		if (p.distance_to(spawn_local) < 5.5f || p.distance_to(gate_local) < 2.6f || p.distance_to(shop_local) < 3.0f) {
-			return true;
-		}
-		return !clear_of_boxes(ctx, p, 0.3f);
-	};
-	auto grow = [&](Vector3 pos, Vector3 dir, float length, const Vector3 *target) {
-		std::vector<Vector3> pts = { pos };
-		const float step = 0.7f;
-		for (float run = 0.0f; run < length; run += step) {
-			if (target) {
-				const Vector3 want = Vector3(target->x - pos.x, 0, target->z - pos.z).normalized();
-				dir = (dir * 0.55f + want * 0.45f).normalized();
-			}
-			dir = dir.rotated(Vector3(0, 1, 0), rng_.range(-0.35f, 0.35f));
-			bool moved = false;
-			for (float turn : { 0.0f, 0.5f, -0.5f, 1.0f, -1.0f }) {
-				const Vector3 d = dir.rotated(Vector3(0, 1, 0), turn);
-				const Vector3 cand = pos + d * step;
-				if (!blocked(cand)) {
-					dir = d;
-					pos = cand;
-					moved = true;
-					break;
-				}
-			}
-			if (!moved) {
-				break;
-			}
-			pts.push_back(pos);
-			if (target && pos.distance_to(*target) < 0.8f) {
-				break;
-			}
-		}
-		return pts;
-	};
-	std::vector<Vector3> door_paths;
-	for (const Lot &lot : ctx.lots) {
-		const HouseSpec &h = lot.house;
-		door_paths.push_back(town ? lot.to_world(h.door_x, 0, 1.5f) : lot.to_world(h.door_x, 0, h.front_z + h.porch_d + 1.08f + 1.3f));
-	}
-	std::vector<char> door_taken(door_paths.size(), 0);
-	struct Planned {
-		std::vector<Vector3> pts;
-		int nest;
-	};
-	std::vector<Planned> planned;
-	std::vector<std::pair<Vector3, int>> knots;
-	for (size_t ni = 0; ni < heart_spots.size(); ++ni) {
-		const Vector3 c = heart_spots[ni];
-		const float r = 2.0f;
-		// Uneven spokes: a varied count, angles knocked off the even spread, lengths from stubby to long.
-		const int n = rng_.irange(4, 8);
-		const float a0 = rng_.range(0.0f, Math_TAU);
-		for (int k = 0; k < n; ++k) {
-			const float a = a0 + (k + rng_.range(-0.35f, 0.35f)) * Math_TAU / n;
-			const Vector3 dir = Vector3(std::cos(a), 0, std::sin(a));
-			std::vector<Vector3> pts = grow(c + dir * r, dir, rng_.chance(0.3f) ? rng_.range(4.0f, 8.0f) : rng_.range(8.0f, 18.0f), nullptr);
-			if (pts.size() >= 4) {
-				// A side branch partway along.
-				if (pts.size() > 6 && rng_.chance(0.6f)) {
-					const size_t at = Math::clamp(size_t(pts.size() * rng_.range(0.3f, 0.7f)), size_t(1), pts.size() - 2);
-					const Vector3 bd = (pts[at] - pts[at - 1]).normalized().rotated(Vector3(0, 1, 0), rng_.chance(0.5f) ? 0.9f : -0.9f);
-					std::vector<Vector3> branch = grow(pts[at], bd, rng_.range(4.0f, 7.0f), nullptr);
-					if (branch.size() >= 4) {
-						planned.push_back({ branch, int(ni) });
+				// Its vines wither, burning back outward from the thorn nest.
+				const Vector3 c = heart->get_global_position();
+				for (size_t k = 0; k < tendrils_.size(); ++k) {
+					if (tendril_nest_[k] == idx) {
+						tendrils_[k]->wither(0.2f + tendrils_[k]->get_global_position().distance_to(c) * 0.05f);
 					}
 				}
-				planned.push_back({ pts, int(ni) });
+				for (size_t k = 0; k < vines_.size(); ++k) {
+					if (vine_nest_[k] == idx) {
+						vines_[k]->wither(0.6f + vines_[k]->get_global_position().distance_to(c) * 0.06f);
+					}
+				}
+				check_freed();
+			};
+			continue;
+		}
+		i -= heart_spots.size();
+		if (i < planned.size()) {
+			// Thorn vines creeping out of the thorn nests and the knots blocking front doors, from the layout.
+			std::vector<Vector3> world_pts;
+			for (const Vector3 &p : planned[i].pts) {
+				world_pts.push_back(to_world(p + Vector3(0, lift, 0)));
 			}
-		}
-		// Reach for the nearest free front door.
-		int best = -1;
-		float best_d = 26.0f;
-		for (size_t d = 0; d < door_paths.size(); ++d) {
-			const float dd = door_paths[d].distance_to(c);
-			if (!door_taken[d] && dd < best_d && door_paths[d].distance_to(spawn_local) > 7.0f) {
-				best_d = dd;
-				best = int(d);
+			VineTendril *v = memnew(VineTendril);
+			root->add_child(v);
+			v->init(world, world_pts, rng_.range(0.45f, 0.6f), rng_.next());
+			tendrils_.push_back(v);
+			tendril_nest_.push_back(planned[i].nest);
+			if (st.vine_down[i] || st.heart_down[planned[i].nest]) {
+				v->preset_burned();
 			}
+			const int idx = int(i);
+			v->on_burned = [this, idx](VineTendril *) {
+				if (on_vine_down) {
+					on_vine_down(idx);
+				}
+			};
+			continue;
 		}
-		if (best >= 0) {
-			const Vector3 target = door_paths[best];
-			const Vector3 dir = Vector3(target.x - c.x, 0, target.z - c.z).normalized();
-			std::vector<Vector3> pts = grow(c + dir * r, dir, best_d * 1.8f, &target);
-			if (pts.size() >= 3 && pts.back().distance_to(target) < 1.5f) {
-				door_taken[best] = 1;
-				planned.push_back({ pts, int(ni) });
-				knots.push_back({ target, int(ni) });
-			}
-		}
-	}
-	const size_t vine_count = planned.size() + knots.size();
-	if (st.vine_down.size() != vine_count) {
-		st.vine_down.assign(vine_count, 0);
-	}
-	const float lift = 0.02f;
-	for (size_t i = 0; i < planned.size(); ++i) {
-		std::vector<Vector3> world_pts;
-		for (const Vector3 &p : planned[i].pts) {
-			world_pts.push_back(area.to_world(p + Vector3(0, lift, 0)));
-		}
-		VineTendril *v = memnew(VineTendril);
-		root->add_child(v);
-		v->init(world, world_pts, rng_.range(0.45f, 0.6f), rng_.next());
-		tendrils_.push_back(v);
-		tendril_nest_.push_back(planned[i].nest);
-		if (st.vine_down[i] || st.heart_down[planned[i].nest]) {
-			v->preset_burned();
-		}
-		const int idx = int(i);
-		v->on_burned = [this, idx](VineTendril *) {
-			if (on_vine_down) {
-				on_vine_down(idx);
-			}
-		};
-	}
-	for (size_t i = 0; i < knots.size(); ++i) {
+		i -= planned.size();
 		ThornVine *v = memnew(ThornVine);
 		root->add_child(v);
-		v->set_global_position(area.to_world(knots[i].first));
+		v->set_global_position(to_world(knots[i].first));
 		v->init(world, int(i), rng_.range(0.85f, 1.05f), rng_.next());
 		vines_.push_back(v);
 		vine_nest_.push_back(knots[i].second);
@@ -1915,13 +2405,15 @@ void Infestation::build(Area &area, MonsterWorld *world, Node3D *root, bool peac
 			}
 		};
 	}
+	building_ = false;
 	freed_ = false;
-	if (peaceful) {
+	if (build_peaceful_) {
 		st.freed = true;
 	}
 	if (st.freed) {
 		set_freed(false);
 	}
+	return true;
 }
 
 void Infestation::spawn_from(MonsterNest *nest) {
@@ -2043,7 +2535,7 @@ int Infestation::hearts_left() const {
 
 // Freed once every monster nest and thorn nest is gone (the vines wither with their thorn nest).
 void Infestation::check_freed() {
-	if (!freed_ && nests_left() == 0 && hearts_left() == 0) {
+	if (!freed_ && !building_ && nests_left() == 0 && hearts_left() == 0) { // (not while build_step() is still making them)
 		set_freed(true);
 		if (on_freed) {
 			on_freed();

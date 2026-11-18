@@ -58,6 +58,7 @@ public:
 	// where the kid stands. load_state rebuilds the world from the save's seed with that progress.
 	godot::Dictionary save_state();
 	bool load_state(const godot::Dictionary &d);
+	int save_version() const; // the save format this build writes and loads (older saves are refused: saves.gd)
 	// A night is under way, with no menu up (play time and autosaves count only then).
 	bool is_playing() const { return started_ && !in_menu_ && !menu_open_ && teleport_t_ < 0.0f && cine_mode_.is_empty(); }
 
@@ -79,7 +80,14 @@ private:
 	void call_audio(const char *method, const godot::Array &args = godot::Array());
 	// Signals.
 	void on_candy(int kind, int value, int lot, godot::Vector3 pos, int id, int64_t key);
-	void on_house_cleared(int lot, int64_t key);
+	void on_house_cleared(int lot, int64_t key); // the announcement only
+	void on_lot_emptied(int lot, int64_t key);
+	// Houses: cleared = trick-or-treated + all of its placed candy collected (either order, announced once).
+	int lot_candy_left(const Area *a, int lot) const;
+	void try_clear_house(Area *a, int lot);
+	// Area goals (nests, thorn nests, houses trick-or-treated, houses cleared): all done = all clear.
+	bool goals_done(const Area *a) const;
+	void check_complete(Area *a);
 	void bump_combo();
 	int fire_lead() const;
 	int combo_ = 0;
@@ -203,11 +211,22 @@ private:
 	bool cine_aim_on_ = false; // shots that fire at a set point instead of the auto-aim's pick
 	godot::Vector3 cine_aim_;
 	float cine_cut_at_ = -1.0f; // a shot that ends early (once its action is done)
+	// Ship: --cine-check: per shot, frames with the camera under the ground or inside something solid, frames with the
+	// kid (or the car) hidden from it, and the same at the still; printed as "CINE check" when the shot ends.
+	bool cine_check_ = false;
+	bool save_test_ = false; // Ship: --save-version-test
+	int cc_frames_ = 0, cc_under_ = 0, cc_inside_ = 0, cc_hidden_ = 0;
+	float cc_low_ = 1e9f; // the camera's lowest height over the ground
+	godot::String cc_still_, cc_inside_what_, cc_hidden_what_;
+	void cine_check_frame(const godot::Transform3D &xf, bool rig);
+	void cine_check_end();
 	std::vector<godot::Node3D *> cine_props_; // extra models a shot places (the costume lineup), freed at the next shot
 	bool cine_aggro_ = false; // gameplay segments: monsters come for the kid as usual (who can't be hurt)
 	bool cine_clear(const godot::Vector3 &a, const godot::Vector3 &b); // nothing solid between a and b
 	// The first camera offset (side, back) with a clear view of every target from both ends of its move.
-	godot::Vector2 cine_lane(const godot::Vector3 &anchor, const godot::Vector3 &back_dir, std::initializer_list<float> sides, std::initializer_list<float> backs, float push, float height, std::initializer_list<godot::Vector3> targets);
+	// (Ship: *found says whether one was clear; else the first offset comes back.)
+	godot::Vector2 cine_lane(const godot::Vector3 &anchor, const godot::Vector3 &back_dir, std::initializer_list<float> sides, std::initializer_list<float> backs, float push, float height, std::initializer_list<godot::Vector3> targets, bool *found = nullptr);
+	bool cine_spot_free(const godot::Vector3 &feet); // Ship: a kid standing here is inside nothing solid
 	// Character showcase recorder (festival_showcase.cpp): --showcase=<id> walks one character (a player
 	// costume or a monster) through a fixed timeline of beats on the home street, for Godot's movie
 	// writer; --showcase-out=<dir> gets <id>.beats.json. Driven by tools/showcase.ps1.
@@ -223,6 +242,13 @@ private:
 	void showcase_spawn(uint64_t seed);
 	void showcase_finish();
 	void showcase_free();
+	// --door-test (festival_doortest.cpp): doorbells, house clearing and the area goals, headless.
+	struct DoorTest;
+	DoorTest *door_test_ = nullptr;
+	void start_door_test();
+	void door_test_step();
+	void door_test_announced(uint64_t key, int lot);
+	void door_test_completed(uint64_t key);
 	void parse_cmdline();
 	void capture_and_maybe_quit();
 
@@ -282,6 +308,7 @@ private:
 	int frame_ = 0;
 	godot::String capture_view_ = "play";
 	int sweep_ = 0;
+	godot::String sweep_dump_, sweep_dump_detail_; // --sweep-dump=<file>, --sweep-dump-detail=<category>
 	bool quit_after_capture_ = false;
 
 	// Asset preview (review pipeline): one asset on a lawn plot, four views stitched into one image.

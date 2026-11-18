@@ -49,10 +49,13 @@ constexpr float SIDE[2] = { 1.0f, -1.0f };
 constexpr float STRIDE = 0.62f; // metres per full walk cycle (a left and a right step)
 constexpr float STEP_H = 0.075f; // how high a swinging foot lifts
 constexpr float CROUCH = 0.04f; // the pelvis sits this far below rest, so the knees are always bowed
-constexpr float STANCE = 0.04f; // feet this much wider than the hips
+constexpr float STANCE = 0.075f; // feet this much wider than the hips (0.04 read as one narrow tube with the arms in)
+// Hands and elbows held this far out from the ribs in every pose (user, 2026-11-17: "The old skeleton arms were
+// farther out from the body and read better at a distance. Now the body reads as one constrained tube").
+constexpr float ARM_SPLAY = 0.11f, ELBOW_SPLAY = 0.12f;
 constexpr float TOE_OUT = 0.4f; // duck feet, radians
 constexpr float CHASE_SPEED = 1.9f; // its speed when chasing (tuning.speed): the gait is fullest there
-constexpr float ARM_REACH = 0.325f; // just short of the arm's 0.33 m, so a pointing elbow keeps a hint of bend
+constexpr float ARM_REACH = 0.36f; // just short of the arm's 0.37 m (body lengthened 12%, 2026-11-17), so a pointing elbow keeps a hint of bend
 constexpr float WHIP_START = 0.80f, WHIP_END = 0.955f; // fractions of the wind-up: the arm whips forward between them
 constexpr float RISE_TIME = 0.6f, DEATH_TIME = 0.6f;
 constexpr float NEW_BONE_AT = 0.5f; // seconds into Recover when the new bone pops into the hand
@@ -188,15 +191,19 @@ public:
 			rig.gloss(socket_[s], -2.0f);
 			rig.gloss(light_[s], 0.0f);
 		}
-		for (int s : { bandana_, tail_ }) {
-			rig.gloss(s, 0.0f); // cloth: a highlight there is a flash across the whole chest
+		// The bandana was removed from the model (user, 2026-11-17: "Ditch the bandana"); its code stays for a model
+		// that has one.
+		if (bandana_ >= 0 && tail_ >= 0) {
+			for (int s : { bandana_, tail_ }) {
+				rig.gloss(s, 0.0f); // cloth: a highlight there is a flash across the whole chest
+			}
+			// Soft parts: the flap runs down the chest from its pin (the neck ring stays stiff), the tails
+			// are measured by distance from the knot.
+			flap_dir_ = Vector3(0.0f, -1.0f, 0.22f).normalized();
+			rig.soft(bandana_, flap_dir_, 0.15f, 0.012f);
+			rig.soft(tail_);
+			tail_dir_ = rig.tip(tail_).length_squared() > 1e-8f ? rig.tip(tail_).normalized() : Vector3(0, -1, 0);
 		}
-		// Soft parts: the flap runs down the chest from its pin (the neck ring stays stiff), the tails
-		// are measured by distance from the knot.
-		flap_dir_ = Vector3(0.0f, -1.0f, 0.22f).normalized();
-		rig.soft(bandana_, flap_dir_, 0.15f, 0.012f);
-		rig.soft(tail_);
-		tail_dir_ = rig.tip(tail_).length_squared() > 1e-8f ? rig.tip(tail_).normalized() : Vector3(0, -1, 0);
 
 		// The heap of bones a spawn assembles from and a death collapses into: where each big part
 		// lies (model space, the pivot's position) and when it moves, as fractions of the state.
@@ -397,6 +404,12 @@ public:
 				p.hand[L] = p.hand[L].lerp(arm_[L].root + dir.normalized() * ARM_REACH, saturate(p.point));
 			}
 		}
+		// Arms out from the ribs, so the silhouette is not one tube (less on the pointing arm as it aims).
+		for (int s = 0; s < 2; ++s) {
+			const float k = s == L ? 1.0f - saturate(p.point) : 1.0f;
+			p.hand[s].x += SIDE[s] * ARM_SPLAY * k;
+			p.pole[s].x += SIDE[s] * ELBOW_SPLAY * k;
+		}
 		const Vector3 elbow_hinge(-1, 0, 0); // folds the forearm forward
 		arm_[L].solve(rig, elbow_hinge, p.hand[L], p.pole[L]);
 		const Basis fore_r = arm_[R].solve(rig, elbow_hinge, p.hand[R], p.pole[R]);
@@ -442,7 +455,9 @@ public:
 		}
 
 		// ---- bandana: one soft mesh each, thrown about by the chest
-		if (far) {
+		if (bandana_ < 0 || tail_ < 0) {
+			// no bandana on this model
+		} else if (far) {
 			flap_.reset();
 			tails_.reset();
 			rig.bend(bandana_, Vector3());
@@ -526,7 +541,7 @@ private:
 			p.foot_yaw[s] = SIDE[s] * TOE_OUT;
 		}
 		// Arms swing against the legs: the left hand hangs loose, the right carries the bone upright.
-		p.hand[L] = arm_[L].root + Vector3(0.075f, -0.295f + 0.03f * amt * bounce, 0.035f - 0.12f * amt * cs);
+		p.hand[L] = arm_[L].root + Vector3(0.075f, -0.33f + 0.03f * amt * bounce, 0.035f - 0.12f * amt * cs);
 		p.pole[L] = arm_[L].root + Vector3(0.3f, -0.2f, -0.4f);
 		p.hand[R] = arm_[R].root + Vector3(-0.055f, -0.14f + 0.025f * amt * bounce + 0.006f * breath, 0.185f + 0.06f * amt * cs);
 		p.pole[R] = arm_[R].root + Vector3(-0.3f, -0.25f, -0.35f);

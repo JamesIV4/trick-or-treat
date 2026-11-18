@@ -26,6 +26,8 @@
 namespace tot {
 
 struct Area;
+struct AreaState;
+struct RegionPlan;
 
 // Everything monsters need from the game.
 struct MonsterWorld {
@@ -266,12 +268,56 @@ private:
 	Rng rng_;
 };
 
+struct GenContext;
+
+// Where a settlement's travel gate, candy cart, monster nests, thorn nests and their vines go
+// (settlement-local), drawn from `rng` in the order Infestation::build consumes it, so saves (per-index
+// nest state) line up from one load to the next. Pure: no nodes, so the --sweep can call it. `origin`
+// is the area's world origin (the game's local -> world -> local round trips are kept bit for bit).
+//
+// Nest rules (Stage 1d): monster nests on lawns, sidewalks, service yards and on the asphalt (0-2.5 m off
+// a road's centreline, 15-85% along its built stretch, >= 10 m from junctions and the spawn); thorn
+// hearts anywhere a player can reach (lawns, backyards, service yards, squares and parks, sidewalks,
+// roads), at most one on a road. One spacing rule across all of them: heart-heart 18 m, heart-nest
+// 12 m, nest-nest 14 m, relaxed by 15% (compounding: x0.85, x0.7225) at most twice when the draws run dry.
+struct InfestationLayout {
+	godot::Vector3 gate; // the gate pad
+	godot::Transform3D cart; // the shop cart; its front (+Z) faces the middle of the side street
+	std::vector<int> kinds; // the area's monster mix (MonsterType), nest i is kinds[i % size]
+	std::vector<godot::Vector3> nests;
+	std::vector<uint32_t> nest_seeds;
+	std::vector<godot::Vector3> hearts; // thorn nests
+	std::vector<float> heart_yaw;
+	std::vector<uint32_t> heart_seeds;
+	std::vector<char> nest_on_road, heart_on_road; // on a road's asphalt
+	// Thorn vines creeping out of the hearts (ground points), and the thorn knots blocking front doors.
+	struct Tendril {
+		std::vector<godot::Vector3> pts;
+		int nest = 0; // heart index
+	};
+	std::vector<Tendril> tendrils;
+	std::vector<std::pair<godot::Vector3, int>> knots;
+	int want_nests = 0, want_hearts = 0, nest_candidates = 0, heart_candidates = 0;
+	int road_nest_candidates = 0, road_heart_candidates = 0;
+	int relax_hearts = 0, relax = 0; // spacing relax steps in force after the hearts / at the end (0-2)
+	int tries = 0; // whole-layout picks made (a jammed pick starts over, up to 4)
+};
+InfestationLayout plan_infestation(const GenContext &ctx, const MonsterArtKit &art, const godot::Vector3 &origin, bool peaceful, Rng &rng);
+
 // One settlement's infestation: nests, vines, the monsters out roaming, and the travel gate.
 class Infestation {
 public:
 	// peaceful (Trick or Treat mode): just the travel gate and the shop cart, awake from the start;
 	// no nests, thorn nests, vines or monsters.
 	void build(Area &area, MonsterWorld *world, godot::Node3D *root, bool peaceful = false);
+	// Area preloading: build()'s pure-data half (walk grid, nest layout and the draws they take) from the
+	// settlement's plan, safe on a worker thread; a build() with the same `peaceful` then starts from it.
+	void prepare(const GenContext &ctx, const RegionPlan &plan, const MonsterArtKit &art, bool peaceful);
+	// build() in slices: build_begin() makes the gate and the cart, build_step() the nests, thorn nests,
+	// tendrils and knots in order until `deadline_us` (NeighborhoodGenerator::build_clock_us(); 0: none)
+	// passes, after at least one; true when all are made. build() is the two together.
+	void build_begin(Area &area, MonsterWorld *world, godot::Node3D *root, bool peaceful = false);
+	bool build_step(uint64_t deadline_us);
 	bool route(const godot::Vector3 &from, const godot::Vector3 &to, std::vector<godot::Vector3> &path) const;
 	void update(float dt);
 	void gather(std::vector<Damageable *> &out);
@@ -303,6 +349,15 @@ public:
 		for (VineTendril *t : tendrils_) t->set_hidden(!on);
 		for (ThornVine *h : hearts_) h->set_hidden(!on);
 	}
+	// --sweep nav probe: the walk grid alone (as build() makes it), and what the last route() did.
+	void build_nav_only(const Area &area) { build_nav(area); }
+	// The walk grid from the settlement's plan alone (plain data; plan_infestation's reachability test, Stage 3c).
+	void build_nav(const GenContext &ctx, const RegionPlan &plan);
+	int last_route_expanded() const { return route_expanded_; }
+	// Connected piece of the walk grid at p (nearest open cell within 4, as route() snaps; 0: none).
+	int nav_label(const godot::Vector3 &p) const;
+	bool last_route_capped() const { return route_capped_; }
+	static int route_cap; // A* expansions per search (monsters.cpp)
 	std::function<void()> on_freed;
 	std::function<void(int index)> on_nest_down;
 	std::function<void(int index)> on_vine_down;
@@ -312,6 +367,13 @@ public:
 private:
 	void spawn_from(MonsterNest *nest);
 	void build_nav(const Area &area);
+	bool prepared_ = false, prepared_peaceful_ = false;
+	InfestationLayout prepared_layout_;
+	InfestationLayout build_layout_; // build_begin() .. the last build_step()
+	AreaState *build_state_ = nullptr;
+	godot::Vector3 build_origin_;
+	bool build_peaceful_ = false, building_ = false;
+	size_t build_unit_ = 0;
 	bool nav_blocked(int x, int z) const { return x < 0 || z < 0 || x >= nav_w_ || z >= nav_h_ || nav_[z * nav_w_ + x]; }
 	bool nav_line(const godot::Vector3 &a, const godot::Vector3 &b) const;
 	// Walk grid over the settlement: 1 = blocked (houses, fences, hedges, big props).
@@ -319,6 +381,10 @@ private:
 	int nav_w_ = 0, nav_h_ = 0;
 	float nav_x0_ = 0.0f, nav_z0_ = 0.0f, nav_y_ = 0.0f;
 	static constexpr float NAV_CELL = 0.6f;
+	void ensure_labels() const; // connected pieces of the walk grid (built with it)
+	mutable std::vector<int> labels_;
+	mutable int route_expanded_ = 0;
+	mutable bool route_capped_ = false;
 	void check_freed();
 
 	MonsterWorld *world_ = nullptr;

@@ -24,6 +24,7 @@ var _combo: Label
 var _combo_n := 0
 var _area_name: Label
 var _area_line: Label
+var _area_houses: Label
 var _area_candy: Label
 var _area_panel: PanelContainer
 var _toast: Label
@@ -109,7 +110,9 @@ func _ready() -> void:
 	arow.add_child(_area_name)
 	_area_line = _label(19, Color(1.0, 0.75, 0.6))
 	col.add_child(_area_line)
-	_area_candy = _label(19, Color(0.9, 0.85, 1.0))
+	_area_houses = _label(19, Color(0.9, 0.85, 1.0))
+	col.add_child(_area_houses)
+	_area_candy = _label(16, Color(0.9, 0.85, 1.0, 0.8))
 	col.add_child(_area_candy)
 
 	# Callout (milestones) and the area banner.
@@ -343,20 +346,32 @@ func set_area(d: Dictionary) -> void:
 	if not d.get("settlement", false):
 		_area_line.text = "Open country"
 		_area_line.add_theme_color_override("font_color", Color(0.75, 0.85, 1.0))
+		_area_houses.text = ""
 		_area_candy.text = ""
 		return
-	if d.get("peaceful", false):
-		var left: int = int(d.get("houses_total", 0)) - int(d.get("houses", 0))
-		_area_line.text = ("%d doorbells left to ring" % left) if left > 0 else "Every doorbell rung!"
-		_area_line.add_theme_color_override("font_color", ORANGE if left > 0 else TEAL)
+	# The goals: monster nests and thorn nests (left / all), houses trick-or-treated and houses cleared
+	# (trick-or-treated and all of its candy found; done / all). All four done: all clear.
+	var total: int = int(d.get("houses_total", 0))
+	var rung: int = int(d.get("houses", 0))
+	var cleared: int = int(d.get("cleared", 0))
+	var places := "Shops" if d.get("town", false) else "Houses"
+	if d.get("complete", false):
+		_area_line.text = "All clear!"
+		_area_line.add_theme_color_override("font_color", TEAL)
+	elif d.get("peaceful", false):
+		if rung < total:
+			_area_line.text = "%d doorbells left to ring" % (total - rung)
+		else:
+			_area_line.text = "%d %s left to clear" % [total - cleared, places.to_lower()]
+		_area_line.add_theme_color_override("font_color", ORANGE)
 	elif d.get("freed", false):
 		_area_line.text = "Freed!  The travel gate is awake."
 		_area_line.add_theme_color_override("font_color", TEAL)
 	else:
 		_area_line.text = "Monster nests %d/%d   Thorn nests %d/%d" % [d.get("nests_left", 0), d.get("nests", 0), d.get("hearts_left", 0), d.get("hearts", 0)]
 		_area_line.add_theme_color_override("font_color", Color(1.0, 0.72, 0.55))
-	var places := "Shops" if d.get("town", false) else "Houses"
-	_area_candy.text = "%s trick-or-treated %d/%d   Candy %d/%d" % [places, d.get("houses", 0), d.get("houses_total", 0), d.get("candy", 0), d.get("candy_total", 0)]
+	_area_houses.text = "%s trick-or-treated %d/%d   Cleared %d/%d" % [places, rung, total, cleared, total]
+	_area_candy.text = "Candy %d/%d" % [d.get("candy", 0), d.get("candy_total", 0)]
 
 
 func banner(title: String, sub: String) -> void:
@@ -598,7 +613,7 @@ func open_travel(destinations: Array) -> void:
 	for i in destinations.size():
 		var d: Dictionary = destinations[i]
 		var b := _menu_button()
-		b.text = "%s   (%d m away)" % [d["name"], d["distance"]]
+		b.text = "%s   (%d m away)%s" % [d["name"], d["distance"], "   All clear!" if d.get("complete", false) else ""]
 		var idx := i
 		b.pressed.connect(func():
 			_close_menu(false)
@@ -813,9 +828,11 @@ func show_main_menu(focus_id := "") -> void:
 		buttons.append(b)
 		match id:
 			"continue":
-				b.pressed.connect(func(): _load_and_play(latest))
+				b.pressed.connect(func():
+					_load_from = "main" # (a refused save comes back to this menu)
+					_load_and_play(latest))
 			"load":
-				b.disabled = latest == ""
+				b.disabled = not Saves.any_save() # (older versions' saves too: listed, marked, refused kindly)
 				b.focus_mode = Control.FOCUS_NONE if b.disabled else Control.FOCUS_ALL
 				b.pressed.connect(func(): open_load("main"))
 			"options":
@@ -929,7 +946,7 @@ func open_pause(focus_id := "resume", remember_frame := true) -> void:
 			b.focus_mode = Control.FOCUS_NONE if b.disabled else Control.FOCUS_ALL
 			b.pressed.connect(func(): open_save())
 		elif id == "load":
-			b.disabled = Saves.latest() == ""
+			b.disabled = not Saves.any_save()
 			b.focus_mode = Control.FOCUS_NONE if b.disabled else Control.FOCUS_ALL
 			b.pressed.connect(func(): open_load("pause"))
 		elif id == "options":
@@ -1374,12 +1391,14 @@ func _load_and_play(id: String) -> void:
 	if Saves.load_slot(id):
 		_set_play_hud(true)
 		toast("Loaded \"%s\"" % name)
-	elif _load_from == "main":
+		return
+	# An older version's save (the world it was made in has changed) gets its own, friendlier message.
+	var why := "That save is from an older version of the game, so it can't be loaded. Start a new night!" if Saves.last_error == "outdated" else "That save couldn't be loaded."
+	if _load_from == "main":
 		show_main_menu("load")
-		toast("That save couldn't be loaded.")
 	else:
 		open_pause("load")
-		toast("That save couldn't be loaded.")
+	toast(why)
 
 
 ## Name the save (the slot's old name, or the place the kid is in), then save.
@@ -1619,6 +1638,9 @@ func _slot_button(info: Dictionary) -> Button:
 	var bits := ["%s candy" % _thousands(int(info.get("candy", 0))), "%d houses" % int(info.get("houses", 0))]
 	if mode == 1:
 		bits.append("%d freed" % int(info.get("freed", 0)))
+	var all_clear = info.get("complete", 0) # null in saves from before the house goals
+	if all_clear != null and int(all_clear) > 0:
+		bits.append("%d all clear" % int(all_clear))
 	bits.append("%d/6 costumes" % int(info.get("costumes", 1)))
 	bits.append(Saves.play_time_text(float(info.get("play_time", 0.0))) + " played")
 	var line2 := _label(17, CREAM)
@@ -1627,6 +1649,9 @@ func _slot_button(info: Dictionary) -> Button:
 	v.add_child(line2)
 	v.move_child(line2, 2)
 	when.text = "%s   ·   %s" % [Saves.slot_label(str(info["id"])), Saves.date_text(float(info.get("time", 0.0)))]
+	if info.get("outdated", false):
+		# A save from before the world rework: its places no longer exist (the game refuses it; overwriting is fine).
+		when.text += "   ·   from an older version"
 	return b
 
 

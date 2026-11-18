@@ -37,6 +37,10 @@ bool is_car(const std::string &id) {
 	return id.rfind("parked_", 0) == 0;
 }
 
+float hdist_xz(const Vector3 &a, const Vector3 &b) {
+	return Vector2(a.x - b.x, a.z - b.z).length();
+}
+
 struct Yard {
 	GenContext &ctx;
 	Lot &lot;
@@ -53,7 +57,7 @@ struct Yard {
 		zf = h.front_z;
 		zb = h.front_z - h.depth;
 		deck = h.deck_h;
-		steps_front = zf + h.porch_d + 3 * 0.36f;
+		steps_front = l.flight.empty() ? zf + h.porch_d + float(l.porch_steps) * 0.36f : l.flight_foot; // Stage 3c: the flight as built
 		const Basis inv = l.xf.basis.inverse();
 		moon_local = inv.xform(Vector3(c.moon_dir.x, 0, c.moon_dir.z)).normalized();
 		wind_local = inv.xform(Vector3(1, 0, 0)).normalized();
@@ -94,10 +98,122 @@ struct Yard {
 		}
 	}
 
+	// Stage 3c: ground props take the surface under them (prop_settle_kind): flat things lie on its plane, tall
+	// ones stand plumb sunk to the lowest ground under their base; whatever is stacked on one (upper bales, a
+	// pumpkin on a bale, the cat on a gatepost) rides on its base's tilt and height.
+	struct Base {
+		float x, z, y;
+		Basis tilt;
+	};
+	std::vector<Base> bases;
+
+	// A car on its four wheels (contact points about 78% / 66% out along the body), on the drive slab's top where
+	// it stands on the driveway: the plane through them, centred, each wheel within +-twist of it.
+	GroundFit car_fit(const std::string &id, const Vector3 &p, float yaw) const {
+		const AABB &bb = ctx.assets->get(id)->aabb;
+		const HouseSpec &h = lot.house;
+		const float dz1 = h.garage ? h.front_z - 0.4f : h.front_z + 1.0f;
+		auto surf = [&](float x, float z) {
+			const bool drive = std::abs(x - lot.drive_x) <= 1.45f && z >= dz1 - 0.2f && z <= 0.0f; // (a wheel right at the slab's end: on it)
+			return ctx.yard_lift(lot, x, z) + (drive ? 0.025f : 0.0f);
+		};
+		const float cx = bb.get_center().x, cz = bb.get_center().z, hx = bb.size.x * 0.5f * 0.78f, hz = bb.size.z * 0.5f * 0.66f;
+		GroundFit f = fit_footprint(surf, p, yaw, 1.0f, cx - hx, cx + hx, cz - hz, cz + hz, 0.35f, 2);
+		// The ground under the body between the wheels (a crest, the bank by the house) must stay under the sills:
+		// f.bury becomes how far it rises over the wheels' plane there.
+		const Vector3 ax(std::cos(yaw), 0.0f, -std::sin(yaw)), az(std::sin(yaw), 0.0f, std::cos(yaw));
+		const float gx = -f.up.x / f.up.y, gz = -f.up.z / f.up.y;
+		f.bury = -1e9f;
+		for (float u : { -0.7f, 0.0f, 0.7f }) {
+			for (float v : { -0.8f, 0.0f, 0.8f }) {
+				const Vector3 q = p + ax * (cx + u * bb.size.x * 0.5f) + az * (cz + v * bb.size.z * 0.5f);
+				const float plane = f.y_centred + gx * (q.x - p.x) + gz * (q.z - p.z);
+				f.bury = Math::max(f.bury, surf(q.x, q.z) - plane);
+			}
+		}
+		return f;
+	}
+
+	// Ship: how deep a flat prop standing at (p.x, p.z) would sink, as put() would settle it (its plane lowered until no
+	// corner floats): the deepest the ground rises over that plane, or its origin under the lowest ground on a 0.3 m ring
+	// round it (the sweep's buried test), whichever is worse. 0 without terrain.
+	float flat_sink(const std::string &id, const Vector3 &p, float yaw, float scale, bool ring_only = false) const {
+		if (!ctx.terrain || ctx.in_structure(lot, p.x, p.z)) {
+			return 0.0f;
+		}
+		const AABB &bb = ctx.assets->get(id)->aabb;
+		const bool c_tread = ctx.yard_lift(lot, p.x, p.z) > ctx.lot_ground(lot, p.x, p.z) + 1e-4f;
+		auto surf = [&](float x, float z) {
+			if (ctx.in_structure(lot, x, z)) {
+				return std::nanf("");
+			}
+			const float yl = ctx.yard_lift(lot, x, z);
+			return (yl > ctx.lot_ground(lot, x, z) + 1e-4f) == c_tread ? yl : std::nanf("");
+		};
+		const bool big = bb.size.x * scale > 1.5f || bb.size.z * scale > 1.5f;
+		const GroundFit f = fit_footprint(surf, p, yaw, scale, bb.position.x, bb.get_end().x, bb.position.z, bb.get_end().z, 0.5f, big ? 5 : 3);
+		const float y = f.y - 0.01f;
+		float ring = ctx.lot_ground(lot, p.x, p.z);
+		for (int k = 0; k < 8; ++k) {
+			const float a = float(k) * float(Math_TAU) / 8.0f;
+			ring = Math::min(ring, ctx.lot_ground(lot, p.x + std::cos(a) * 0.3f, p.z + std::sin(a) * 0.3f));
+		}
+		return ring_only ? ring - y : Math::max(f.bury, ring - y);
+	}
+
 	void put(const std::string &id, Vector3 p, float yaw, float scale = 1.0f, bool collide = true, float lean = 0.0f, float wind = 0.0f, int cost = 1) {
 		PropPlacement pp;
 		pp.id = id;
-		Basis b = Basis(Vector3(0, 1, 0), yaw) * Basis(Vector3(1, 0, 0), lean);
+		Basis tilt;
+		if (ctx.terrain) {
+			const Base *on = nullptr;
+			if (p.y > 0.05f && !ctx.in_structure(lot, p.x, p.z)) { // (things on the porch, the roof... stay with the pad)
+				for (const Base &b : bases) {
+					if (Vector2(b.x - p.x, b.z - p.z).length() < 0.45f && (!on || Vector2(b.x - p.x, b.z - p.z).length() < Vector2(on->x - p.x, on->z - p.z).length())) {
+						on = &b;
+					}
+				}
+			}
+			if (on) {
+				const Vector3 up = on->tilt.xform(Vector3(0, p.y, 0));
+				p = Vector3(on->x, on->y, on->z) + up + Vector3(p.x - on->x, 0.0f, p.z - on->z);
+				tilt = on->tilt;
+			} else if (std::abs(p.y) < 1e-4f && !ctx.in_structure(lot, p.x, p.z)) {
+				const AssetInfo *a = ctx.assets->get(id);
+				const AABB &bb = a->aabb;
+				// Only samples on the same support as its centre count (the ground, or a tread of a long porch flight): a
+				// footprint that overhangs a step's edge or a building's wall stays on the level of its centre.
+				const bool c_tread = ctx.yard_lift(lot, p.x, p.z) > ctx.lot_ground(lot, p.x, p.z) + 1e-4f;
+				auto surf = [&](float x, float z) {
+					if (ctx.in_structure(lot, x, z)) {
+						return std::nanf("");
+					}
+					const float yl = ctx.yard_lift(lot, x, z);
+					return (yl > ctx.lot_ground(lot, x, z) + 1e-4f) == c_tread ? yl : std::nanf("");
+				};
+				const PropSettle kind = prop_settle_kind(id);
+				if (kind == PropSettle::Car) {
+					const GroundFit f = car_fit(id, p, yaw);
+					p.y = f.y_centred;
+					tilt = tilt_to(f.up);
+				} else if (kind == PropSettle::Upright) {
+					// The base: the trunk / post / pillar footprint, not the canopy.
+					const float r = Math::clamp(a->radius > 0.0f ? a->radius : Math::min(bb.size.x, bb.size.z) * 0.5f, 0.1f, 0.45f);
+					p.y = footprint_low(surf, p, r * scale);
+				} else {
+					// (big footprints sampled finer; a bale may lean further into a bank than a bench; 1 cm into the ground)
+					const bool big = bb.size.x * scale > 1.5f || bb.size.z * scale > 1.5f;
+					const GroundFit f = fit_footprint(surf, p, yaw, scale, bb.position.x, bb.get_end().x, bb.position.z, bb.get_end().z, 0.5f, big ? 5 : 3);
+					p.y = f.y - 0.01f;
+					tilt = tilt_to(f.up);
+				}
+				bases.push_back({ p.x, p.z, p.y, tilt });
+				lean = 0.0f; // (a hand-placed wobble would lift a lying thing's edge off the ground, or a tall one off plumb)
+			} else {
+				p.y += ctx.yard_lift(lot, p.x, p.z); // Stage 3b: on the ground (things on the house stay with the pad)
+			}
+		}
+		Basis b = tilt * Basis(Vector3(0, 1, 0), yaw) * Basis(Vector3(1, 0, 0), lean);
 		pp.xf = lot.xf * Transform3D(b.scaled(Vector3(scale, scale, scale)), p);
 		pp.lot = lot.index;
 		pp.collide = collide;
@@ -121,6 +237,14 @@ struct Yard {
 			const float x = rng.range(zone.x0, zone.x1), z = rng.range(zone.z0, zone.z1);
 			if (ctx.occupied_at(lot.index, x, z, radius) || ctx.route_distance(lot.index, x, z) < route_clear + radius || (fits && !fits(x, z))) {
 				continue;
+			}
+			if (ctx.terrain && prop_settle_kind(id) == PropSettle::Flat) {
+				// Stage 3c: not where the slope is too steep for it to lie on (it would sink into the bank uphill).
+				const AABB &bb = ctx.assets->get(id)->aabb;
+				auto sf = [&](float sx, float sz) { return ctx.in_structure(lot, sx, sz) ? std::nanf("") : ctx.yard_lift(lot, sx, sz); };
+				if (fit_footprint(sf, Vector3(x, 0, z), 0.0f, scale, bb.position.x, bb.get_end().x, bb.position.z, bb.get_end().z, 0.5f, 3).bury > 0.15f) {
+					continue;
+				}
 			}
 			cands.push_back({ score(x, z) + rng.range(0.0f, 0.35f), x, z });
 		}
@@ -149,7 +273,7 @@ struct Yard {
 		const Transform3D inv = lot.xf.affine_inverse();
 		const Vector3 p(x, 0.0f, z);
 		for (const OBox &o : ctx.boxes) {
-			if (o.lot != lot.index || o.xf.origin.y - o.half.y > max_bottom) {
+			if (o.lot != lot.index || o.xf.origin.y - o.half.y - lot.xf.origin.y > max_bottom) { // (Stage 3c: over the pad, not over 0)
 				continue;
 			}
 			const Vector3 l = (inv * o.xf).affine_inverse().xform(p);
@@ -175,9 +299,9 @@ struct Yard {
 	const char *jack_face() {
 		// Faces that neither street neighbour already uses.
 		int banned = 0;
-		for (const Lot &o : ctx.lots) {
-			if (o.side == lot.side && std::abs(o.index - lot.index) == 1) {
-				banned |= o.faces_used;
+		for (int ni : { lot.prev, lot.next }) {
+			if (ni >= 0) {
+				banned |= ctx.lots[ni].faces_used;
 			}
 		}
 		std::vector<int> ok;
@@ -232,6 +356,30 @@ struct Yard {
 	}
 };
 
+// Candy anchor: a pumpkin cluster (Yard::pumpkin_cluster: hero piece, smaller ones 0.5-0.8 m out)
+// is a compact obstacle to jump over from any side.
+void add_pumpkin_obstacle(Lot &lot, const Vector3 &c) {
+	YardObstacle o;
+	o.kind = ObstacleKind::Pumpkins;
+	o.c = c;
+	o.half_across = 1.05f;
+	o.top = 0.8f;
+	lot.obstacles.push_back(o);
+	YardFeature f;
+	f.kind = FeatureKind::Pumpkins;
+	f.c = c;
+	f.r = 1.05f;
+	lot.features.push_back(f);
+}
+
+// Candy anchor: a landmark's centrepiece (prop `id` placed at local `c`), for the ring round it.
+void set_centrepiece(GenContext &ctx, Lot &lot, const Vector3 &c, const std::string &id, float scale, float extra = 0.0f) {
+	const AABB &bb = ctx.assets->get(id)->aabb;
+	lot.has_centrepiece = true;
+	lot.centrepiece = c;
+	lot.centre_r = Math::max(bb.size.x, bb.size.z) * 0.5f * scale + extra;
+}
+
 } // namespace
 
 // ---------------------------------------------------------------- per-lot dressing
@@ -246,7 +394,9 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 	// Mailbox where the front path meets the sidewalk, on the side away from the driveway.
 	{
 		const float side = (h.door_x - lot.drive_x) >= 0 ? 1.0f : -1.0f;
-		const float mx = Math::clamp(h.door_x + side * 1.3f, -y.fence + 0.5f, y.fence - 0.5f);
+		// (Stage 3c: clear of a long porch flight that comes right down to the sidewalk)
+		const float off = lot.flight_foot > -1.4f ? 0.85f + 0.72f + 0.4f : 1.3f;
+		const float mx = Math::clamp(h.door_x + side * off, -y.fence + 0.5f, y.fence - 0.5f);
 		y.put("mailbox", Vector3(mx, 0, -0.75f), rng.range(-0.08f, 0.08f), 1.0f, true, rng.range(-0.04f, 0.04f));
 		ctx.occupy(lot.index, mx, -0.75f, 0.45f);
 	}
@@ -258,7 +408,7 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 	const int level = y.pumpkin_level();
 	if (level > 0) {
 		for (int i = 2; i >= 0; --i) {
-			const float top = y.deck - (y.deck / 3.0f) * i;
+			const float top = i < int(lot.flight.size()) ? lot.flight[i].top : y.deck - (y.deck / 3.0f) * i; // Stage 3c: the flight as built
 			const float sz = pz1 + 0.36f * (i + 0.5f);
 			const float scale = 0.62f + (2 - i) * 0.08f;
 			const bool both = level >= 3;
@@ -270,7 +420,10 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 				if (level == 1 && i == 2) {
 					continue;
 				}
-				y.put(y.jack_face(), Vector3(h.door_x + sx * 0.66f, top, sz), rng.range(-0.3f, 0.3f), scale, false, rng.range(-0.04f, 0.04f));
+				// Stage 4c (3b leftover): on a lot below its sidewalk the bank down from the sidewalk can reach over the
+				// bottom tread (its lattice square spans both): the jack-o'-lantern sits on that ground, not buried in it.
+				const float g = ctx.terrain ? ctx.lot_ground(lot, h.door_x + sx * 0.66f, sz) : -1.0f;
+				y.put(y.jack_face(), Vector3(h.door_x + sx * 0.66f, Math::max(top, g), sz), rng.range(-0.3f, 0.3f), scale, false, rng.range(-0.04f, 0.04f));
 			}
 		}
 	}
@@ -296,6 +449,13 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 		const char *tid = TREES[rng.irange(0, 2)];
 		if (y.place(tid, 1.4f, y.front_yard(), Facing::Random, tree_score, &tree, rng.range(0.85f, 1.1f), 1.3f, true, 1.0f, 2)) {
 			has_tree = true;
+			// Candy anchor: the trunk, for a small ring round it.
+			const AssetInfo *ta = ctx.assets->get(tid);
+			YardFeature f;
+			f.kind = FeatureKind::Tree;
+			f.c = tree;
+			f.r = (ta->radius > 0.0f ? ta->radius : 0.3f) * ctx.props.back().xf.basis.get_scale().x;
+			lot.features.push_back(f);
 			const Vector3 leaf = tree + y.wind_local * rng.range(1.0f, 1.6f);
 			if (!ctx.occupied_at(lot.index, leaf.x, leaf.z, 0.6f) && ctx.route_distance(lot.index, leaf.x, leaf.z) > 1.0f) {
 				y.put("leaf_pile", leaf, rng.range(0.0f, Math_TAU), rng.range(0.8f, 1.1f), false);
@@ -378,6 +538,7 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 		if (y.place("pumpkin_round", 1.0f, y.front_yard(), Facing::Street, score, &at, 1.0f, 1.0f, true, 0.0f, 0)) {
 			ctx.props.pop_back();
 			y.pumpkin_cluster(at, count, rng.chance(0.5f));
+			add_pumpkin_obstacle(lot, at);
 		}
 	}
 	// Hay bales against a side fence with a pumpkin on top (farm-ish personas).
@@ -387,7 +548,21 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 		for (int tries = 0; tries < 6; ++tries) {
 			const float z = rng.range(y.zf + 1.5f, -1.8f);
 			if (!ctx.occupied_at(lot.index, fx, z, 0.7f) && ctx.route_distance(lot.index, fx, z) > 1.6f) {
-				y.bale_stack(Vector3(fx, 0, z), Math_PI * 0.5f, rng.chance(0.5f) ? 2 : 1, true);
+				const int high = rng.chance(0.5f) ? 2 : 1;
+				y.bale_stack(Vector3(fx, 0, z), Math_PI * 0.5f, high, true);
+				if (high == 1) {
+					// Candy anchor: a single bale with a pumpkin on it, hopped over along the fence (a
+					// double stack is a platform to climb instead).
+					const AABB &bb = ctx.assets->get("hay_bale")->aabb;
+					YardObstacle o;
+					o.kind = ObstacleKind::Hay;
+					o.c = Vector3(fx, 0, z);
+					o.across = Vector3(0, 0, 1); // the bale's long side runs along the fence
+					o.half_across = bb.size.x * 0.5f;
+					o.top = 0.55f + 0.5f;
+					lot.obstacles.push_back(o);
+					lot.features.push_back({ FeatureKind::Bale, o.c, o.half_across, 0.0f });
+				}
 				break;
 			}
 		}
@@ -396,9 +571,32 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 	if (h.garage) {
 		const float g = float(h.garage_side);
 		const float gx = h.house_x + g * (h.width * 0.5f + 3.8f * 0.5f);
-		const Vector3 p(gx + g * 1.25f, 0, y.zf - 0.4f + 0.75f);
+		Vector3 p(gx + g * 1.25f, 0, y.zf - 0.4f + 0.75f);
+		// Ship: on the level apron, not half over the fill beside it: if the bale would sink, the nearest spot further in
+		// along the door where it lies flat (else the flattest of them).
+		{
+			const Vector3 base = p;
+			float best = y.flat_sink("hay_bale", p, 0.0f, 1.0f);
+			for (float in : { 0.25f, 0.5f, 0.75f, 1.0f }) {
+				if (best < 0.1f) {
+					break;
+				}
+				const Vector3 q = base - Vector3(g * in, 0.0f, 0.0f);
+				const float s = y.flat_sink("hay_bale", q, 0.0f, 1.0f);
+				if (s < best - 0.02f) {
+					best = s;
+					p = q;
+				}
+			}
+		}
 		y.bale_stack(p, 0.0f, 2, false);
 		y.put("hay_bale", p + Vector3(-g * 0.9f, 0, 0.35f), 0.2f * g, 1.0f, true);
+		// The single bale stands on the driveway: the open drive (candy anchor) ends short of it.
+		if (lot.drive_line.size() >= 2) {
+			const AABB &bb = ctx.assets->get("hay_bale")->aabb;
+			const float front = p.z + 0.35f + bb.size.z * 0.5f + bb.size.x * 0.5f * std::sin(0.2f);
+			lot.drive_line.back().z = Math::max(lot.drive_line.back().z, front + 0.3f);
+		}
 	}
 	// Flower pots at the foot of the steps.
 	if (lot.persona == Persona::CozyGrandparents || lot.persona == Persona::GreenThumbs || lot.persona == Persona::CraftyArtists ||
@@ -438,7 +636,7 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 		const float cat_side = rng.chance(0.5f) ? 1.0f : -1.0f;
 		const bool cat = lot.persona == Persona::SpookyCute || lot.persona == Persona::PetLovers || rng.chance(0.35f);
 		for (float sx : { -1.0f, 1.0f }) {
-			const Vector3 p(h.door_x + sx * 1.05f, 0, -0.5f);
+			const Vector3 p(h.door_x + sx * (lot.flight_foot > -1.1f ? 0.85f + 0.72f + 0.3f : 1.05f), 0, -0.5f); // (Stage 3c: beside a flight that reaches the gate)
 			if (std::abs(p.x - lot.drive_x) < 2.0f || std::abs(p.x) > y.fence - 0.3f) {
 				continue;
 			}
@@ -455,8 +653,18 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 	// A raised brick planter of mums and little pumpkins out on the lawn (it doubles as a step up).
 	if (lot.persona == Persona::GreenThumbs || lot.persona == Persona::CozyGrandparents || lot.persona == Persona::Bakers ||
 			lot.persona == Persona::CraftyArtists || lot.persona == Persona::PumpkinFanatics || rng.chance(0.35f)) {
-		y.place("brick_planter", 1.25f, y.front_yard(), Facing::Street,
-				[&](float x, float z) { return -std::abs(z + 1.6f) * 0.4f + std::abs(x - h.door_x) * 0.1f; }, nullptr, 1.0f, 1.2f, true, 0.0f, 2);
+		Vector3 at;
+		if (y.place("brick_planter", 1.25f, y.front_yard(), Facing::Street,
+					[&](float x, float z) { return -std::abs(z + 1.6f) * 0.4f + std::abs(x - h.door_x) * 0.1f; }, &at, 1.0f, 1.2f, true, 0.0f, 2)) {
+			const AssetInfo *a = ctx.assets->get("brick_planter");
+			YardObstacle o;
+			o.kind = ObstacleKind::Planter;
+			o.c = at;
+			o.half_across = Math::max(a->aabb.size.x, a->aabb.size.z) * 0.5f;
+			o.top = a->collision_top > 0.0f ? a->collision_top : a->aabb.get_end().y;
+			lot.obstacles.push_back(o);
+			lot.features.push_back({ FeatureKind::Planter, at, o.half_across, 0.0f });
+		}
 	}
 	// A friendly sheet ghost keeping watch on the porch.
 	if (lot.persona == Persona::SpookyCute || lot.persona == Persona::YoungFamily || rng.chance(0.3f)) {
@@ -544,8 +752,48 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 		y.place(id, 0.6f, back, Facing::Random, any, nullptr, 1.0f, 1.1f, std::string(id) != "leaf_pile");
 	}
 	// Parked car in an open driveway.
-	if (!h.garage && rng.chance(0.4f) && lot.landmark != Landmark::HayRide) {
-		y.put(pick_car(ctx, rng), Vector3(lot.drive_x, 0, y.zf + 0.2f + 2.0f), rng.range(-0.05f, 0.05f), 1.0f, true);
+	bool car_here = !h.garage && rng.chance(0.4f) && lot.landmark != Landmark::HayRide;
+	std::string car_id;
+	float car_yaw = 0.0f, car_z = y.zf + 0.2f + 2.0f;
+	if (car_here) {
+		car_id = pick_car(ctx, rng);
+		car_yaw = rng.range(-0.05f, 0.05f);
+		if (ctx.terrain) {
+			// Stage 3c: parked where the drive is even enough for all four wheels to touch (within 2.5 cm), else not at all.
+			const AABB &bb = ctx.assets->get(car_id)->aabb;
+			car_here = false;
+			for (float dz : { 0.0f, 0.4f, -0.3f, 0.8f, 1.2f }) {
+				const float z = y.zf + 2.2f + dz;
+				if (z + bb.get_end().z > -0.6f) {
+					continue;
+				}
+				const GroundFit cf = y.car_fit(car_id, Vector3(lot.drive_x, 0.0f, z), car_yaw);
+				if (cf.twist <= 0.025f && cf.bury <= 0.12f && cf.up.y >= std::cos(0.2f)) { // (and a drive no steeper than ~20%)
+					car_z = z;
+					car_here = true;
+					break;
+				}
+			}
+		}
+	}
+	if (car_here) {
+		y.put(car_id, Vector3(lot.drive_x, 0, car_z), car_yaw, 1.0f, true);
+		// Candy anchors: the hood (a trampoline, candy.cpp register_prop_collisions) faces the street,
+		// and the open drive ends just in front of the bumper.
+		const PropPlacement &car = ctx.props.back();
+		const AssetInfo *a = ctx.assets->get(car.id);
+		if (a->has_hood) {
+			const Transform3D local = lot.xf.affine_inverse() * car.xf;
+			const AABB &bb = a->aabb;
+			const float z0 = a->hood.position.z, z1 = bb.get_end().z;
+			lot.car_in_drive = true;
+			lot.car_hood = local.xform(Vector3(bb.get_center().x, a->hood.get_end().y, (z0 + z1) * 0.5f));
+			lot.car_hood_half = Vector3(bb.size.x * 0.5f, 0.0f, (z1 - z0) * 0.5f);
+			const float bumper = local.xform(Vector3(0, 0, z1)).z;
+			if (lot.drive_line.size() >= 2) {
+				lot.drive_line.back().z = Math::max(lot.drive_line.back().z, bumper + 0.3f);
+			}
+		}
 	}
 
 	// Trampolines: now and then a big one in the backyard, and little ones parked where a kid would
@@ -556,7 +804,18 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 			y.budget = std::max(y.budget, 3);
 			// The whole mat and frame clear of hedges, fences, sheds and the house (not just its centre).
 			y.place("trampoline_large", 2.1f, back, Facing::Random, [&](float, float z) { return -z * 0.05f; }, nullptr, 1.0f, 1.2f, true, 0.0f, 3,
-					[&](float x, float z) { return y.clear_of_solids(x, z, 2.2f); });
+					[&](float x, float z) {
+						if (!y.clear_of_solids(x, z, 2.2f)) {
+							return false;
+						}
+						if (!ctx.terrain) {
+							return true;
+						}
+						// Stage 3c: on ground even enough that the frame doesn't sink into the slope (<= 15 cm at its edge).
+						const AABB &bb = ctx.assets->get("trampoline_large")->aabb;
+						auto sf = [&](float sx, float sz) { return ctx.yard_lift(lot, sx, sz); };
+						return fit_footprint(sf, Vector3(x, 0, z), 0.0f, 1.0f, bb.position.x, bb.get_end().x, bb.position.z, bb.get_end().z, 0.3f, 5).bury <= 0.15f;
+					});
 		}
 		if (rng.chance(lot.persona == Persona::Minimalists ? 0.25f : 0.7f)) {
 			const Transform3D inv = lot.xf.affine_inverse();
@@ -587,7 +846,8 @@ void dress_yard(GenContext &ctx, Lot &lot) {
 							}
 							// The whole mini trampoline (about 0.9 m across the frame) clear of everything solid
 							// at ground level, and of the lot's edges.
-							const bool clear = y.clear_of_solids(p.x, p.z, 0.95f, 1.2f);
+							// (Ship: and on ground it can lie on: a bank or a tread edge under it would sink its uphill side)
+							const bool clear = y.clear_of_solids(p.x, p.z, 0.95f, 1.2f) && y.flat_sink("trampoline_mini", p, 0.0f, 1.25f, true) < 0.1f;
 							const float score = p.z * 0.15f + rng.range(0.0f, 0.5f); // street side first
 							if (clear && score > best_score) {
 								best_score = score;
@@ -625,7 +885,7 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 	const Rect front = y.front_yard();
 	switch (lot.landmark) {
 		case Landmark::PumpkinPatch: {
-			// A whole front yard of pumpkins in loose rows on vines; some are bouncy.
+			// A whole front yard of pumpkins in loose rows on vines (Stage 3c: none of them bounce like a trampoline any more).
 			for (float z = -1.8f; z > y.zf + 1.0f; z -= 1.25f) {
 				for (float x = -y.fence + 1.0f; x < y.fence - 0.8f; x += 1.3f) {
 					const float jx = x + rng.range(-0.25f, 0.25f), jz = z + rng.range(-0.2f, 0.2f);
@@ -637,13 +897,13 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 					}
 					const char *id = rng.chance(0.15f) ? y.jack_face() : (rng.chance(0.5f) ? "pumpkin_round" : (rng.chance(0.5f) ? "pumpkin_tall" : "pumpkin_small"));
 					y.put(id, Vector3(jx, 0, jz), rng.range(0.0f, Math_TAU), rng.range(0.85f, 1.2f), true, rng.range(-0.06f, 0.06f));
-					if (rng.chance(0.25f)) {
-						ctx.props.back().bouncy = true;
-					}
 					ctx.occupy(lot.index, jx, jz, 0.45f);
 				}
 			}
-			y.place("giant_pumpkin", 1.2f, front, Facing::Street, [&](float x, float z) { return -std::abs(z - (pz1 + 2.5f)) - std::abs(x - h.door_x) * 0.1f; });
+			Vector3 at;
+			if (y.place("giant_pumpkin", 1.2f, front, Facing::Street, [&](float x, float z) { return -std::abs(z - (pz1 + 2.5f)) - std::abs(x - h.door_x) * 0.1f; }, &at)) {
+				set_centrepiece(ctx, lot, at, "giant_pumpkin", 1.0f);
+			}
 			y.place("wheelbarrow", 0.8f, front, Facing::Random, any);
 			// Hay-bale steps up to the porch roof (1, 2, 3 bales high), like the scarecrow yard's.
 			{
@@ -660,6 +920,10 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 				y.put("hay_bale", sc + Vector3(0.9f, 0, 0.6f), 0.4f, 1.0f, true);
 				y.put("corn_stalks", sc + Vector3(-0.8f, 0, -0.3f), 0.0f, 1.0f, true, 0.0f, 0.6f);
 				y.put(y.jack_face(), sc + Vector3(0.9f, 0.55f, 0.6f), 0.0f, 0.75f, true);
+				// The ring goes round the whole group (the bale reaches about 1.6 m out).
+				lot.has_centrepiece = true;
+				lot.centrepiece = sc;
+				lot.centre_r = 1.6f;
 			}
 			// Pumpkin-stack stairs up to the porch roof: 1, 2, 3 bales high with pumpkins on top.
 			const float x_end = ds > 0 ? px1 + 0.7f : px0 - 0.7f;
@@ -701,7 +965,9 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 		case Landmark::TreeHouse: {
 			// A giant maple in the backyard with platforms spiralling up to a little hut.
 			const Vector3 t(rng.range(-1.5f, 1.5f), 0, (y.zb + (-lot.depth)) * 0.5f - 0.3f);
-			m.cylinder(t, 0.65f, 7.5f, 9, mat_cell(pal::BARK, mat::BARK), 0.45f);
+			const Vector3 tl(0, ctx.yard_lift(lot, t.x, t.z), 0); // Stage 3b: the mesh stands on the ground (add_box lifts the solids itself)
+			m.set_transform(Transform3D(Basis(), tl));
+			m.cylinder(t - Vector3(0, 0.3f, 0), 0.65f, 7.8f, 9, mat_cell(pal::BARK, mat::BARK), 0.45f);
 			for (int i = 0; i < 6; ++i) {
 				const float a = i * Math_TAU / 6.0f;
 				m.blob(t + Vector3(std::cos(a) * 2.2f, 7.6f + (i & 1) * 0.8f, std::sin(a) * 2.2f), Vector3(2.0f, 1.5f, 2.0f),
@@ -709,6 +975,9 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 			}
 			m.blob(t + Vector3(0, 9.0f, 0), Vector3(2.4f, 1.6f, 2.4f), mat_cell(pal::GOLDEN_LEAF, mat::LEAVES), 1, 0.15f, 5);
 			ctx.add_box(lot.index, t + Vector3(0, 3.75f, 0), Vector3(0.6f, 3.75f, 0.6f), false);
+			lot.has_centrepiece = true; // the ring runs round the trunk, under the lowest platform
+			lot.centrepiece = t;
+			lot.centre_r = 0.65f;
 			lot.summit_route.clear();
 			const float a0 = rng.range(0.0f, Math_TAU);
 			for (int k = 0; k < 5; ++k) {
@@ -716,10 +985,10 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 				const float yy = 1.35f + k * 1.3f;
 				const Vector3 p = t + Vector3(std::cos(a) * 1.9f, yy, std::sin(a) * 1.9f);
 				const Basis rot(Vector3(0, 1, 0), -a);
-				m.set_transform(Transform3D(rot, p));
+				m.set_transform(Transform3D(rot, p + tl));
 				m.rounded_box(Vector3(), Vector3(0.85f, 0.1f, 0.75f), 0.04f, mat_cell(pal::PLANK, mat::PLANKS), mat_cell(pal::WOOD_LIGHT, mat::PLANKS));
 				m.box(Vector3(0, -0.5f, 0), Vector3(0.06f, 0.45f, 0.06f), mat_cell(pal::WOOD_DARK, mat::WOOD));
-				m.set_transform(Transform3D());
+				m.set_transform(Transform3D(Basis(), tl));
 				ctx.add_box(lot.index, p, Vector3(0.85f, 0.1f, 0.75f), true, -a);
 				lot.summit_route.push_back(p + Vector3(0, 0.1f, 0));
 			}
@@ -728,7 +997,7 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 			m.rounded_box(hut + Vector3(0, -0.1f, 0), Vector3(1.6f, 0.12f, 1.6f), 0.05f, mat_cell(pal::PLANK, mat::PLANKS));
 			m.box(hut + Vector3(0, 0.7f, -0.6f), Vector3(1.2f, 0.7f, 0.6f), mat_cell(pal::WOOD_LIGHT, mat::PLANKS));
 			m.box(hut + Vector3(0, 0.75f, -0.0f), Vector3(0.3f, 0.35f, 0.02f), pal::GLOW_WINDOW);
-			m.set_transform(Transform3D(Basis(), hut + Vector3(0, 1.4f, -0.6f)));
+			m.set_transform(Transform3D(Basis(), hut + Vector3(0, 1.4f, -0.6f) + tl));
 			m.prism_xy({ { -1.35f, 0 }, { 1.35f, 0 }, { 0, 0.9f } }, 0.0f, 1.5f, mat_cell(pal::ROOF_RED, mat::SHINGLES));
 			m.set_transform(Transform3D());
 			ctx.add_box(lot.index, hut + Vector3(0, -0.1f, 0), Vector3(1.6f, 0.12f, 1.6f), true);
@@ -740,7 +1009,10 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 		}
 		case Landmark::HayRide: {
 			// Hay wagon on the lawn and a bale pyramid up to the porch (or garage) roof.
-			y.place("hay_wagon", 1.6f, front, Facing::Street, [&](float x, float) { return -std::abs(x - lot.drive_x) * 0.1f; });
+			Vector3 at;
+			if (y.place("hay_wagon", 1.6f, front, Facing::Street, [&](float x, float) { return -std::abs(x - lot.drive_x) * 0.1f; }, &at)) {
+				set_centrepiece(ctx, lot, at, "hay_wagon", 1.0f);
+			}
 			const float x_end = ds > 0 ? px1 + 0.7f : px0 - 0.7f;
 			const float z = y.zf + h.porch_d * 0.5f;
 			lot.summit_route.clear();
@@ -754,12 +1026,17 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 			break;
 		}
 		case Landmark::Cauldron: {
-			y.place("cauldron", 0.8f, front, Facing::Street, [&](float x, float z) { return -std::abs(x - h.door_x) * 0.1f - std::abs(z - (pz1 + 2.5f)); }, nullptr, 1.5f);
+			Vector3 cat;
+			if (y.place("cauldron", 0.8f, front, Facing::Street, [&](float x, float z) { return -std::abs(x - h.door_x) * 0.1f - std::abs(z - (pz1 + 2.5f)); }, &cat,
+						1.5f)) {
+				set_centrepiece(ctx, lot, cat, "cauldron", 1.5f);
+			}
 			for (int i = 0; i < 3; ++i) {
 				Vector3 at;
 				if (y.place("pumpkin_round", 0.9f, front, Facing::Street, any, &at, 1.0f, 1.0f, true, 0.0f, 0)) {
 					ctx.props.pop_back();
 					y.pumpkin_cluster(at, 3, true);
+					add_pumpkin_obstacle(lot, at);
 				}
 			}
 			break;
@@ -767,8 +1044,13 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 		case Landmark::Inflatables: {
 			const char *ids[] = { "inflatable_ghost", "inflatable_cat", "inflatable_ghost", "inflatable_cat", "inflatable_ghost" };
 			for (int i = 0; i < 5; ++i) {
-				if (y.place(ids[i], 0.9f, front, Facing::Street, any, nullptr, rng.range(0.85f, 1.15f))) {
+				Vector3 at;
+				const float s = rng.range(0.85f, 1.15f);
+				if (y.place(ids[i], 0.9f, front, Facing::Street, any, &at, s)) {
 					ctx.props.back().bouncy = true;
+					if (!lot.has_centrepiece) {
+						set_centrepiece(ctx, lot, at, ids[i], s);
+					}
 				}
 			}
 			break;
@@ -790,9 +1072,10 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 				if (ctx.route_distance(lot.index, c.x, c.z) < 1.2f) {
 					continue;
 				}
-				m.rounded_box(c + Vector3(0, 0.76f, 0), Vector3(1.6f, 0.05f, 0.5f), 0.02f, mat_cell(pal::FLANNEL_RED, mat::FABRIC), mat_cell(pal::CANDY_CORN_WHITE, mat::FABRIC));
+				const Vector3 cl(0, ctx.yard_lift(lot, c.x, c.z), 0); // Stage 3b: the table's mesh on the ground
+				m.rounded_box(c + cl + Vector3(0, 0.76f, 0), Vector3(1.6f, 0.05f, 0.5f), 0.02f, mat_cell(pal::FLANNEL_RED, mat::FABRIC), mat_cell(pal::CANDY_CORN_WHITE, mat::FABRIC));
 				for (float lx : { -1.4f, 1.4f }) {
-					m.box(c + Vector3(lx, 0.36f, 0), Vector3(0.06f, 0.36f, 0.4f), mat_cell(pal::WOOD, mat::WOOD));
+					m.box(c + cl + Vector3(lx, 0.31f, 0), Vector3(0.06f, 0.41f, 0.4f), mat_cell(pal::WOOD, mat::WOOD));
 				}
 				ctx.add_box(lot.index, c + Vector3(0, 0.4f, 0), Vector3(1.6f, 0.41f, 0.5f), true);
 				for (int k = 0; k < 4; ++k) {
@@ -808,94 +1091,136 @@ void place_landmark(GenContext &ctx, Lot &lot) {
 }
 
 // ---------------------------------------------------------------- pocket parks
-// Frontage the lots couldn't use (beside the side lane, at the row ends) becomes a little
-// festival corner, so the street never shows an empty lawn.
+// Frontage the lots couldn't use (beside a side road's corner, at the row ends, the wedges on the inside
+// of a bend) becomes a little festival corner, so the street never shows an empty lawn. Each is sized
+// like a lot (the same footprint tests), so it never runs into a neighbour or a corridor; slivers too
+// small for the pumpkin pyramid get a tree and a leaf pile.
 void place_pocket_parks(GenContext &ctx) {
 	Rng rng = ctx.rng(STAGE_RHYTHM, 31);
-	const StreetPlan &s = ctx.street;
-	for (int side : { 1, -1 }) {
-		std::vector<std::pair<float, float>> covered;
-		for (const Lot &lot : ctx.lots) {
-			if (lot.side == side) {
-				covered.push_back({ lot.center_x - lot.width * 0.5f, lot.center_x + lot.width * 0.5f });
+	const RoadNet &net = ctx.roads;
+	for (int r = 0; r < int(net.roads.size()); ++r) {
+		const Road &s = net.roads[r];
+		for (int side : { 1, -1 }) {
+			for (const auto &g : frontage_gaps(ctx, r, side, 5.0f)) {
+				const float cx = (g.first + g.second) * 0.5f;
+				const float w = g.second - g.first;
+				const Transform3D frame = s.frontage_frame(cx, side);
+				// The deepest footprint (up to 9 m, at least 3 m) that keeps clear of lots and corridors.
+				Lot probe;
+				probe.road = r;
+				probe.side = side;
+				probe.xf = frame;
+				probe.width = w;
+				float depth = 0.0f;
+				for (float d = 9.0f; d >= 3.0f; d -= 1.5f) {
+					probe.depth = d;
+					float own, other;
+					lot_corridor_reach(ctx, probe, own, other);
+					bool clear = own <= 0.05f && other <= -0.1f;
+					for (size_t k = 0; k < ctx.lots.size() && clear; ++k) {
+						clear = lot_overlap(probe, ctx.lots[k]) <= 0.0f;
+					}
+					if (clear) {
+						depth = d;
+						break;
+					}
+				}
+				const Vector3 up(0, 1, 0);
+				auto put = [&](const std::string &id, float lx, float lz, float yaw, float scale = 1.0f, float y = 0.0f) {
+					PropPlacement pp;
+					pp.id = id;
+					pp.xf = frame * Transform3D(Basis(up, yaw).scaled(Vector3(scale, scale, scale)), Vector3(lx, y, lz));
+					if (ctx.terrain) {
+						pp.xf.origin.y += ctx.ground(pp.xf.origin.x, pp.xf.origin.z) - frame.origin.y; // Stage 3b: on the ground
+					}
+					pp.lot = -1;
+					ctx.props.push_back(pp);
+				};
+				if (depth <= 0.0f) {
+					continue;
+				}
+				if (w < 9.0f || depth < 6.0f) {
+					// A side garden: a street tree and its leaves.
+					put(TREES[rng.irange(0, 2)], rng.range(-0.15f, 0.15f) * w, -Math::min(depth * 0.55f, 3.5f), rng.range(0.0f, Math_TAU), 0.85f, 0.0f);
+					put("leaf_pile", rng.range(-0.2f, 0.2f) * w, -Math::min(depth * 0.4f, 2.2f) + 1.0f, rng.range(0.0f, Math_TAU));
+					continue;
+				}
+				const float hw = w * 0.5f - 1.0f;
+				// Pumpkin pyramid on hay bales, the centrepiece.
+				const float px = rng.range(-hw * 0.3f, hw * 0.3f);
+				const size_t pyramid0 = ctx.props.size();
+				for (int k = 0; k < 3; ++k) {
+					put("hay_bale", px - 0.6f + k * 0.6f, -3.0f, Math_PI * 0.5f);
+				}
+				put("hay_bale", px - 0.3f, -3.0f, Math_PI * 0.5f, 1.0f, 0.55f);
+				put("hay_bale", px + 0.3f, -3.0f, Math_PI * 0.5f, 1.0f, 0.55f);
+				put("giant_pumpkin", px, -3.0f, rng.range(-0.3f, 0.3f), 0.55f, 1.1f);
+				if (ctx.terrain) {
+					// Stage 3c: the pyramid settles as one piece on the ground's plane under its bottom row (each bale on its
+					// own would split the rows apart on a slope).
+					const Vector3 c = frame.xform(Vector3(px, 0.0f, -3.0f));
+					const float fyaw = std::atan2(frame.basis.get_column(2).x, frame.basis.get_column(2).z);
+					auto sf = [&](float x, float z) { return street_surface(ctx, Vector3(x, 0.0f, z)); };
+					const GroundFit f = fit_footprint(sf, c, fyaw, 1.0f, -1.2f, 1.2f, -0.6f, 0.6f, 0.3f, 3);
+					const Basis tb = tilt_to(f.up);
+					const float y0 = ctx.ground(c.x, c.z);
+					for (size_t i = pyramid0; i < ctx.props.size(); ++i) {
+						PropPlacement &pp = ctx.props[i];
+						Vector3 rel = pp.xf.origin - Vector3(c.x, y0, c.z); // (put lifted every piece by the ground at its own spot)
+						rel.y = pp.xf.origin.y - (ctx.ground(pp.xf.origin.x, pp.xf.origin.z) - frame.origin.y) - frame.origin.y;
+						pp.xf.origin = Vector3(c.x, f.y, c.z) + tb.xform(rel);
+						pp.xf.basis = tb * pp.xf.basis;
+						pp.settled = true;
+					}
+				}
+				const char *jacks[] = { "jackolantern_happy", "jackolantern_toothy", "jackolantern_wink", "jackolantern_surprised", "jackolantern_sleepy" };
+				for (int k = 0; k < 5; ++k) {
+					put(jacks[k], px - 1.6f + k * 0.8f, -1.5f, rng.range(-0.3f, 0.3f), rng.range(0.75f, 1.0f));
+				}
+				if (hw > 3.0f && depth >= 7.5f) {
+					put("bench", px + hw * 0.7f, -1.4f, 0.0f);
+					put(TREES[rng.irange(0, 2)], -px - hw * 0.6f, -5.5f, rng.range(0.0f, Math_TAU), 1.0f);
+					put("leaf_pile", -px - hw * 0.6f + 1.2f, -4.8f, rng.range(0.0f, Math_TAU));
+					put("corn_stalks", px + hw * 0.8f, -4.5f, 0.0f);
+					put("corn_stalks", px - hw * 0.8f, -2.2f, 0.4f);
+				}
+				// Lamp posts with a string of lights between them.
+				Vector3 la = frame.xform(Vector3(-hw, 0, -0.8f)), lb = frame.xform(Vector3(hw, 0, -0.8f));
+				if (ctx.terrain) {
+					la.y = ctx.ground(la.x, la.z);
+					lb.y = ctx.ground(lb.x, lb.z);
+				}
+				put("lamp_post", -hw, -0.8f, 0.0f);
+				put("lamp_post", hw, -0.8f, 0.0f);
+				StringLight sl;
+				sl.a = la + Vector3(0, 3.0f, 0);
+				sl.b = lb + Vector3(0, 3.0f, 0);
+				sl.sag = 0.7f;
+				ctx.strings.push_back(sl);
+				// A lawn under it all, and a festival banner arch.
+				MeshBuilder &m = ctx.boundary_mesh;
+				m.set_transform(frame);
+				if (ctx.terrain) {
+					probe.depth = depth;
+					drape_lot_rect(ctx, m, probe, -w * 0.5f, w * 0.5f, -depth, 0.0f, 0.004f, mat_cell(pal::LAWN, mat::GRASS)); // Stage 3b
+				} else {
+					m.quad_out(Vector3(-w * 0.5f, 0.004f, 0), Vector3(w * 0.5f, 0.004f, 0), Vector3(w * 0.5f, 0.004f, -depth), Vector3(-w * 0.5f, 0.004f, -depth),
+							mat_cell(pal::LAWN, mat::GRASS), Vector3(0, -1, -depth * 0.5f));
+				}
+				const int banner[] = { pal::BANNER_ORANGE, pal::BANNER_PURPLE, pal::BANNER_GREEN };
+				const float span = Math::min(hw, 5.0f);
+				for (int k = 0; k < 9; ++k) {
+					const float t = float(k) / 8.0f;
+					const float bx = Math::lerp(-span, span, t);
+					const float by = 2.4f - std::sin(t * Math_PI) * 0.35f;
+					m.tri_out(Vector3(bx - 0.25f, by, -0.85f), Vector3(bx + 0.25f, by, -0.85f), Vector3(bx, by - 0.45f, -0.85f),
+							mat_cell(banner[k % 3], mat::FABRIC), Vector3(bx, by, -2.0f));
+					m.tri_out(Vector3(bx - 0.25f, by, -0.85f), Vector3(bx + 0.25f, by, -0.85f), Vector3(bx, by - 0.45f, -0.85f),
+							mat_cell(banner[k % 3], mat::FABRIC), Vector3(bx, by, 0.5f));
+				}
+				m.beam(Vector3(-span, 2.4f, -0.85f), Vector3(span, 2.4f, -0.85f), 0.02f, 0.02f, pal::CHARCOAL);
+				m.set_transform(Transform3D());
 			}
-		}
-		if (side == s.lane_dir) {
-			covered.push_back({ s.lane_x - s.edge() - 0.6f, s.lane_x + s.edge() + 0.6f });
-		}
-		std::sort(covered.begin(), covered.end());
-		std::vector<std::pair<float, float>> gaps;
-		float x = ctx.bound_x0 + 1.0f;
-		for (const auto &c : covered) {
-			if (c.first - x > 5.0f) {
-				gaps.push_back({ x, c.first });
-			}
-			x = Math::max(x, c.second);
-		}
-		if (ctx.bound_x1 - 1.0f - x > 5.0f) {
-			gaps.push_back({ x, ctx.bound_x1 - 1.0f });
-		}
-		for (const auto &g : gaps) {
-			const float cx = (g.first + g.second) * 0.5f;
-			const float w = g.second - g.first;
-			const Vector3 c = s.at(cx), l = s.left_at(cx);
-			const Vector3 toward = -l * float(side);
-			const Vector3 up(0, 1, 0);
-			const Transform3D frame(Basis(up.cross(toward), up, toward), c + l * float(side) * s.edge());
-			auto put = [&](const std::string &id, float lx, float lz, float yaw, float scale = 1.0f, float y = 0.0f) {
-				PropPlacement pp;
-				pp.id = id;
-				pp.xf = frame * Transform3D(Basis(up, yaw).scaled(Vector3(scale, scale, scale)), Vector3(lx, y, lz));
-				pp.lot = -1;
-				ctx.props.push_back(pp);
-			};
-			const float hw = w * 0.5f - 1.0f;
-			// Pumpkin pyramid on hay bales, the centrepiece.
-			const float px = rng.range(-hw * 0.3f, hw * 0.3f);
-			for (int k = 0; k < 3; ++k) {
-				put("hay_bale", px - 0.6f + k * 0.6f, -3.0f, Math_PI * 0.5f);
-			}
-			put("hay_bale", px - 0.3f, -3.0f, Math_PI * 0.5f, 1.0f, 0.55f);
-			put("hay_bale", px + 0.3f, -3.0f, Math_PI * 0.5f, 1.0f, 0.55f);
-			put("giant_pumpkin", px, -3.0f, rng.range(-0.3f, 0.3f), 0.55f, 1.1f);
-			const char *jacks[] = { "jackolantern_happy", "jackolantern_toothy", "jackolantern_wink", "jackolantern_surprised", "jackolantern_sleepy" };
-			for (int k = 0; k < 5; ++k) {
-				put(jacks[k], px - 1.6f + k * 0.8f, -1.5f, rng.range(-0.3f, 0.3f), rng.range(0.75f, 1.0f));
-			}
-			if (hw > 3.0f) {
-				put("bench", px + hw * 0.7f, -1.4f, 0.0f);
-				put(TREES[rng.irange(0, 2)], -px - hw * 0.6f, -5.5f, rng.range(0.0f, Math_TAU), 1.0f);
-				put("leaf_pile", -px - hw * 0.6f + 1.2f, -4.8f, rng.range(0.0f, Math_TAU));
-				put("corn_stalks", px + hw * 0.8f, -4.5f, 0.0f);
-				put("corn_stalks", px - hw * 0.8f, -2.2f, 0.4f);
-			}
-			// Lamp posts with a string of lights between them.
-			const Vector3 la = frame.xform(Vector3(-hw, 0, -0.8f)), lb = frame.xform(Vector3(hw, 0, -0.8f));
-			put("lamp_post", -hw, -0.8f, 0.0f);
-			put("lamp_post", hw, -0.8f, 0.0f);
-			StringLight sl;
-			sl.a = la + Vector3(0, 3.0f, 0);
-			sl.b = lb + Vector3(0, 3.0f, 0);
-			sl.sag = 0.7f;
-			ctx.strings.push_back(sl);
-			// A lawn under it all, and a festival banner arch.
-			MeshBuilder &m = ctx.boundary_mesh;
-			m.set_transform(frame);
-			m.quad_out(Vector3(-w * 0.5f, 0.004f, 0), Vector3(w * 0.5f, 0.004f, 0), Vector3(w * 0.5f, 0.004f, -9.0f), Vector3(-w * 0.5f, 0.004f, -9.0f),
-					mat_cell(pal::LAWN, mat::GRASS), Vector3(0, -1, -4));
-			const int banner[] = { pal::BANNER_ORANGE, pal::BANNER_PURPLE, pal::BANNER_GREEN };
-			const float span = Math::min(hw, 5.0f);
-			for (int k = 0; k < 9; ++k) {
-				const float t = float(k) / 8.0f;
-				const float bx = Math::lerp(-span, span, t);
-				const float by = 2.4f - std::sin(t * Math_PI) * 0.35f;
-				m.tri_out(Vector3(bx - 0.25f, by, -0.85f), Vector3(bx + 0.25f, by, -0.85f), Vector3(bx, by - 0.45f, -0.85f),
-						mat_cell(banner[k % 3], mat::FABRIC), Vector3(bx, by, -2.0f));
-				m.tri_out(Vector3(bx - 0.25f, by, -0.85f), Vector3(bx + 0.25f, by, -0.85f), Vector3(bx, by - 0.45f, -0.85f),
-						mat_cell(banner[k % 3], mat::FABRIC), Vector3(bx, by, 0.5f));
-			}
-			m.beam(Vector3(-span, 2.4f, -0.85f), Vector3(span, 2.4f, -0.85f), 0.02f, 0.02f, pal::CHARCOAL);
-			m.set_transform(Transform3D());
 		}
 	}
 }
@@ -903,7 +1228,9 @@ void place_pocket_parks(GenContext &ctx) {
 // ---------------------------------------------------------------- street rhythm
 void place_street_rhythm(GenContext &ctx) {
 	Rng rng = ctx.rng(STAGE_RHYTHM);
-	const StreetPlan &s = ctx.street;
+	const RoadNet &net = ctx.roads;
+	const bool legacy = net.trunk().x_station; // the pre-Stage-4c town street (towns run on spline roads now)
+	const std::vector<RoadJunction> mouths = net.junctions(0);
 	auto lot_at = [&](const Vector3 &p, Vector3 &local) -> Lot * {
 		for (Lot &lot : ctx.lots) {
 			local = lot.to_local(p);
@@ -913,47 +1240,132 @@ void place_street_rhythm(GenContext &ctx) {
 		}
 		return nullptr;
 	};
-	for (int side : { 1, -1 }) {
-		float x = ctx.bound_x0 + rng.range(3.0f, 7.0f);
-		int count = 0;
-		while (x < ctx.bound_x1 - 3.0f) {
-			// Street trees and lamps stand in the grass verge, with gaps at driveways and paths.
-			const Vector3 p = s.at(x) + s.left_at(x) * float(side) * (s.edge() + 1.0f);
-			const Vector3 verge = s.at(x) + s.left_at(x) * float(side) * (s.half_road + s.curb + s.verge * 0.5f);
-			const bool in_lane = side == s.lane_dir && std::abs(x - s.lane_x) < s.edge() + 1.5f;
-			Vector3 local;
-			Lot *lot = lot_at(p, local);
-			const bool lamp = (count % 2 == 1);
-			if (lot && !in_lane && std::abs(local.x - lot->drive_x) > 2.3f && std::abs(local.x - lot->house.door_x) > 1.6f) {
-				const float yaw = std::atan2(-s.left_at(x).x * side, -s.left_at(x).z * side);
-				if (lamp) {
-					ctx.add_prop(-1, "lamp_post", verge, yaw);
+	// Street trees and lamps stand in the grass verge, with gaps at driveways and paths, alternating.
+	auto verge_piece = [&](const Vector3 &p, const Vector3 &verge, const Vector3 &to_road, int &count) {
+		Vector3 local;
+		Lot *lot = lot_at(p, local);
+		if (!lot || std::abs(local.x - lot->drive_x) <= 2.3f || std::abs(local.x - lot->house.door_x) <= 1.6f) {
+			return false;
+		}
+		if (count % 2 == 1) {
+			ctx.add_prop(-1, "lamp_post", verge, std::atan2(to_road.x, to_road.z));
+		} else {
+			ctx.add_prop(-1, TREES[rng.irange(0, 2)], verge, rng.range(0.0f, Math_TAU), rng.range(0.78f, 0.92f), 1.0f);
+		}
+		++count;
+		return true;
+	};
+	for (int r = 0; r < (legacy ? 1 : int(net.roads.size())); ++r) {
+		const Road &s = net.roads[r];
+		for (int side : { 1, -1 }) {
+			float x = s.lots_s0 + rng.range(3.0f, 7.0f);
+			int count = 0;
+			while (x < s.lots_s1 - 3.0f) {
+				const Vector3 p = s.at(x) + s.left_at(x) * float(side) * (s.edge() + 1.0f);
+				const Vector3 verge = s.at(x) + s.left_at(x) * float(side) * (s.half_road + s.curb + s.verge * 0.5f);
+				bool mouth = false; // a side road's mouth
+				if (legacy) {
+					for (const RoadJunction &j : mouths) {
+						mouth = mouth || (side == j.side && std::abs(x - j.s) < net.roads[j.child].edge() + 1.5f);
+					}
 				} else {
-					ctx.add_prop(-1, TREES[rng.irange(0, 2)], verge, rng.range(0.0f, Math_TAU), rng.range(0.78f, 0.92f), 1.0f);
+					int which = -1;
+					mouth = s.cut(side, x) || net.zone(verge, &which) != RoadZone::Verge || which != r;
 				}
-				++count;
-				x += rng.range(6.5f, 8.0f);
-			} else {
-				x += 1.5f;
+				if (!mouth && verge_piece(p, verge, s.left_at(x) * -float(side), count)) {
+					x += rng.range(6.5f, 8.0f);
+				} else {
+					x += 1.5f;
+				}
+			}
+		}
+		if (!legacy && s.bulb()) {
+			// Round the turning circle's verge too.
+			const float rv = s.bulb_r + s.curb + s.verge * 0.5f, rp = s.bulb_r + s.edge() - s.half_road + 1.0f;
+			const Vector3 te = s.tangent_at(s.s_end()), le = s.left_at(s.s_end());
+			const float H = Math_PI - s.bulb_entry - 0.15f;
+			int count = 1; // a lamp first
+			for (float a = -H + rng.range(0.1f, 0.4f); a < H; ) {
+				const Vector3 dir = te * std::cos(a) + le * std::sin(a);
+				const Vector3 verge = s.bulb_c + dir * rv;
+				int which = -1;
+				if (net.zone(verge, &which) == RoadZone::Verge && verge_piece(s.bulb_c + dir * rp, verge, -dir, count)) {
+					a += rng.range(6.5f, 8.0f) / rv;
+				} else {
+					a += 1.5f / rv;
+				}
 			}
 		}
 	}
-	// Lamps at the intersection corners.
-	for (float sx : { -1.0f, 1.0f }) {
-		const Vector3 p = s.lane_origin + Vector3(sx * (s.edge() + 0.6f), 0, float(s.lane_dir) * (s.edge() + 0.6f));
-		ctx.add_prop(-1, "lamp_post", p, sx > 0 ? -Math_PI * 0.25f : Math_PI * 0.25f);
+	if (legacy) {
+		// Lamps at the intersection corners (the parent's backward corner first).
+		for (const RoadJunction &j : mouths) {
+			const Road &s = net.trunk();
+			const Road &lane = net.roads[j.child];
+			const Vector3 across = lane.left_at(0.0f) * -float(lane.parent_side); // the way the parent runs
+			const float e = lane.edge() + 0.6f;
+			for (float sx : { -1.0f, 1.0f }) {
+				const Vector3 p = lane.at(lane.s_begin() + (s.edge() + 0.6f)) + across * (sx * e);
+				ctx.add_prop(-1, "lamp_post", p, sx > 0 ? -Math_PI * 0.25f : Math_PI * 0.25f);
+			}
+		}
+	} else {
+		// A lamp in the verge at every rounded corner, facing the junction.
+		for (const RoadFillet &f : net.fillets) {
+			if (f.bulb) {
+				continue; // a bulb's shoulder, not a junction corner
+			}
+			const Vector3 mid = (f.u0 + f.u1).normalized();
+			Vector3 p = f.c + mid * (f.r - f.curb - f.verge * 0.5f);
+			if (ctx.terrain) {
+				// Stage 3b: the corner's verge on the graded ground (Stage 4c: on the verge's own surface where the corner's
+				// band, laid between its two roads' heights, stands above the lattice: the base was sunk up to ~0.17 m).
+				p.y = Math::max(ctx.ground(p.x, p.z), (f.p0.y + f.p1.y) * 0.5f + 0.05f);
+			}
+			ctx.add_prop(-1, "lamp_post", p, std::atan2(mid.x, mid.z));
+		}
 	}
-	// Parked cars at the curb, clear of the intersection and the row of candy hops across the road.
-	const int cars = rng.irange(1, 3);
+	// Parked cars at the curb, clear of the intersections, the bulbs and the row of candy hops.
+	const int cars = rng.irange(1, 3) + (legacy ? 0 : int(net.roads.size()) / 2);
+	float total = 0.0f;
+	for (const Road &s : net.roads) {
+		total += Math::max(0.0f, s.lots_s1 - s.lots_s0 - 16.0f);
+	}
 	for (int i = 0; i < cars; ++i) {
 		for (int tries = 0; tries < 10; ++tries) {
-			const float x = rng.range(ctx.bound_x0 + 8.0f, ctx.bound_x1 - 8.0f);
-			if (std::abs(x - s.lane_x) < 14.0f) {
+			int r = 0;
+			float x;
+			if (legacy) {
+				x = rng.range(net.trunk().lots_s0 + 8.0f, net.trunk().lots_s1 - 8.0f);
+			} else {
+				// A road by its length, then a station on it.
+				float pick = rng.range(0.0f, total);
+				for (r = 0; r + 1 < int(net.roads.size()); ++r) {
+					const float len = Math::max(0.0f, net.roads[r].lots_s1 - net.roads[r].lots_s0 - 16.0f);
+					if (pick < len) {
+						break;
+					}
+					pick -= len;
+				}
+				x = net.roads[r].lots_s0 + 8.0f + pick;
+			}
+			const Road &s = net.roads[r];
+			bool near_mouth = false;
+			for (const RoadJunction &j : net.junctions(r)) {
+				near_mouth = near_mouth || std::abs(x - j.s) < 14.0f;
+			}
+			if (!legacy) {
+				for (const BandCut &c : s.cuts) {
+					near_mouth = near_mouth || (x > c.s0 - 8.0f && x < c.s1 + 8.0f);
+				}
+				near_mouth = near_mouth || (s.parent >= 0 && x < s.asphalt_s + 6.0f);
+			}
+			if (near_mouth) {
 				continue;
 			}
 			bool clash = false;
 			for (const PropPlacement &pp : ctx.props) {
-				if (is_car(pp.id) && pp.lot < 0 && std::abs(pp.xf.origin.x - x) < 7.0f) {
+				if (legacy && is_car(pp.id) && pp.lot < 0 && std::abs(ctx.roads.project(0, pp.xf.origin).s_ext - x) < 7.0f) {
 					clash = true;
 				}
 			}
@@ -962,9 +1374,31 @@ void place_street_rhythm(GenContext &ctx) {
 			}
 			const int side = rng.chance(0.5f) ? 1 : -1;
 			const Vector3 p = s.at(x) + s.left_at(x) * float(side) * (s.half_road - 1.15f);
-			const Vector3 tangent = (s.at(x + 1) - s.at(x - 1)).normalized();
+			for (const PropPlacement &pp : ctx.props) {
+				clash = clash || (!legacy && is_car(pp.id) && pp.lot < 0 && hdist_xz(pp.xf.origin, p) < 9.0f);
+			}
+			if (clash) {
+				continue;
+			}
+			const Vector3 tangent = s.tangent_at(x);
 			const float yaw = std::atan2(tangent.x, tangent.z) + (side > 0 ? 0.0f : Math_PI);
-			ctx.add_prop(-1, pick_car(ctx, rng), p, yaw);
+			const std::string car = pick_car(ctx, rng);
+			if (ctx.terrain) {
+				// Stage 3c: on its four wheels on the road's surface (the asphalt 1 cm over the graded centreline, level
+				// across): the plane through the wheel contacts; a spot where they can't all touch is passed over.
+				const AABB &bb = ctx.assets->get(car)->aabb;
+				const int ri = r;
+				auto surf = [&](float qx, float qz) { return ctx.roads.project(ri, Vector3(qx, 0.0f, qz)).y + 0.01f; };
+				const float cx = bb.get_center().x, cz = bb.get_center().z, hx = bb.size.x * 0.5f * 0.78f, hz = bb.size.z * 0.5f * 0.66f;
+				const GroundFit f = fit_footprint(surf, p, yaw, 1.0f, cx - hx, cx + hx, cz - hz, cz + hz, 0.35f, 2);
+				if (f.twist > 0.025f || f.up.y < std::cos(0.2f)) {
+					continue;
+				}
+				ctx.add_prop(-1, car, Vector3(p.x, f.y_centred, p.z), yaw);
+				ctx.props.back().xf.basis = tilt_to(f.up) * Basis(Vector3(0, 1, 0), yaw);
+			} else {
+				ctx.add_prop(-1, car, p, yaw);
+			}
 			break;
 		}
 	}

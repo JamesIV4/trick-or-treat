@@ -3,7 +3,7 @@
   "pass": true,
   "fails": [],
   "notes": [],
-  "tris": 27896,
+  "tris": 27380,
   "optional": [
    "wing_l",
    "wing_r",
@@ -100,8 +100,8 @@
    "    alt_mouth_grit       mesh  (-0.0095, +0.1089, +0.2323)",
    "    alt_mouth_o          mesh  (-0.0095, +0.1089, +0.2323)",
    "    alt_mouth_open       mesh  (-0.0095, +0.1089, +0.2323)",
-   "    brow_l               mesh  (+0.0649, +0.2591, +0.2024)",
-   "    brow_r               mesh  (-0.1089, +0.2439, +0.2024)",
+   "    brow_l               mesh  (+0.0653, +0.2543, +0.2048)",
+   "    brow_r               mesh  (-0.1085, +0.2391, +0.2048)",
    "    eye_l                mesh  (+0.0632, +0.1843, +0.2263)  rotated",
    "      iris_l             mesh  (+0.0000, +0.0000, +0.0000)",
    "    eye_r                mesh  (-0.0942, +0.1705, +0.2263)  rotated",
@@ -124,7 +124,7 @@
    "bucket origin in the world [-0.376, 0.3108, 0.0534] (v1: -0.26, 0.385, 0.085)",
    "costume parts: ['soft_cowl', 'soft_sheet']"
   ],
-  "tris": 29760,
+  "tris": 29244,
   "optional": [],
   "height": 1.1198,
   "min_height": -0.0228,
@@ -218,8 +218,8 @@
    "    alt_mouth_grit       mesh  (-0.0095, +0.1089, +0.2323)",
    "    alt_mouth_o          mesh  (-0.0095, +0.1089, +0.2323)",
    "    alt_mouth_open       mesh  (-0.0095, +0.1089, +0.2323)",
-   "    brow_l               mesh  (+0.0649, +0.2591, +0.2024)",
-   "    brow_r               mesh  (-0.1089, +0.2439, +0.2024)",
+   "    brow_l               mesh  (+0.0653, +0.2543, +0.2048)",
+   "    brow_r               mesh  (-0.1085, +0.2391, +0.2048)",
    "    eye_l                mesh  (+0.0632, +0.1843, +0.2263)  rotated",
    "      iris_l             mesh  (+0.0000, +0.0000, +0.0000)",
    "    eye_r                mesh  (-0.0942, +0.1705, +0.2263)  rotated",
@@ -238,7 +238,7 @@
   "notes": [
    "costume parts: ['bob_bell', 'bob_bow', 'hood', 'soft_ear_l', 'soft_ear_r']"
   ],
-  "tris": 28440,
+  "tris": 27924,
   "optional": [
    "tail"
   ],
@@ -335,8 +335,8 @@
    "    alt_mouth_grit       mesh  (-0.0095, +0.1089, +0.2323)",
    "    alt_mouth_o          mesh  (-0.0095, +0.1089, +0.2323)",
    "    alt_mouth_open       mesh  (-0.0095, +0.1089, +0.2323)",
-   "    brow_l               mesh  (+0.0649, +0.2591, +0.2024)",
-   "    brow_r               mesh  (-0.1089, +0.2439, +0.2024)",
+   "    brow_l               mesh  (+0.0653, +0.2543, +0.2048)",
+   "    brow_r               mesh  (-0.1085, +0.2391, +0.2048)",
    "    eye_l                mesh  (+0.0632, +0.1843, +0.2263)  rotated",
    "      iris_l             mesh  (+0.0000, +0.0000, +0.0000)",
    "    eye_r                mesh  (-0.0942, +0.1705, +0.2263)  rotated",
@@ -358,7 +358,7 @@
   "notes": [
    "costume parts: ['bob_bow', 'bob_hat', 'hair_cap', 'soft_cape', 'soft_hair_back', 'soft_hair_l', 'soft_hair_r', 'soft_skirt', 'soft_tip']"
   ],
-  "tris": 29994,
+  "tris": 29478,
   "optional": [],
   "height": 1.3122,
   "min_height": 0.0,
@@ -456,8 +456,8 @@
    "    alt_mouth_open       mesh  (-0.0095, +0.1089, +0.2323)",
    "    bob_hat              mesh  (-0.0291, +0.3321, -0.0395)",
    "      soft_tip           mesh  (-0.0847, +0.2373, -0.0881)",
-   "    brow_l               mesh  (+0.0649, +0.2591, +0.2024)",
-   "    brow_r               mesh  (-0.1089, +0.2439, +0.2024)",
+   "    brow_l               mesh  (+0.0653, +0.2543, +0.2048)",
+   "    brow_r               mesh  (-0.1085, +0.2391, +0.2048)",
    "    eye_l                mesh  (+0.0632, +0.1843, +0.2263)  rotated",
    "      iris_l             mesh  (+0.0000, +0.0000, +0.0000)",
    "    eye_r                mesh  (-0.0942, +0.1705, +0.2263)  rotated",
@@ -479,7 +479,7 @@
   "notes": [
    "costume parts: ['soft_cord_l', 'soft_cord_r']"
   ],
-  "tris": 29868,
+  "tris": 29352,
   "optional": [],
   "height": 1.1811,
   "min_height": 0.0,
@@ -574,8 +574,8 @@
    "    alt_mouth_grit       mesh  (-0.0095, +0.1089, +0.2323)",
    "    alt_mouth_o          mesh  (-0.0095, +0.1089, +0.2323)",
    "    alt_mouth_open       mesh  (-0.0095, +0.1089, +0.2323)",
-   "    brow_l               mesh  (+0.0649, +0.2591, +0.2024)",
-   "    brow_r               mesh  (-0.1089, +0.2439, +0.2024)",
+   "    brow_l               mesh  (+0.0653, +0.2543, +0.2048)",
+   "    brow_r               mesh  (-0.1085, +0.2391, +0.2048)",
    "    eye_l                mesh  (+0.0632, +0.1843, +0.2263)  rotated",
    "      iris_l             mesh  (+0.0000, +0.0000, +0.0000)",
    "    eye_r                mesh  (-0.0942, +0.1705, +0.2263)  rotated",
@@ -593,7 +593,7 @@
   "notes": [
    "costume parts: ['bob_leaf_a', 'bob_leaf_b', 'matte_carve', 'soft_stem', 'soft_vine_a', 'soft_vine_b']"
   ],
-  "tris": 29282,
+  "tris": 28766,
   "optional": [],
   "height": 1.212,
   "min_height": 0.0,
@@ -689,8 +689,8 @@
    "    alt_mouth_open       mesh  (-0.0095, +0.1089, +0.2323)",
    "    bob_leaf_a           mesh  (-0.0704, +0.4509, -0.0209)",
    "    bob_leaf_b           mesh  (-0.0037, +0.4562, -0.0199)",
-   "    brow_l               mesh  (+0.0649, +0.2591, +0.2024)",
-   "    brow_r               mesh  (-0.1089, +0.2439, +0.2024)",
+   "    brow_l               mesh  (+0.0653, +0.2543, +0.2048)",
+   "    brow_r               mesh  (-0.1085, +0.2391, +0.2048)",
    "    eye_l                mesh  (+0.0632, +0.1843, +0.2263)  rotated",
    "      iris_l             mesh  (+0.0000, +0.0000, +0.0000)",
    "    eye_r                mesh  (-0.0942, +0.1705, +0.2263)  rotated",
