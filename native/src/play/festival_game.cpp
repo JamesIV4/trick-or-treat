@@ -2969,8 +2969,18 @@ void FestivalGame::_process(double delta) {
 			}
 		}
 	}
-	// The first time an upgrade becomes affordable, point at the shop.
-	if (!told_shop_ && wallet_ >= 60) {
+	// The first time an upgrade becomes affordable, point at the shop. The threshold is the cheapest
+	// next level in the UPGRADES table, so it follows any price change there.
+	int cheapest = -1;
+	if (!told_shop_) {
+		for (const UpgradeDef &u : UPGRADES) {
+			const int *lvl = up_.level(u.id);
+			if (lvl && *lvl < u.max && (cheapest < 0 || u.cost[*lvl] < cheapest)) {
+				cheapest = u.cost[*lvl];
+			}
+		}
+	}
+	if (!told_shop_ && cheapest >= 0 && wallet_ >= cheapest) {
 		told_shop_ = true;
 		Array t;
 		t.push_back(String("You can afford an upgrade! Press {shop}, or visit a candy cart."));
