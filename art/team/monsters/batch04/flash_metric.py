@@ -15,7 +15,7 @@ usage: python flash_metric.py <side>[,<side>...] [ids] [out.json]
 import sys, os, json, subprocess
 import numpy as np
 
-ROOT = r"S:\Repos\trick-or-treat\art\review\showcase"
+ROOT = r"S:\Repos\Games\trick-or-treat\art\review\showcase"
 SW, SH = 320, 360
 LAG = 3
 IDS = ["monster_pumpkin", "monster_skeleton", "monster_bat", "monster_ghost", "monster_gremlin", "monster_mummy",

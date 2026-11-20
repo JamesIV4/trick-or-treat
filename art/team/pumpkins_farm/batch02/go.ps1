@@ -6,7 +6,7 @@ param(
 # Build assets with a batch02 script, run the gates and the in-engine preview for each id.
 #   powershell -NoProfile -File art\team\pumpkins_farm\batch02\go.ps1 -Script build_pumpkins.py -Ids pumpkin_round
 $Ids = @($Ids | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
-$root = 'S:\Repos\trick-or-treat'
+$root = 'S:\Repos\Games\trick-or-treat'
 Set-Location $root
 $blender = 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe'
 $py = "art/team/pumpkins_farm/batch02/$Script"

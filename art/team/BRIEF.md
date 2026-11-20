@@ -28,7 +28,7 @@ proportions where they were good, but rebuild in `art/team/<lane>/batch02/` to t
 - You MAY run the in-engine preview (it renders through Godot with the real shader; it is
   serialised by a lock so it can wait a bit): `powershell -NoProfile -File tools\asset_preview.ps1 -Id <id>`
   -> `art\review\engine\<id>.png` (top row: night lighting, bottom row: neutral studio light).
-- Run from the repo root `S:\Repos\trick-or-treat`. Use the PowerShell tool (Bash is broken here).
+- Run from the repo root `S:\Repos\Games\trick-or-treat`. Use the PowerShell tool (Bash is broken here).
 
 ## Material guidance
 

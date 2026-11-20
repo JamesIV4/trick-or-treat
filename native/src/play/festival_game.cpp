@@ -65,13 +65,13 @@ struct UpgradeDef {
 	int cost[3];
 };
 const UpgradeDef UPGRADES[] = {
-	{ "fire", "Hotter Flames", "Fireballs hit harder.", 3, { 60, 150, 300 } },
-	{ "quick", "Quick Breath", "Breathe fire more often.", 2, { 80, 200, 0 } },
-	{ "triple", "Triple Flame", "Three fireballs in a fan.", 1, { 250, 0, 0 } },
-	{ "blast", "Bigger Blast", "The ground-pound fire ring reaches further and burns hotter.", 2, { 100, 220, 0 } },
-	{ "lid", "Bucket Lid", "Spill less candy when you get hit.", 2, { 90, 200, 0 } },
-	{ "magnet", "Candy Magnet", "Candy flies to you from further away.", 1, { 120, 0, 0 } },
-	{ "car", "Pumpkin Cruiser", "A magic ride-on car. Summon it with {summon_car}.", 1, { 350, 0, 0 } },
+	{ "fire", "Hotter Flames", "Fireballs hit harder.", 3, { 240, 600, 1200 } },
+	{ "quick", "Quick Breath", "Breathe fire more often.", 2, { 320, 800, 0 } },
+	{ "triple", "Triple Flame", "Three fireballs in a fan.", 1, { 2500, 0, 0 } },
+	{ "blast", "Bigger Blast", "The ground-pound fire ring reaches further and burns hotter.", 2, { 400, 880, 0 } },
+	{ "lid", "Bucket Lid", "Spill less candy when you get hit.", 2, { 360, 800, 0 } },
+	{ "magnet", "Candy Magnet", "Candy flies to you from further away.", 1, { 480, 0, 0 } },
+	{ "car", "Pumpkin Cruiser", "A magic ride-on car. Summon it with {summon_car}.", 1, { 1400, 0, 0 } },
 };
 
 Color candy_color(int kind) {

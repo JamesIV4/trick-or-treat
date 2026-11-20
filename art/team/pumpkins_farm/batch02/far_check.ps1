@@ -8,7 +8,7 @@ param(
 # (render is 1600x900, tile 800x450) and blown back up with nearest neighbour into one strip.
 Add-Type -AssemblyName System.Drawing
 $Ids = @($Ids | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
-$root = 'S:\Repos\trick-or-treat'
+$root = 'S:\Repos\Games\trick-or-treat'
 $out = "$root\art\team\pumpkins_farm\batch02\_far\far_$($Ids -join '_').png"
 New-Item -ItemType Directory -Force (Split-Path $out) | Out-Null
 $tiles = @()

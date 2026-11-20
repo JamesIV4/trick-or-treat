@@ -7,7 +7,7 @@ param(
 # optionally run the in-engine preview for each.
 #   powershell -NoProfile -File art\team\decor_ground\batch03\go.ps1 -Script build_mums.py -Ids mums_orange -Preview
 $Ids = @($Ids | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
-$root = 'S:\Repos\trick-or-treat'
+$root = 'S:\Repos\Games\trick-or-treat'
 Set-Location $root
 $blender = 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe'
 $py = "art/team/decor_ground/batch03/$Script"

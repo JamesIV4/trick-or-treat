@@ -3,7 +3,7 @@ import json
 import os
 import sys
 
-HERE = r"S:\Repos\trick-or-treat\art\team\world\stage0"
+HERE = r"S:\Repos\Games\trick-or-treat\art\team\world\stage0"
 
 
 def load(name):

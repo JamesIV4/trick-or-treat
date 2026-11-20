@@ -9,10 +9,10 @@ import sys
 import bpy
 from mathutils import Vector
 
-sys.path.insert(0, r"S:\Repos\trick-or-treat\art\tools")
+sys.path.insert(0, r"S:\Repos\Games\trick-or-treat\art\tools")
 import lowpoly_kit as K  # noqa: E402
 
-M = r"S:\Repos\trick-or-treat\game\assets\models\props"
+M = r"S:\Repos\Games\trick-or-treat\game\assets\models\props"
 args = sys.argv[sys.argv.index("--") + 1:]
 out = args[0]
 views = [tuple(float(x) for x in v.split(":")) for v in args[1:]] or [(0, 12, 6.0), (-35, 35, 15.0)]

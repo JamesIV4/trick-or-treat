@@ -30,7 +30,7 @@ for qy in range(2):
 conc = opt("--concept", None)
 if conc:
     x0, y0, x1, y1 = [int(v) for v in conc.split(",")]
-    c = Image.open(r"S:\Repos\trick-or-treat\art\review\concept\target.png").convert("RGB").crop((x0, y0, x1, y1))
+    c = Image.open(r"S:\Repos\Games\trick-or-treat\art\review\concept\target.png").convert("RGB").crop((x0, y0, x1, y1))
     ck = px / (y1 - y0) * 1.0
     cs = c.resize((max(1, int(c.width * ck)), max(1, int(c.height * ck))), Image.LANCZOS)
     tiles.append(cs.resize((cs.width * 3, cs.height * 3), Image.NEAREST))

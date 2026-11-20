@@ -1492,7 +1492,7 @@ void FestivalGame::cine_build() {
 			cine_a_ = cart;
 			cine_c_ = flat(spawn - cart); // from the cart out toward the street
 			cine_d_ = Vector3(); // x: shop opened, y: bought, z: closed
-			wallet_ = Math::max(wallet_, 480);
+			wallet_ = Math::max(wallet_, 2730);
 			Array w;
 			w.push_back(wallet_);
 			call_ui("set_candy", w);
@@ -1561,7 +1561,7 @@ void FestivalGame::cine_build() {
 		s.still_at = 0.7f;
 		s.setup = [this]() {
 			up_.car = 1;
-			wallet_ = Math::max(wallet_, 480);
+			wallet_ = Math::max(wallet_, 2730);
 			shop_tab_ = 1;
 			shop_focus_ = "paint:4";
 			open_shop();

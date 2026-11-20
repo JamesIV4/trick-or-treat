@@ -1,7 +1,7 @@
 ﻿param([Parameter(Mandatory = $true)][string]$Script, [string[]]$Ids = @(), [switch]$Preview, [switch]$NoGates)
 # Build assets with headless Blender, gate them, optionally render the in-engine preview.
 #   powershell -NoProfile -File art\team\yard_street\batch02\run.ps1 build_trees.py tree_maple_red -Preview
-$root = 'S:\Repos\trick-or-treat'
+$root = 'S:\Repos\Games\trick-or-treat'
 $blender = 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe'
 $path = Join-Path $PSScriptRoot $Script
 $Ids = @($Ids | ForEach-Object { $_ -split ',' } | Where-Object { $_ })

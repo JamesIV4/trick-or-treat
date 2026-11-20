@@ -9,7 +9,7 @@ Rigid nested parts plus vertex-shader soft deformation is the right call for mon
 ## 2. Rig contract v2
 
 **What exists today**
-- `S:\Repos\trick-or-treat\native\src\play\monster_art.cpp` `apply_assets` (line 792) pulls `body`, `part_a`, `part_b` through `AssetLibrary::part_mesh`, which bakes every descendant into one mesh.
+- `S:\Repos\Games\trick-or-treat\native\src\play\monster_art.cpp` `apply_assets` (line 792) pulls `body`, `part_a`, `part_b` through `AssetLibrary::part_mesh`, which bakes every descendant into one mesh.
 - The pumpkin is deliberately skipped there ("the user preferred it"), so the in-game hopper is the procedural one, not the model in `monster_pumpkin.png`.
 - Collision height and radius come only from the C++ `build_*` functions; `apply_assets` never touches them.
 - Current exports are 1,632 to 2,476 triangles against a 2,500 budget.
@@ -39,7 +39,7 @@ Rigid nested parts plus vertex-shader soft deformation is the right call for mon
 - The 0.28 s death and 0.55 s rise are each hard-coded twice (`_physics_process` and `_process`). Move them to `rise_time()` and `death_time()` on the animator, 0.45 to 0.7 s. Tell the showcase worker, since their timeline may assume 0.28 s.
 - Thrown projectiles spawn at `pos + height*0.9` in `begin_attack`. Add an animator `muzzle()` (hand or mouth world position) with that as the fallback.
 
-**Shader (`S:\Repos\trick-or-treat\game\shaders\toon.gdshader`, 8 instance uniforms today)**
+**Shader (`S:\Repos\Games\trick-or-treat\game\shaders\toon.gdshader`, 8 instance uniforms today)**
 - `bend` (vec4: tip offset xyz, length): `VERTEX += bend.xyz * k*k`, `k = clamp(length(VERTEX)/bend.w, 0, 1)`. Spring-driven from C++.
 - `ripple` (vec4: amplitude, phase, lobes, height): radial hem wave below local `height`.
 - `gloss` (float): tighter, stronger highlight in `light()` for eyes and slime.

@@ -4,7 +4,7 @@ param(
 )
 # Crops a region of an engine preview (1600x900 sheet coordinates) and enlarges it for close review.
 Add-Type -AssemblyName System.Drawing
-$root = 'S:\Repos\trick-or-treat'
+$root = 'S:\Repos\Games\trick-or-treat'
 $src = [System.Drawing.Bitmap]::FromFile("$root\art\review\engine\$Id.png")
 $c = $src.Clone((New-Object System.Drawing.Rectangle $X, $Y, $W, $H), $src.PixelFormat)
 $out = New-Object System.Drawing.Bitmap ([int]($W * $Scale)), ([int]($H * $Scale))

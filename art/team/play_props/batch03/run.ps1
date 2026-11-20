@@ -1,7 +1,7 @@
 param([string[]]$Ids = @('trampoline_large', 'trampoline_mini'), [switch]$Preview)
 # Build the trampolines with headless Blender, gate them, optionally render the in-engine previews.
 #   powershell -NoProfile -File art\team\play_props\batch03\run.ps1 trampoline_mini -Preview
-$root = 'S:\Repos\trick-or-treat'
+$root = 'S:\Repos\Games\trick-or-treat'
 $blender = 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe'
 $Ids = @($Ids | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
 Push-Location $root

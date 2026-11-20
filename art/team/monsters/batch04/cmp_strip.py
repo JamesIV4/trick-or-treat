@@ -9,7 +9,7 @@ import argparse, os, subprocess
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-ROOT = r"S:\Repos\trick-or-treat\art\review\showcase"
+ROOT = r"S:\Repos\Games\trick-or-treat\art\review\showcase"
 W, H = 960, 1080
 
 

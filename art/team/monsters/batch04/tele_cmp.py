@@ -2,7 +2,7 @@
 usage: python tele_cmp.py <id> <side>[,<side>...]   (read only; prints, writes nothing)"""
 import sys, os
 import numpy as np
-V4 = r"S:\Repos\trick-or-treat\art\review\showcase\after\review\v4"
+V4 = r"S:\Repos\Games\trick-or-treat\art\review\showcase\after\review\v4"
 src = open(os.path.join(V4, "tele4.py")).read().split("clip = sys.argv[1]")[0]
 exec(src)
 

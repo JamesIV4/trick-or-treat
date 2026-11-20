@@ -7,7 +7,7 @@ import sys
 import bpy
 from mathutils import Vector
 
-sys.path.insert(0, r"S:\Repos\trick-or-treat\art\tools")
+sys.path.insert(0, r"S:\Repos\Games\trick-or-treat\art\tools")
 import lowpoly_kit as K  # noqa: E402
 
 args = sys.argv[sys.argv.index("--") + 1:]

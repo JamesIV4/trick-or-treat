@@ -77,14 +77,14 @@ struct CarScheme {
 };
 const CarScheme SCHEMES[] = {
 	{ "Pumpkin Cruiser", pal::PUMPKIN, pal::WITCH_PURPLE, pal::WITCH_PURPLE, pal::BANNER_PURPLE, pal::PUMPKIN, mat::VINYL, 0 },
-	{ "Ghostly Glow", pal::GHOST_WHITE, pal::CANDY_SKY_LIGHT, pal::SHADOW_NAVY, pal::CANDY_SKY_LIGHT, pal::SILVER, mat::VINYL, 40 },
-	{ "Candy Corn", pal::CANDY_CORN_YELLOW, pal::PUMPKIN, pal::CANDY_CORN_WHITE, pal::PUMPKIN, pal::CANDY_CORN_WHITE, mat::VINYL, 60 },
-	{ "Witch's Brew", pal::WITCH_PURPLE, pal::WITCH_GREEN, pal::CAT_BLACK, pal::WITCH_GREEN, pal::WITCH_GREEN, mat::VINYL, 60 },
-	{ "Bubblegum", pal::CANDY_PINK, pal::CANDY_MINT, pal::LOLLY_WHITE, pal::CANDY_MINT, pal::CANDY_MINT, mat::VINYL, 80 },
-	{ "Midnight Bat", pal::CAT_BLACK, pal::CANDY_VIOLET, pal::BAT_WING, pal::CANDY_VIOLET, pal::CANDY_VIOLET, mat::VINYL, 80 },
-	{ "Mint Chip", pal::CANDY_MINT, pal::CHOCO, pal::CHOCO_DARK, pal::CHOCO, pal::CANDY_MINT_LIGHT, mat::VINYL, 100 },
-	{ "Slime Time", pal::SLIME_GREEN, pal::SLIME_DARK, pal::CAT_BLACK, pal::CANDY_LIME, pal::SLIME_LIGHT, mat::VINYL, 100 },
-	{ "Golden Treat", pal::FOIL_GOLD, pal::CHOCO_DARK, pal::WRAPPER_RED, pal::WRAPPER_RED, pal::FOIL_GOLD, mat::METAL, 200 },
+	{ "Ghostly Glow", pal::GHOST_WHITE, pal::CANDY_SKY_LIGHT, pal::SHADOW_NAVY, pal::CANDY_SKY_LIGHT, pal::SILVER, mat::VINYL, 160 },
+	{ "Candy Corn", pal::CANDY_CORN_YELLOW, pal::PUMPKIN, pal::CANDY_CORN_WHITE, pal::PUMPKIN, pal::CANDY_CORN_WHITE, mat::VINYL, 240 },
+	{ "Witch's Brew", pal::WITCH_PURPLE, pal::WITCH_GREEN, pal::CAT_BLACK, pal::WITCH_GREEN, pal::WITCH_GREEN, mat::VINYL, 240 },
+	{ "Bubblegum", pal::CANDY_PINK, pal::CANDY_MINT, pal::LOLLY_WHITE, pal::CANDY_MINT, pal::CANDY_MINT, mat::VINYL, 320 },
+	{ "Midnight Bat", pal::CAT_BLACK, pal::CANDY_VIOLET, pal::BAT_WING, pal::CANDY_VIOLET, pal::CANDY_VIOLET, mat::VINYL, 320 },
+	{ "Mint Chip", pal::CANDY_MINT, pal::CHOCO, pal::CHOCO_DARK, pal::CHOCO, pal::CANDY_MINT_LIGHT, mat::VINYL, 400 },
+	{ "Slime Time", pal::SLIME_GREEN, pal::SLIME_DARK, pal::CAT_BLACK, pal::CANDY_LIME, pal::SLIME_LIGHT, mat::VINYL, 400 },
+	{ "Golden Treat", pal::FOIL_GOLD, pal::CHOCO_DARK, pal::WRAPPER_RED, pal::WRAPPER_RED, pal::FOIL_GOLD, mat::METAL, 800 },
 };
 constexpr int SCHEME_COUNT = int(sizeof(SCHEMES) / sizeof(SCHEMES[0]));
 

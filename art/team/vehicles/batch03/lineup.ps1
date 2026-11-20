@@ -1,7 +1,7 @@
 param([string]$Out = '')
 # Engine preview of the three parked cars side by side (gameplay-distance comparison).
 # Temporarily writes the lineup over props/parked_car, previews it, then rebuilds parked_car.
-$root = 'S:\Repos\trick-or-treat'
+$root = 'S:\Repos\Games\trick-or-treat'
 $blender = 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe'
 if (-not $Out) { $Out = Join-Path $PSScriptRoot 'lineup_engine.png' }
 Push-Location $root

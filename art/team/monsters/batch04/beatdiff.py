@@ -5,7 +5,7 @@ Per beat: median / p95 / max of the frame mean, max block diff, and the frames w
 import sys, os, json, subprocess
 import numpy as np
 
-ROOT = r"S:\Repos\trick-or-treat\art\review\showcase"
+ROOT = r"S:\Repos\Games\trick-or-treat\art\review\showcase"
 SW, SH, K = 320, 360, 20
 
 
@@ -23,7 +23,7 @@ def main():
         assert beats == beats2, "beat lists differ"
         A, B = load(os.path.join(da, cid + ".mp4")), load(os.path.join(db, cid + ".mp4"))
         n = min(len(A), len(B))
-        bbp = os.path.join(r"S:\Repos\trick-or-treat\art\review\showcase\after\review\v4", cid, "bbox.json")
+        bbp = os.path.join(r"S:\Repos\Games\trick-or-treat\art\review\showcase\after\review\v4", cid, "bbox.json")
         bb = json.load(open(bbp)) if os.path.exists(bbp) else {}
         mean = np.zeros(n); blk = np.zeros(n)
         for t in range(n):
